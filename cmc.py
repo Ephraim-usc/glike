@@ -48,7 +48,8 @@ def P2PP(P):
     return PP
 
 
-class CMC:
+# Coalescent Markov Process
+class CMP:
   def __init__(self, Qs, times):
     self.Qs = Qs
     self.times = times
