@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.linalg import expm
 
 #ns = [0.01, 0.02, 0.03]
 #Q = np.array([[0, 0.001, 0], [0.001, 0, 0.001], [0, 0.001, 0]])
@@ -47,6 +48,29 @@ def P2PP(P):
     return PP
 
 
+class CMC:
+  def __init__(self, Qs, times):
+    self.Qs = Qs
+    self.times = times
+    self.N = Qs[0].shape[0]
+  
+  def __call__(self, start, end):
+    P = np.identity(self.N)
+    for i, time in enumerate(self.times):
+      if type(time) == list: # continuous process
+        if (time[1] <= start or time[0] > end): continue
+        duration = time[1] - max(time[0], start)
+        P = np.matmul(P, expm(self.Qs[i] * duration))
+      if type(time) != list: # mass migration
+        if (time <= start or time > end): continue
+        P = np.matmul(P, self.Qs[i])
+    
+    return P
 
 
+Qs = [np.array([[-0.01, 0.01, 0], [0.01, -0.01, 0], [0, 0, 0]]), 
+      np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]]), 
+      np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])]
+times = [[0, 100], 100, [100, 1000]]
+cmc = CMC(Qs, times)
 
