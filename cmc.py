@@ -1,6 +1,17 @@
 import numpy as np
 import pandas as pd
-from scipy.linalg import expm
+import scipy.linalg
+
+def expm(X):
+  if type(X) == np.ndarray:
+    return scipy.linalg.expm(X)
+  if type(X) == pd.DataFrame:
+    buffer = scipy.linalg.expm(X.values)
+    buffer = pd.DataFrame(buffer)
+    buffer.index = buffer.columns = X.index
+    return buffer
+
+
 
 #ns = [0.01, 0.02, 0.03]
 #Q = np.array([[0, 0.001, 0], [0.001, 0, 0.001], [0, 0.001, 0]])
@@ -25,8 +36,8 @@ def Q2QQ(Q, ns):
       for pop3 in set(pops).difference([pop, pop2]):
         QQ.loc[pop+pop2, pop+pop3] = Q[int(pop2), int(pop3)]
         QQ.loc[pop+pop2, pop3+pop2] = Q[int(pop), int(pop3)]
-    
-    return QQ
+  
+  return QQ
 
 
 #P = np.array([[0,0.2,0.8],[0,1,0],[0,0,1]])
@@ -44,14 +55,15 @@ def P2PP(P):
       for pop3 in pops:
         for pop4 in pops:
           PP.loc[pop+pop2, pop3+pop4] = P[int(pop), int(pop3)] * P[int(pop2), int(pop4)]
-    
-    return PP
+  
+  return PP
 
 
 # Coalescent Markov Process
 class CMP:
-  def __init__(self, Qs, times):
+  def __init__(self, Qs, nss, times):
     self.Qs = Qs
+    self.nss = nss
     self.times = times
     self.N = Qs[0].shape[0]
   
@@ -69,18 +81,19 @@ class CMP:
   
   def s2p(self):
     QQs = []
-    for Q, time in zip(self.Qs, self.times):
+    for Q, ns, time in zip(self.Qs, nss, self.times):
       if type(time) == list:
-        QQs.append(Q2QQ(Q))
+        QQs.append(Q2QQ(Q, ns))
       if type(time) != list:
         QQs.append(P2PP(Q))
-    pcmp = CMP(QQs, self.times)
+    pcmp = CMP(QQs, self.nss, self.times)
     return pcmp
 
-
+nss = [[0.001, 0.001, 0.001], [0.001, 0.001, 0.001], [0.001, 0.001, 0.001]]
 Qs = [np.array([[-0.01, 0.01, 0], [0.01, -0.01, 0], [0, 0, 0]]), 
       np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]]), 
       np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])]
 times = [[0, 100], 100, [100, 1000]]
-scmc = CMP(Qs, times)
+scmc = CMP(Qs, nss, times)
+pcmc = scmc.s2p()
 
