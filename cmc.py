@@ -2,17 +2,6 @@ import numpy as np
 import pandas as pd
 from scipy.linalg import expm
 
-'''
-def expm(X):
-  if type(X) == np.ndarray:
-    return scipy.linalg.expm(X)
-  if type(X) == pd.DataFrame:
-    buffer = scipy.linalg.expm(X.values)
-    buffer = pd.DataFrame(buffer)
-    buffer.index = buffer.columns = X.index
-    return buffer
-'''
-
 
 #ns = [0.01, 0.02, 0.03]
 #Q = np.array([[0, 0.001, 0], [0.001, 0, 0.001], [0, 0.001, 0]])
@@ -67,6 +56,7 @@ class CMP:
     self.nss = nss
     self.times = times
     self.N = Qs[0].shape[0]
+    self.states = [str(i) for i in range(N)]
   
   def __call__(self, start, end):
     P = np.identity(self.N)
@@ -78,16 +68,20 @@ class CMP:
       if type(time) != list: # mass migration
         if (time <= start or time > end): continue
         P = np.matmul(P, self.Qs[i])
+    P = pd.DataFrame(P)
+    P.index = P.columns = self.states
     return P
   
   def s2p(self):
     QQs = []
     for Q, ns, time in zip(self.Qs, nss, self.times):
       if type(time) == list:
-        QQs.append(Q2QQ(Q, ns))
+        QQs.append(Q2QQ(Q, ns).values)
       if type(time) != list:
-        QQs.append(P2PP(Q))
+        QQs.append(P2PP(Q).values)
     pcmp = CMP(QQs, self.nss, self.times)
+    pops = [str(i) for i in range(self.N)]
+    pcmp.states = pops + [x+y for x in pops for y in pops]
     return pcmp
 
 nss = [[0.001, 0.001, 0.001], [0.001, 0.001, 0.001], [0.001, 0.001, 0.001]]
