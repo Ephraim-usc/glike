@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-import scipy.linalg
+from scipy.linalg import expm
 
+'''
 def expm(X):
   if type(X) == np.ndarray:
     return scipy.linalg.expm(X)
@@ -10,7 +11,7 @@ def expm(X):
     buffer = pd.DataFrame(buffer)
     buffer.index = buffer.columns = X.index
     return buffer
-
+'''
 
 
 #ns = [0.01, 0.02, 0.03]
