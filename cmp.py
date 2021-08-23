@@ -98,4 +98,20 @@ def CLG(trees, cmp, labels):
 
 
 
+import msprime
+
+trees = msprime.sim_ancestry(samples = 100, ploidy = 1)
+tree = trees.last()
+
+# Coalescent likelihood of node
+def CLN(scmp, pcmp, tree, node, label, sample_labels):
+  children = tree.children(node)
+  if len(children) == 0:
+    return sample_labels[node] == label
+  child_1, child_2 = children
+  t1 = min(tree.time(child_1), tree.time(child_2))
+  t2 = max(tree.time(child_1), tree.time(child_2))
+  t3 = tree.time(node)
+  
+
 
