@@ -104,14 +104,30 @@ trees = msprime.sim_ancestry(samples = 100, ploidy = 1)
 tree = trees.last()
 
 # Coalescent likelihood of node
-def CLN(scmp, pcmp, tree, node, label, sample_labels):
+def CLN(scmp, pcmp, tree, node, pop, sample_pops, saved = {}):
+  print(str(node) + " " + pop)
   children = tree.children(node)
   if len(children) == 0:
-    return sample_labels[node] == label
-  child_1, child_2 = children
-  t1 = min(tree.time(child_1), tree.time(child_2))
-  t2 = max(tree.time(child_1), tree.time(child_2))
-  t3 = tree.time(node)
+    return float(sample_pops[node] == pop)
+  if tree.time(children[0]) <= tree.time(children[1]):
+    child_1, child_2 = children
+  else:
+    child_2, child_1 = children
+  P = scmp(tree.time(child_1), tree.time(child_2))
+  PP = pcmp(tree.time(child_2), tree.time(node))
   
+  pops = scmp.states
+  p = 0
+  ps_1 = {pop_1:CLN(scmp, pcmp, tree, child_1, pop_1, sample_pops) for pop_1 in pops}
+  ps_2 = {pop_2:CLN(scmp, pcmp, tree, child_2, pop_2, sample_pops) for pop_2 in pops}
+  for pop_1 in pops:
+    if 
+    for pop_2 in pops:
+      for pop_1_ in pops:
+        p += PP.loc[pop_1_ + pop_2, pop] * P.loc[pop_1, pop_1_] * ps_1[pop_1] * ps_2[pop_2]
+  
+  return p
 
+sample_pops = ["0"] * 50 + ["1"] * 50
+CLN(scmp, pcmp, tree, 190, "0", sample_pops)
 
