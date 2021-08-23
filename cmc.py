@@ -65,13 +65,22 @@ class CMP:
       if type(time) != list: # mass migration
         if (time <= start or time > end): continue
         P = np.matmul(P, self.Qs[i])
-    
     return P
+  
+  def s2p(self):
+    QQs = []
+    for Q, time in zip(self.Qs, self.times):
+      if type(time) == list:
+        QQs.append(Q2QQ(Q))
+      if type(time) != list:
+        QQs.append(P2PP(Q))
+    pcmp = CMP(QQs, self.times)
+    return pcmp
 
 
 Qs = [np.array([[-0.01, 0.01, 0], [0.01, -0.01, 0], [0, 0, 0]]), 
       np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]]), 
       np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])]
 times = [[0, 100], 100, [100, 1000]]
-cmc = CMC(Qs, times)
+scmc = CMP(Qs, times)
 
