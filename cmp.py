@@ -89,6 +89,13 @@ Qs = [np.array([[-0.01, 0.01, 0], [0.01, -0.01, 0], [0, 0, 0]]),
       np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]]), 
       np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])]
 times = [[0, 100], 100, [100, 1000]]
-scmc = CMP(Qs, nss, times)
-pcmc = scmc.s2p()
+scmp = CMP(Qs, nss, times)
+pcmp = scmp.s2p()
+
+
+# Coalescent likelihood of genealogy
+def CLG(trees, cmp, labels):
+
+
+
 
