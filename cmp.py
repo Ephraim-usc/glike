@@ -58,7 +58,7 @@ class CMP:
     self.N = Qs[0].shape[0]
     self.states = [str(i) for i in range(N)]
   
-  def __call__(self, start, end):
+  def get_P(self, start, end):
     P = np.identity(self.N)
     for i, time in enumerate(self.times):
       if type(time) == list: # continuous process
@@ -68,6 +68,18 @@ class CMP:
       if type(time) != list: # mass migration
         if (time <= start or time > end): continue
         P = np.matmul(P, self.Qs[i])
+    P = pd.DataFrame(P)
+    P.index = P.columns = self.states
+    return P
+  
+  def get_Q(self, time):
+    P = np.zeros([self.N, self.N])
+    for i, time in enumerate(self.times):
+      if type(time) == list: # continuous process
+        if time[1] <= time: continue
+        P = self.Qs[i]
+      if type(time) != list: # mass migration
+        continue
     P = pd.DataFrame(P)
     P.index = P.columns = self.states
     return P
