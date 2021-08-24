@@ -167,9 +167,12 @@ def log10(x):
 
 def log_add(x, y):
   max_ = max(x, y)
+  if max_ == -math.inf:
+    return -math.inf
+  
   x_ = x - max_
   y_ = y - max_
-  buffer = max_ + math.log10(math.pow(10, x_) + math.pow(10, y_))
+  buffer = max_ + log10(math.pow(10, x_) + math.pow(10, y_))
   return buffer
 
 
@@ -197,16 +200,14 @@ def logCLN(scmp, pcmp, tree, node, sample_pops, logps = {}):
   QQ = pcmp.get_Q(tree.time(node))
   buffer = {}
   for pop in pops:
-    p = -math.inf
+    logp = -math.inf
     for pop_1 in pops:
       for pop_2 in pops:
         for pop_1_ in pops:
-          p = log_add(p, log10(PP.loc[pop_1_ + pop_2, pop + pop]))
-          p = log_add(p, log10(P.loc[pop_1, pop_1_]))
-          p = log_add(p, logps[child_1][pop_1])
-          p = log_add(p, logps[child_2][pop_2])
-    p = log_add(p, log10(QQ.loc[pop + pop, pop]))
-    buffer[pop] = p
+          tmp = log10(PP.loc[pop_1_ + pop_2, pop + pop]) + log10(P.loc[pop_1, pop_1_]) + logps[child_1][pop_1] + logps[child_2][pop_2]
+    tmp += log10(QQ.loc[pop + pop, pop])
+    
+    buffer[pop] = logp
   
   logps[node] = buffer
   return buffer
