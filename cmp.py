@@ -149,7 +149,7 @@ def CLN(scmp, pcmp, tree, node, sample_pops, ps = {}):
       for pop_2 in pops:
         for pop_1_ in pops:
           p += PP.loc[pop_1_ + pop_2, pop + pop] * P.loc[pop_1, pop_1_] * ps[child_1][pop_1] * ps[child_2][pop_2]
-    buffer[pop] = p * QQ.loc[pop + pop, pop] # and coalescent rate
+    buffer[pop] = p * QQ.loc[pop + pop, pop]
   
   ps[node] = buffer
   return buffer
