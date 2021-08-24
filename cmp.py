@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pandas as pd
 from scipy.linalg import expm
@@ -157,3 +158,55 @@ def CLN(scmp, pcmp, tree, node, sample_pops, ps = {}):
 sample_pops = ["0"] * 50 + ["1"] * 50
 CLN(scmp, pcmp, tree, 190, sample_pops)
 
+
+def log10(x):
+  if x < 1e-100:
+    return -math.inf
+  else:
+    return math.log10(x)
+
+def log_add(x, y):
+  max_ = max(x, y)
+  x_ = x - max_
+  y_ = y - max_
+  buffer = max_ + math.log10(math.pow(10, x_) + math.pow(10, y_))
+  return buffer
+
+
+def logCLN(scmp, pcmp, tree, node, sample_pops, logps = {}):
+  pops = scmp.states
+  
+  children = tree.children(node)
+  if len(children) == 0:
+    buffer = {pop:log10(sample_pops[node] == pop) for pop in pops}
+    logps[node] = buffer
+    return buffer
+  
+  if tree.time(children[0]) <= tree.time(children[1]):
+    child_1, child_2 = children
+  else:
+    child_2, child_1 = children
+  
+  if child_1 not in logps:
+    CLN(scmp, pcmp, tree, child_1, sample_pops, logps)
+  if child_2 not in logps:
+    CLN(scmp, pcmp, tree, child_2, sample_pops, logps)
+  
+  P = scmp.get_P(tree.time(child_1), tree.time(child_2))
+  PP = pcmp.get_P(tree.time(child_2), tree.time(node))
+  QQ = pcmp.get_Q(tree.time(node))
+  buffer = {}
+  for pop in pops:
+    p = -math.inf
+    for pop_1 in pops:
+      for pop_2 in pops:
+        for pop_1_ in pops:
+          p = log_add(p, log10(PP.loc[pop_1_ + pop_2, pop + pop]))
+          p = log_add(p, log10(P.loc[pop_1, pop_1_]))
+          p = log_add(p, logps[child_1][pop_1])
+          p = log_add(p, logps[child_2][pop_2])
+    p = log_add(p, log10(QQ.loc[pop + pop, pop]))
+    buffer[pop] = p
+  
+  logps[node] = buffer
+  return buffer
