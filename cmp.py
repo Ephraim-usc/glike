@@ -61,7 +61,7 @@ class CMP:
     self.nss = nss
     self.times = times
     self.N = Qs[0].shape[0]
-    self.states = [str(i) for i in range(N)]
+    self.states = [str(i) for i in range(self.N)]
   
   def get_P(self, start, end):
     P = np.identity(self.N)
@@ -101,24 +101,6 @@ class CMP:
     pcmp.states = pops + [x+y for x in pops for y in pops]
     return pcmp
 
-nss = [[0.001, 0.001, 0.001], [0.001, 0.001, 0.001], [0.001, 0.001, 0.001]]
-Qs = [np.array([[-0.01, 0.01, 0], [0.01, -0.01, 0], [0, 0, 0]]), 
-      np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]]), 
-      np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])]
-times = [[0, 100], 100, [100, 1e6]]
-scmp = CMP(Qs, nss, times)
-pcmp = scmp.s2p()
-
-
-# Coalescent likelihood of genealogy
-def CLG(trees, cmp, labels):
-
-
-
-import msprime
-
-trees = msprime.sim_ancestry(samples = 100, ploidy = 1, population_size = 1e6)
-tree = trees.last()
 
 # Coalescent likelihood of node
 def CLN(scmp, pcmp, tree, node, sample_pops, ps = {}):
@@ -155,9 +137,6 @@ def CLN(scmp, pcmp, tree, node, sample_pops, ps = {}):
   ps[node] = buffer
   return buffer
 
-sample_pops = ["0"] * 50 + ["1"] * 50
-CLN(scmp, pcmp, tree, 190, sample_pops)
-
 
 def log10(x):
   if x < 1e-100:
@@ -191,9 +170,9 @@ def logCLN(scmp, pcmp, tree, node, sample_pops, logps = {}):
     child_2, child_1 = children
   
   if child_1 not in logps:
-    CLN(scmp, pcmp, tree, child_1, sample_pops, logps)
+    logCLN(scmp, pcmp, tree, child_1, sample_pops, logps)
   if child_2 not in logps:
-    CLN(scmp, pcmp, tree, child_2, sample_pops, logps)
+    logCLN(scmp, pcmp, tree, child_2, sample_pops, logps)
   
   P = scmp.get_P(tree.time(child_1), tree.time(child_2))
   PP = pcmp.get_P(tree.time(child_2), tree.time(node))
@@ -209,3 +188,71 @@ def logCLN(scmp, pcmp, tree, node, sample_pops, logps = {}):
   
   logps[node] = buffer
   return buffer
+
+
+
+
+
+demography = msprime.Demography()
+demography.add_population(name="A", initial_size=1_000)
+demography.add_population(name="B", initial_size=1_000)
+demography.add_population(name="C", initial_size=1_000)
+demography.set_migration_rate(source="A", dest="B", rate=1e-5)
+demography.set_migration_rate(source="B", dest="A", rate=1e-5)
+demography.add_population_split(time=200, derived=["A", "B"], ancestral="C")
+trees = msprime.sim_ancestry(samples={"A": 500, "B": 500}, demography=demography, ploidy = 1)
+tree = trees.first()
+
+sample_pops = ["0"] * 500 + ["1"] * 500
+nss = [[0.001, 0.001, 0.001], [0.001, 0.001, 0.001], [0.001, 0.001, 0.001]]
+Qs = [np.array([[-1e-5, 1e-5, 0], [1e-5, -1e-5, 0], [0, 0, 0]]), 
+      np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]]), 
+      np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])]
+
+results = []
+for time in range(150, 250, 5):
+  print(time)
+  times = [[0, time], time, [time, 1e6]]
+  scmp = CMP(Qs, nss, times)
+  pcmp = scmp.s2p()
+  results.append(logCLN(scmp, pcmp, tree, 1998, sample_pops, logps = {})['2'])
+
+import matplotlib.pyplot as plt
+plt.scatter(range(100, 300, 10), results)
+plt.show()
+
+
+
+
+
+demography = msprime.Demography()
+demography.add_population(name="A", initial_size=1000)
+demography.add_population(name="B", initial_size=1000)
+demography.add_population(name="ADMIX", initial_size=1000)
+demography.add_population(name="ANC", initial_size=1000)
+demography.set_migration_rate(source="A", dest="B", rate=1e-5)
+demography.set_migration_rate(source="B", dest="A", rate=1e-5)
+demography.add_admixture(time=100, derived="ADMIX", ancestral=["A", "B"], proportions=[0.2, 0.8])
+demography.add_population_split(time=500, derived=["A", "B"], ancestral="ANC")
+trees = msprime.sim_ancestry(samples={"ADMIX": 1000}, demography=demography, ploidy = 1)
+tree = trees.first()
+
+sample_pops = ["2"] * 1000
+nss = [[0.001, 0.001, 0.001, 0.001]] * 5
+Qs = [np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]), 
+      np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0.2, 0.8, 0, 0], [0, 0, 0, 1]]), 
+      np.array([[-1e-5, 1e-5, 0, 0], [1e-5, -1e-5, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]), 
+      np.array([[0, 0, 0, 1], [0, 0, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]]),
+      np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])]
+
+results = []
+for time in range(10, 400, 10):
+  print(time)
+  times = [[0, time], time, [time, 500], 500, [500, 1e6]]
+  scmp = CMP(Qs, nss, times)
+  pcmp = scmp.s2p()
+  results.append(logCLN(scmp, pcmp, tree, 1998, sample_pops, logps = {})['3'])
+
+import matplotlib.pyplot as plt
+plt.scatter(range(10, 400, 10), results)
+plt.show()
