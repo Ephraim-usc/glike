@@ -14,15 +14,18 @@ def Q2QQ(Q, ns):
   QQ = pd.DataFrame(np.zeros([N*N+N, N*N+N]))
   QQ.index = QQ.columns = states
   
+  Q_ = Q.copy()
+  np.fill_diagonal(Q_, 0)
+  
   for pop in pops:
     QQ.loc[pop+pop, pop] = ns[int(pop)]
-    QQ.loc[pop+pop, pop+pop] = - ns[int(pop)] - 2 * Q[int(pop)].sum()
+    QQ.loc[pop+pop, pop+pop] = - ns[int(pop)] - 2 * Q_[int(pop)].sum()
     for pop2 in set(pops).difference(pop):
       QQ.loc[pop+pop, pop+pop2] = Q[int(pop), int(pop2)]
       QQ.loc[pop+pop, pop2+pop] = Q[int(pop), int(pop2)]
       QQ.loc[pop2+pop, pop+pop] = Q[int(pop2), int(pop)]
       QQ.loc[pop+pop2, pop+pop] = Q[int(pop2), int(pop)]
-      QQ.loc[pop+pop2, pop+pop2] = - Q[int(pop)].sum() - Q[int(pop2)].sum()
+      QQ.loc[pop+pop2, pop+pop2] = - Q_[int(pop)].sum() - Q_[int(pop2)].sum()
       for pop3 in set(pops).difference([pop, pop2]):
         QQ.loc[pop+pop2, pop+pop3] = Q[int(pop2), int(pop3)]
         QQ.loc[pop+pop2, pop3+pop2] = Q[int(pop), int(pop3)]
@@ -41,6 +44,7 @@ def P2PP(P):
   PP.index = PP.columns = states
   
   for pop in pops:
+    PP.loc[pop, pop] = 1
     for pop2 in pops:
       for pop3 in pops:
         for pop4 in pops:
@@ -72,11 +76,11 @@ class CMP:
     P.index = P.columns = self.states
     return P
   
-  def get_Q(self, time):
+  def get_Q(self, start):
     P = np.zeros([self.N, self.N])
     for i, time in enumerate(self.times):
       if type(time) == list: # continuous process
-        if time[1] <= time: continue
+        if time[1] <= start: continue
         P = self.Qs[i]
       if type(time) != list: # mass migration
         continue
