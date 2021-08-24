@@ -137,8 +137,9 @@ def CLN(scmp, pcmp, tree, node, sample_pops, ps = {}):
   if child_2 not in ps:
     ps[child_2] = CLN(scmp, pcmp, tree, child_2, sample_pops, ps)
   
-  P = scmp(tree.time(child_1), tree.time(child_2))
-  PP = pcmp(tree.time(child_2), tree.time(node))
+  P = scmp.get_P(tree.time(child_1), tree.time(child_2))
+  PP = pcmp.get_P(tree.time(child_2), tree.time(node))
+  QQ = pcmp.get_Q(tree.time(node))
   buffer = {}
   for pop in pops:
     p = 0
@@ -146,7 +147,7 @@ def CLN(scmp, pcmp, tree, node, sample_pops, ps = {}):
       for pop_2 in pops:
         for pop_1_ in pops:
           p += PP.loc[pop_1_ + pop_2, pop + pop] * P.loc[pop_1, pop_1_] * ps[child_1][pop_1] * ps[child_2][pop_2]
-    buffer[pop] = p # and coalescent rate
+    buffer[pop] = p * QQ.loc[pop + pop, pop] # and coalescent rate
   
   return buffer
 
