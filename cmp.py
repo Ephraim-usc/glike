@@ -121,8 +121,6 @@ tree = trees.last()
 
 # Coalescent likelihood of node
 def CLN(scmp, pcmp, tree, node, sample_pops, ps = {}):
-  print(str(node))
-  
   pops = scmp.states
   children = tree.children(node)
   if len(children) == 0:
