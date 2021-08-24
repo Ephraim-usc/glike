@@ -88,7 +88,7 @@ nss = [[0.001, 0.001, 0.001], [0.001, 0.001, 0.001], [0.001, 0.001, 0.001]]
 Qs = [np.array([[-0.01, 0.01, 0], [0.01, -0.01, 0], [0, 0, 0]]), 
       np.array([[0, 0, 1], [0, 0, 1], [0, 0, 1]]), 
       np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]])]
-times = [[0, 100], 100, [100, 1000]]
+times = [[0, 100], 100, [100, 1e6]]
 scmp = CMP(Qs, nss, times)
 pcmp = scmp.s2p()
 
@@ -100,7 +100,7 @@ def CLG(trees, cmp, labels):
 
 import msprime
 
-trees = msprime.sim_ancestry(samples = 100, ploidy = 1)
+trees = msprime.sim_ancestry(samples = 100, ploidy = 1, population_size = 1e6)
 tree = trees.last()
 
 # Coalescent likelihood of node
