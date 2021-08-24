@@ -229,30 +229,28 @@ demography = msprime.Demography()
 demography.add_population(name="A", initial_size=1000)
 demography.add_population(name="B", initial_size=1000)
 demography.add_population(name="ADMIX", initial_size=1000)
-demography.add_population(name="ANC", initial_size=1000)
 demography.set_migration_rate(source="A", dest="B", rate=1e-5)
 demography.set_migration_rate(source="B", dest="A", rate=1e-5)
 demography.add_admixture(time=100, derived="ADMIX", ancestral=["A", "B"], proportions=[0.2, 0.8])
-demography.add_population_split(time=500, derived=["A", "B"], ancestral="ANC")
 trees = msprime.sim_ancestry(samples={"ADMIX": 1000}, demography=demography, ploidy = 1)
 tree = trees.first()
 
 sample_pops = ["2"] * 1000
-nss = [[0.001, 0.001, 0.001, 0.001]] * 5
-Qs = [np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]), 
-      np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0.2, 0.8, 0, 0], [0, 0, 0, 1]]), 
-      np.array([[-1e-5, 1e-5, 0, 0], [1e-5, -1e-5, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]), 
-      np.array([[0, 0, 0, 1], [0, 0, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]]),
-      np.array([[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])]
+nss = [[0.001, 0.001, 0.001]] * 3
+Qs = [np.array([[0, 0, 0], [0, 0, 0], [0, 0, 0]]), 
+      np.array([[1, 0, 0], [0, 1, 0], [0.2, 0.8, 0]]), 
+      np.array([[-1e-5, 1e-5, 0], [1e-5, -1e-5, 0], [0, 0, 0]])]
 
 results = []
-for time in range(10, 400, 10):
-  print(time)
-  times = [[0, time], time, [time, 500], 500, [500, 1e6]]
+for time in range(10, 200, 10):
+  times = [[0, time], time, [time, 1e6]]
   scmp = CMP(Qs, nss, times)
   pcmp = scmp.s2p()
-  results.append(logCLN(scmp, pcmp, tree, 1998, sample_pops, logps = {})['3'])
+  tmp = logCLN(scmp, pcmp, tree, 1998, sample_pops, logps = {})
+  score = log_add(tmp['0'], tmp['1'])
+  results.append(score)
+  print(str(time) + " " + str(score))
 
 import matplotlib.pyplot as plt
-plt.scatter(range(10, 400, 10), results)
+plt.scatter(range(10, 200, 10), results)
 plt.show()
