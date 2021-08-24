@@ -204,10 +204,8 @@ def logCLN(scmp, pcmp, tree, node, sample_pops, logps = {}):
     for pop_1 in pops:
       for pop_2 in pops:
         for pop_1_ in pops:
-          tmp = log10(PP.loc[pop_1_ + pop_2, pop + pop]) + log10(P.loc[pop_1, pop_1_]) + logps[child_1][pop_1] + logps[child_2][pop_2]
-    tmp += log10(QQ.loc[pop + pop, pop])
-    
-    buffer[pop] = logp
+          logp = log_add(logp, log10(PP.loc[pop_1_ + pop_2, pop + pop]) + log10(P.loc[pop_1, pop_1_]) + logps[child_1][pop_1] + logps[child_2][pop_2])
+    buffer[pop] = logp + log10(QQ.loc[pop + pop, pop])
   
   logps[node] = buffer
   return buffer
