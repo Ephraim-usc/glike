@@ -67,7 +67,7 @@ class CMP:
     for i, time in enumerate(self.times):
       if type(time) == list: # continuous process
         if (time[1] <= start or time[0] > end): continue
-        duration = time[1] - max(time[0], start)
+        duration = min(time[1], end) - max(time[0], start)
         P = np.matmul(P, expm(self.Qs[i] * duration))
       if type(time) != list: # mass migration
         if (time <= start or time > end): continue
