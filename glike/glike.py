@@ -3,6 +3,11 @@ import numpy as np
 import pandas as pd
 from scipy.linalg import expm
 
+def log(x):
+  if x != 0:
+    return math.log(x)
+  else:
+    return -math.inf
 
 def mn2Q(ms, ns):
   n = len(ns)
@@ -195,7 +200,7 @@ def loglike_tree(tree, labels, lmp): # tree nodes must be sorted
       else:
         Ps[a][b] = 1 - p_['omega']
       
-      logP += math.log(Ps[a][b])
+      logP += log(Ps[a][b])
   
   return ps, Ps, logP
 
