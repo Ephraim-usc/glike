@@ -200,7 +200,12 @@ def loglike_tree(tree, labels, lmp): # tree nodes must be sorted
       else:
         Ps[a][b] = 1 - p_['omega']
       
-      logP += log(Ps[a][b])
+      if Ps[a][b] == 0:
+        pickle.dump(ps[a][b], open("ps.p", "rb"))
+        pickle.dump(lmp.get_PP(t1, t2), open("PP.p", "rb"))
+        pickle.dump(lmp.get_QQ(t2), open("QQ.p", "rb"))
+      
+      logP += math.log(Ps[a][b])
   
   return ps, Ps, logP
 
