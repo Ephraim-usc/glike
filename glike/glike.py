@@ -2,6 +2,7 @@ import math
 import numpy as np
 import pandas as pd
 from scipy.linalg import expm
+import pickle
 
 def log(x):
   if x != 0:
