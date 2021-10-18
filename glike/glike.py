@@ -205,6 +205,7 @@ def loglike_tree(tree, labels, lmp): # tree nodes must be sorted
         pickle.dump(ps[a][b], open("ps.p", "wb"))
         pickle.dump(lmp.get_PP(t1, t2), open("PP.p", "wb"))
         pickle.dump(lmp.get_QQ(t2), open("QQ.p", "wb"))
+        pickle.dump([t1, t2], open("t1t2.p", "wb"))
       
       logP += math.log(Ps[a][b])
   
