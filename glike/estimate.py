@@ -1,4 +1,4 @@
-from glike import *
+from .glike import *
 
 def estimate(trees, labels, lmp_generator, initial_parameters, epochs):
   n_parameters = len(initial_parameters)
