@@ -212,10 +212,11 @@ def loglike_tree(tree, labels, lmp): # tree nodes must be sorted
   return ps, Ps, logP
 
 
-def loglike_trees(trees, labels, lmp, stride, stop = -1):
+def loglike_trees(trees, labels, lmp, stride, start = 1, stop = -1):
   logP = []
   for tree in trees.trees():
     if tree.index % stride != 0: continue
+    if tree.index // stride < start: break
     if tree.index // stride == stop: break
     print("tree " + str(tree.index), flush = True)
     _, _, logP_ = loglike_tree(tree, labels, lmp)
