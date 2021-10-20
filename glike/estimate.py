@@ -15,9 +15,9 @@ def estimate(trees, labels, lmp_generator, initial_parameters, epochs):
       logP_down = loglike_trees(trees, labels, lmp_down, 1000, stop = epoch*2+2).mean()
       logP_up = loglike_trees(trees, labels, lmp_up, 1000, stop = epoch*2+2).mean()
       
-      if logP_up > logP:
+      if logP_up > max(logP, logP_down):
         parameters = parameters_up.copy()
-      if logP_down > logP:
+      if logP_down > max(logP, logP_up):
         parameters = parameters_down.copy()
       print(str(logP_down) + " " + str(logP) + " " + str(logP_up))
       print(parameters)
