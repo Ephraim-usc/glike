@@ -19,7 +19,7 @@ def estimate(trees, labels, lmp_generator, initial_parameters, epochs):
         parameters = parameters_up.copy()
       if logP_down > max(logP, logP_up):
         parameters = parameters_down.copy()
-      print(str(logP_down) + " " + str(logP) + " " + str(logP_up))
-      print(parameters)
+      print(str(logP_down) + " " + str(logP) + " " + str(logP_up), flush = True)
+      print(parameters, flush = True)
   
   return parameters
