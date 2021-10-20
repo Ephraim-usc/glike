@@ -20,7 +20,7 @@ def estimate(trees, labels, lmp_generator, initial_parameters, epochs):
     for i in range(n_parameters):
       if (parameters[i] > 0.5) and (parameters[i] < 1): # it's a proportion parameter within [0.5, 1]
         parameters_down = parameters.copy(); parameters_down[i] = 1 - (1-parameters_down[i]) * (1 + delta)
-        parameters_up = parameters.copy(); parameters_up[i] = 1 - (1-parameters_down[i]) * (1 - delta)
+        parameters_up = parameters.copy(); parameters_up[i] = 1 - (1-parameters_up[i]) * (1 - delta)
       else:
         parameters_down = parameters.copy(); parameters_down[i] = parameters_down[i] * (1 - delta)
         parameters_up = parameters.copy(); parameters_up[i] = parameters_up[i] * (1 + delta)
