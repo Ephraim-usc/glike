@@ -201,7 +201,7 @@ def loglike_tree(tree, labels, lmp): # tree nodes must be sorted
       else:
         Ps[a][b] = 1 - p_['omega']
       
-      if Ps[a][b] == 0:
+      #if Ps[a][b] == 0:
         #pickle.dump(ps[a][b], open("ps.p", "wb"))
         #pickle.dump(lmp.get_PP(t1, t2), open("PP.p", "wb"))
         #pickle.dump(lmp.get_QQ(t2), open("QQ.p", "wb"))
