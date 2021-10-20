@@ -6,7 +6,7 @@ def get_delta(epoch):
   return buffer
 
 def get_ntrees(epoch):
-  buffer = min(2 + 2 * epoch, 20)
+  buffer = min(2 + epoch, 20)
   return buffer
 
 def estimate(trees, labels, lmp_generator, initial_parameters, epochs):
