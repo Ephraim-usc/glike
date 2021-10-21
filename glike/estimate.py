@@ -30,7 +30,7 @@ def estimate(trees, labels, lmp_generator, initial_parameters, epochs):
       lmp_down = lmp_generator(*parameters_down)
       lmp_up = lmp_generator(*parameters_up)
       
-      start = randint(0, trees.num_trees - n_trees)
+      start = randint(0, (trees.num_trees - n_trees)//1000)
       logP = loglike_trees(trees, labels, lmp, 1000, start = start, stop = start + n_trees).mean()
       logP_down = loglike_trees(trees, labels, lmp_down, 1000, start = start, stop = start + n_trees).mean()
       logP_up = loglike_trees(trees, labels, lmp_up, 1000, start = start, stop = start + n_trees).mean()
