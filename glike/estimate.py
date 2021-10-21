@@ -1,4 +1,5 @@
 from .glike import *
+from random import randint
 
 def get_delta(epoch):
   buffer = 0.01 + 0.19 * math.exp(-epoch / 20)
@@ -28,9 +29,11 @@ def estimate(trees, labels, lmp_generator, initial_parameters, epochs):
       lmp = lmp_generator(*parameters)
       lmp_down = lmp_generator(*parameters_down)
       lmp_up = lmp_generator(*parameters_up)
-      logP = loglike_trees(trees, labels, lmp, 1000, stop = n_trees).mean()
-      logP_down = loglike_trees(trees, labels, lmp_down, 1000, stop = n_trees).mean()
-      logP_up = loglike_trees(trees, labels, lmp_up, 1000, stop = n_trees).mean()
+      
+      start = randint(0, trees.num_trees - ntrees)
+      logP = loglike_trees(trees, labels, lmp, 1000, start = start, stop = start + n_trees).mean()
+      logP_down = loglike_trees(trees, labels, lmp_down, 1000, start = start, stop = start + n_trees).mean()
+      logP_up = loglike_trees(trees, labels, lmp_up, 1000, start = start, stop = start + n_trees).mean()
       
       if logP_up > max(logP, logP_down):
         parameters = parameters_up.copy()
