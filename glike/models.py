@@ -1,7 +1,7 @@
 from .glike import *
 
 def threeway_admixture_lmp(t1, t2, r1, r2, n = 1e-4, m = 1e-4):
-  times = [0, t1, t2]
+  times = [0, t1, t1 + t2]
   mss = [np.array([[0, 0, 0, 0, 0],
                    [0, 0, 0, 0, 0],
                    [0, 0, 0, m, m],
