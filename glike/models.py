@@ -1,3 +1,4 @@
+import msprime
 from .glike import *
 
 def single_lmp(N):
