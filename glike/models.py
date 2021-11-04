@@ -20,7 +20,7 @@ def twoway_admixture_lmp(t, r, N_ab, N_a, N_b, m = 1e-4):
                    [0, 0, m],
                    [0, m, 0]])] * 2
   nss = [[1/N_ab, 1/N_a, 1/N_b]] * 2
-  Ps = [np.identity(5),
+  Ps = [np.identity(3),
         np.matrix([[0, r, 1-r], [0, 1, 0], [0, 0, 1]])]
   lmp = LMP(times, mss, nss, Ps = Ps)
   return lmp
