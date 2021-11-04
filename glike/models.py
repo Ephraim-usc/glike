@@ -48,7 +48,7 @@ def threeway_admixture_lmp(t1, t2, r1, r2, N_abc, N_ab, N_a, N_b, N_c, m = 1e-4)
   lmp = LMP(times, mss, nss, Ps = Ps)
   return lmp
 
-def threeway_admixture_demography(t, r, N_ab, N_ab, N_a, N_b, N_c, m = 1e-4):
+def threeway_admixture_demography(t1, t2, r1, r2, N_ab, N_ab, N_a, N_b, N_c, m = 1e-4):
   demography = msprime.Demography()
   demography.add_population(name = "ABC", initial_size = N_abc)
   demography.add_population(name = "AB", initial_size = N_ab)
