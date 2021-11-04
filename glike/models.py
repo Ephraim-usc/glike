@@ -58,7 +58,7 @@ def threeway_admixture_demography(t1, t2, r1, r2, N_ab, N_ab, N_a, N_b, N_c, m =
   demography.set_symmetric_migration_rate(["A", "B"], m)
   demography.set_symmetric_migration_rate(["A", "C"], m)
   demography.set_symmetric_migration_rate(["B", "C"], m)
-  demography.add_admixture(time=t, derived="ABC", ancestral=["AB", "C"], proportions = [r1, 1-r1])
-  demography.add_admixture(time=t, derived="AB", ancestral=["A", "B"], proportions = [r2, 1-r2])
+  demography.add_admixture(time=t1, derived="ABC", ancestral=["AB", "C"], proportions = [r1, 1-r1])
+  demography.add_admixture(time=t1+t2, derived="AB", ancestral=["A", "B"], proportions = [r2, 1-r2])
   return demography
 
