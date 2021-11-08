@@ -218,8 +218,8 @@ def loglike_trees(trees, labels, lmp, stride, start = 0, stop = -1):
     if tree.index % stride != 0: continue
     if tree.index // stride < start: continue
     if tree.index // stride == stop: break
-    print("tree " + str(tree.index), flush = True)
     _, _, logP_ = loglike_tree(tree, labels, lmp)
+    print("tree " + str(tree.index) + " logP = " + str(logP_), flush = True)
     logP.append(logP_)
   
   return np.array(logP)
