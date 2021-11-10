@@ -5,7 +5,7 @@ def single_lmp(N):
   times = [0]
   mss = [np.array([[0]])]
   nss = [[1/N]]
-  lmp = glike.LMP(times, mss, nss)
+  lmp = LMP(times, mss, nss)
   return lmp
 
 def single_demography(N):
