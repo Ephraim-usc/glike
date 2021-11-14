@@ -70,7 +70,10 @@ def twoway_split_lmp(t, N_ab, N_a, N_b, m = 1e-4):
   times = [0, t]
   mss = [np.array([[0, 0, 0],
                    [0, 0, m],
-                   [0, m, 0]])] * 2
+                   [0, m, 0]]),
+         np.array([[0, 0, 0],
+                   [0, 0, 0],
+                   [0, 0, 0]])]
   nss = [[1/N_ab, 1/N_a, 1/N_b]] * 2
   Ps = [np.identity(3),
         np.matrix([[1, 0, 0], [1, 0, 0], [1, 0, 0]])]
