@@ -77,12 +77,15 @@ def twoway_split_lmp(t, N_ab, N_a, N_b, m = 1e-4):
   lmp = LMP(times, mss, nss, Ps = Ps)
   return lmp
 
-def twoway_admixture_demography(t, r, N_ab, N_a, N_b, m = 1e-4):
+def twoway_split_demography(t, N_ab, N_a, N_b, m = 1e-4):
   demography = msprime.Demography()
   demography.add_population(name = "AB", initial_size = N_ab)
   demography.add_population(name = "A", initial_size = N_a)
   demography.add_population(name = "B", initial_size = N_b)
+  
   demography.set_symmetric_migration_rate(["A", "B"], m)
+  demography.add_symmetric_migration_rate_change(time=t, populations=["A","B"], rate=0)
+  
   demography.add_population_split(time=t, derived=["A", "B"], ancestral="AB")
   return demography
 
@@ -118,9 +121,13 @@ def threeway_split_demography(t1, t2, N_abc, N_ab, N_a, N_b, N_c, m = 1e-4):
   demography.add_population(name = "A", initial_size = N_a)
   demography.add_population(name = "B", initial_size = N_b)
   demography.add_population(name = "C", initial_size = N_c)
+  
   demography.set_symmetric_migration_rate(["A", "B"], m)
   demography.set_symmetric_migration_rate(["A", "C"], m)
   demography.set_symmetric_migration_rate(["B", "C"], m)
+  demography.add_symmetric_migration_rate_change(time=t1, populations=["A","B"], rate=0)
+  demography.add_symmetric_migration_rate_change(time=t1, populations=["A","C"], rate=0)
+  demography.add_symmetric_migration_rate_change(time=t1, populations=["B","C"], rate=0)
   
   demography.set_symmetric_migration_rate(["AB", "C"], 0)
   demography.add_symmetric_migration_rate_change(time=t1, populations=["AB","C"], rate=m)
