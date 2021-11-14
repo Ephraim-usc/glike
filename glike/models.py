@@ -93,7 +93,7 @@ def twoway_split_demography(t, N_ab, N_a, N_b, m = 1e-4):
   return demography
 
 
-def threeway_split_lmp(t1, t2, r1, r2, N_abc, N_ab, N_a, N_b, N_c, m = 1e-4):
+def threeway_split_lmp(t1, t2, N_abc, N_ab, N_a, N_b, N_c, m = 1e-4):
   times = [0, t1, t1 + t2]
   mss = [np.array([[0, 0, 0, 0, 0],
                    [0, 0, 0, 0, 0],
