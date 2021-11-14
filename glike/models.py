@@ -63,3 +63,69 @@ def threeway_admixture_demography(t1, t2, r1, r2, N_abc, N_ab, N_a, N_b, N_c, m 
   demography.add_admixture(time=t1+t2, derived="AB", ancestral=["A", "B"], proportions = [r2, 1-r2])
   return demography
 
+
+
+
+def twoway_split_lmp(t, N_ab, N_a, N_b, m = 1e-4):
+  times = [0, t]
+  mss = [np.array([[0, 0, 0],
+                   [0, 0, m],
+                   [0, m, 0]])] * 2
+  nss = [[1/N_ab, 1/N_a, 1/N_b]] * 2
+  Ps = [np.identity(3),
+        np.matrix([[1, 0, 0], [1, 0, 0], [1, 0, 0]])]
+  lmp = LMP(times, mss, nss, Ps = Ps)
+  return lmp
+
+def twoway_admixture_demography(t, r, N_ab, N_a, N_b, m = 1e-4):
+  demography = msprime.Demography()
+  demography.add_population(name = "AB", initial_size = N_ab)
+  demography.add_population(name = "A", initial_size = N_a)
+  demography.add_population(name = "B", initial_size = N_b)
+  demography.set_symmetric_migration_rate(["A", "B"], m)
+  demography.add_population_split(time=t, derived=["A", "B"], ancestral="AB")
+  return demography
+
+
+def threeway_split_lmp(t1, t2, r1, r2, N_abc, N_ab, N_a, N_b, N_c, m = 1e-4):
+  times = [0, t1, t1 + t2]
+  mss = [np.array([[0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0],
+                   [0, 0, 0, m, m],
+                   [0, 0, m, 0, m],
+                   [0, 0, m, m, 0]]),
+         np.array([[0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, m],
+                   [0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0],
+                   [0, m, 0, 0, 0]]),
+         np.array([[0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0]])]
+  nss = [[1/N_abc, 1/N_ab, 1/N_a, 1/N_b, 1/N_c]] * 3
+  Ps = [np.identity(5),
+        np.matrix([[1, 0, 0, 0, 0], [0, 1, 0, 0, 0], [0, 1, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 0, 0, 1]]),
+        np.matrix([[1, 0, 0, 0, 0], [1, 0, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [1, 0, 0, 0, 0]])]
+  lmp = LMP(times, mss, nss, Ps = Ps)
+  return lmp
+
+def threeway_split_demography(t1, t2, N_abc, N_ab, N_a, N_b, N_c, m = 1e-4):
+  demography = msprime.Demography()
+  demography.add_population(name = "ABC", initial_size = N_abc)
+  demography.add_population(name = "AB", initial_size = N_ab)
+  demography.add_population(name = "A", initial_size = N_a)
+  demography.add_population(name = "B", initial_size = N_b)
+  demography.add_population(name = "C", initial_size = N_c)
+  demography.set_symmetric_migration_rate(["A", "B"], m)
+  demography.set_symmetric_migration_rate(["A", "C"], m)
+  demography.set_symmetric_migration_rate(["B", "C"], m)
+  
+  demography.set_symmetric_migration_rate(["AB", "C"], 0)
+  demography.add_symmetric_migration_rate_change(time=t1, populations=["AB","C"], rate=m)
+  demography.add_symmetric_migration_rate_change(time=t1+t1, populations=["AB","C"], rate=0)
+  
+  demography.add_population_split(time=t1, derived=["A", "B"], ancestral="AB")
+  demography.add_population_split(time=t1+t2, derived=["AB", "C"], ancestral="ABC")
+  return demography
