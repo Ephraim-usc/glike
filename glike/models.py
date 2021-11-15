@@ -137,5 +137,5 @@ def threeway_split_demography(t1, t2, N_abc, N_ab, N_a, N_b, N_c, m = 1e-4):
   demography.add_symmetric_migration_rate_change(time=t1, populations=["AB","C"], rate=m)
   
   demography.add_population_split(time=t2, derived=["AB", "C"], ancestral="ABC")
-  demography.add_symmetric_migration_rate_change(time=t1+t2, populations=["AB","C"], rate=0)
+  demography.add_symmetric_migration_rate_change(time=t2, populations=["AB","C"], rate=0)
   return demography
