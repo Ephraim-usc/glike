@@ -36,7 +36,7 @@ def twoway_admixture_demography(t, r, N_ab, N_a, N_b, m = 1e-4):
 
 
 def threeway_admixture_lmp(t1, t2, r1, r2, N_abc, N_ab, N_a, N_b, N_c, m = 1e-4):
-  times = [0, t1, t1 + t2]
+  times = [0, t1, t2]
   mss = [np.array([[0, 0, 0, 0, 0],
                    [0, 0, 0, 0, 0],
                    [0, 0, 0, m, m],
@@ -60,7 +60,7 @@ def threeway_admixture_demography(t1, t2, r1, r2, N_abc, N_ab, N_a, N_b, N_c, m 
   demography.set_symmetric_migration_rate(["A", "C"], m)
   demography.set_symmetric_migration_rate(["B", "C"], m)
   demography.add_admixture(time=t1, derived="ABC", ancestral=["AB", "C"], proportions = [r1, 1-r1])
-  demography.add_admixture(time=t1+t2, derived="AB", ancestral=["A", "B"], proportions = [r2, 1-r2])
+  demography.add_admixture(time=t2, derived="AB", ancestral=["A", "B"], proportions = [r2, 1-r2])
   return demography
 
 
@@ -94,7 +94,7 @@ def twoway_split_demography(t, N_ab, N_a, N_b, m = 1e-4):
 
 
 def threeway_split_lmp(t1, t2, N_abc, N_ab, N_a, N_b, N_c, m = 1e-4):
-  times = [0, t1, t1 + t2]
+  times = [0, t1, t2]
   mss = [np.array([[0, 0, 0, 0, 0],
                    [0, 0, 0, 0, 0],
                    [0, 0, 0, m, m],
@@ -136,6 +136,6 @@ def threeway_split_demography(t1, t2, N_abc, N_ab, N_a, N_b, N_c, m = 1e-4):
   demography.add_symmetric_migration_rate_change(time=t1, populations=["B","C"], rate=0)
   demography.add_symmetric_migration_rate_change(time=t1, populations=["AB","C"], rate=m)
   
-  demography.add_population_split(time=t1+t2, derived=["AB", "C"], ancestral="ABC")
+  demography.add_population_split(time=t2, derived=["AB", "C"], ancestral="ABC")
   demography.add_symmetric_migration_rate_change(time=t1+t2, populations=["AB","C"], rate=0)
   return demography
