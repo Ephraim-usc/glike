@@ -21,7 +21,7 @@ def popsize_variation_lmp(ts, Ns):
   lmp = LMP(times, mss, nss)
   return lmp
 
-def popsize_variation_lmp(ts, Ns):
+def popsize_variation_demography(ts, Ns):
   demography = msprime.Demography()
   demography.add_population(name = "A", initial_size = Ns[0])
   for t, N in zip(ts[1:], Ns[1:]):
