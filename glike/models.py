@@ -14,6 +14,21 @@ def single_demography(N):
   return demography
 
 
+def popsize_variation_lmp(ts, Ns):
+  times = ts
+  mss = [np.array([[0]]) for N in Ns]
+  nss = [1/N for N in Ns]
+  lmp = LMP(times, mss, nss)
+  return lmp
+
+def popsize_variation_lmp(ts, Ns):
+  demography = msprime.Demography()
+  demography.add_population(name = "A", initial_size = Ns[0])
+  for t, N in zip(ts[1:], Ns[1:]):
+    demography.add_population_parameters_change(time = t, initial_size = N, population = "A")
+  return demography
+
+
 def twoway_admixture_lmp(t, r, N_ab, N_a, N_b, m = 1e-4):
   times = [0, t]
   mss = [np.array([[0, 0, 0],
