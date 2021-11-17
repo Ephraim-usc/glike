@@ -17,7 +17,7 @@ def single_demography(N):
 def popsize_variation_lmp(ts, Ns):
   times = ts
   mss = [np.array([[0]]) for N in Ns]
-  nss = [1/N for N in Ns]
+  nss = [[1/N] for N in Ns]
   lmp = LMP(times, mss, nss)
   return lmp
 
