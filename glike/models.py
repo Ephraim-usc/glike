@@ -31,9 +31,12 @@ def popsize_variation_demography(ts, Ns):
 
 def twoway_admixture_lmp(t, r, N_ab, N_a, N_b, m = 1e-4):
   times = [0, t]
-  mss = [np.array([[0, 0, 0],
+  mss = [np.array([[0, m, m],
+                   [m, 0, m],
+                   [m, m, 0]]),
+         np.array([[0, 0, 0],
                    [0, 0, m],
-                   [0, m, 0]])] * 2
+                   [0, m, 0]])]
   nss = [[1/N_ab, 1/N_a, 1/N_b]] * 2
   Ps = [np.identity(3),
         np.matrix([[0, r, 1-r], [0, 1, 0], [0, 0, 1]])]
@@ -45,8 +48,14 @@ def twoway_admixture_demography(t, r, N_ab, N_a, N_b, m = 1e-4):
   demography.add_population(name = "AB", initial_size = N_ab)
   demography.add_population(name = "A", initial_size = N_a)
   demography.add_population(name = "B", initial_size = N_b)
+  
   demography.set_symmetric_migration_rate(["A", "B"], m)
+  demography.set_symmetric_migration_rate(["AB", "A"], m)
+  demography.set_symmetric_migration_rate(["AB", "B"], m)
+  
   demography.add_admixture(time=t, derived="AB", ancestral=["A", "B"], proportions = [r, 1-r])
+  demography.add_symmetric_migration_rate_change(time=t, populations=["AB","A"], rate=0)
+  demography.add_symmetric_migration_rate_change(time=t, populations=["AB","B"], rate=0)
   return demography
 
 
