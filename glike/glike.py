@@ -201,15 +201,61 @@ def loglike_tree(tree, labels, lmp): # tree nodes must be sorted
       else:
         Ps[a][b] = 1 - p_['omega']
       
-      #if Ps[a][b] == 0:
-        #pickle.dump(ps[a][b], open("ps.p", "wb"))
-        #pickle.dump(lmp.get_PP(t1, t2), open("PP.p", "wb"))
-        #pickle.dump(lmp.get_QQ(t2), open("QQ.p", "wb"))
-        #pickle.dump([t1, t2], open("t1t2.p", "wb"))
-      
       logP += log(Ps[a][b])
   
   return ps, Ps, logP
+
+
+def loglike_tree_test(tree, labels, lmp): # tree nodes must be sorted
+  n = lmp.n
+  pops = [str(i) for i in range(n)]
+  states = [x+y for x in pops for y in pops] + ['omega']
+  
+  N = tree.num_samples()
+  nodes = list(tree.nodes())
+  times = [tree.time(node) for node in nodes]
+  nodes = [x for _, x in sorted(zip(times, nodes))] # time sorted nodes
+  
+  ps = {}
+  for a in range(N):
+    ps[a] = {}
+    for b in range(a):
+      ps[a][b] = (np.array(states) == labels[a] + labels[b]).astype(float)
+      ps[a][b] = pd.Series(ps[a][b], index = states)
+      ps[b][a] = p_transpose(ps[a][b], pops)
+  
+  for a in [x for x in nodes if x not in range(N)]: # inner nodes
+    ps[a] = {}
+    c, d = tree.children(a)
+    for b in nodes[:nodes.index(a)]:
+      if tree.time(tree.parent(b)) <= tree.time(a): continue
+      
+      A = p_trim(np.matmul(ps[c][b], lmp.get_PP(max(tree.time(c), tree.time(b)), tree.time(a))))
+      B = p_trim(np.matmul(ps[d][b], lmp.get_PP(max(tree.time(d), tree.time(b)), tree.time(a))))
+      C = p_trim(np.matmul(ps[c][d], lmp.get_PP(max(tree.time(c), tree.time(d)), tree.time(a))))
+      ps[a][b] = p_new(A, B, C, pops)
+      ps[b][a] = p_transpose(ps[a][b], pops)
+  
+  Ps = {}; logP1 = 0; logP2 = 0
+  for a in nodes:
+    Ps[a] = {}
+    for b in nodes[:nodes.index(a)]:
+      if b not in ps[a]: continue
+      
+      t1 = max(tree.time(a), tree.time(b))
+      t2 = min(tree.time(tree.parent(a)), tree.time(tree.parent(b)))
+      p_ = np.matmul(ps[a][b], lmp.get_PP(t1, t2))
+      
+      if tree.parent(a) == tree.parent(b):
+        Ps[a][b] = (lmp.get_QQ(t2)["omega"] * p_).values.sum()
+        logP1 += log(Ps[a][b])
+      else:
+        Ps[a][b] = 1 - p_['omega']
+        logP2 += log(Ps[a][b])
+  
+  return ps, Ps, logP1, logP2
+
+
 
 
 def loglike_trees(trees, labels, lmp, stride, start = 0, stop = -1):
