@@ -83,12 +83,17 @@ def p_trim(p):
   return p_
 
 
-def p_new(p_ab, p_ac, p_bc, pops):
+def p_new(p_ab, p_ac, p_bc, pops, QQ):
   tmp = p_bc * 0
   for pop in pops:
     for pop2 in pops:
       tmp[pop + pop2] = p_bc[pop + pop]
   buffer = np.sqrt(p_ab * p_ac * tmp)
+  
+  for pop in pops:
+    for pop2 in pops:
+      buffer[pop + pop2] *= QQ["omega"][pop + pop]
+  
   buffer /= buffer.sum()
   return buffer
 
@@ -233,7 +238,8 @@ def loglike_tree_test(tree, labels, lmp): # tree nodes must be sorted
       A = p_trim(np.matmul(ps[c][b], lmp.get_PP(max(tree.time(c), tree.time(b)), tree.time(a))))
       B = p_trim(np.matmul(ps[d][b], lmp.get_PP(max(tree.time(d), tree.time(b)), tree.time(a))))
       C = p_trim(np.matmul(ps[c][d], lmp.get_PP(max(tree.time(c), tree.time(d)), tree.time(a))))
-      ps[a][b] = p_new(A, B, C, pops)
+      QQ = lmp.get_QQ(tree.time(a))["omega"]
+      ps[a][b] = p_new(A, B, C, pops, QQ)
       ps[b][a] = p_transpose(ps[a][b], pops)
   
   Ps = {}; logP1 = 0; logP2 = 0
