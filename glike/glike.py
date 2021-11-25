@@ -188,7 +188,7 @@ def loglike_tree(tree, labels, lmp): # tree nodes must be sorted
       A = p_trim(np.matmul(ps[c][b], lmp.get_PP(max(tree.time(c), tree.time(b)), tree.time(a))))
       B = p_trim(np.matmul(ps[d][b], lmp.get_PP(max(tree.time(d), tree.time(b)), tree.time(a))))
       C = p_trim(np.matmul(ps[c][d], lmp.get_PP(max(tree.time(c), tree.time(d)), tree.time(a))))
-      QQ = lmp.get_QQ(tree.time(a))["omega"]
+      QQ = lmp.get_QQ(tree.time(a))
       ps[a][b] = p_new(A, B, C, pops, QQ)
       ps[b][a] = p_transpose(ps[a][b], pops)
   
