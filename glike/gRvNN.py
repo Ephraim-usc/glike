@@ -24,31 +24,37 @@ class gRNN(nn.Module):
         self.Ui = nn.Linear(size, size, bias = True)
         self.Uu = nn.Linear(size, size, bias = True)
         self.Uo = nn.Linear(size, size, bias = True)
-        self.activation = F.relu
         self.projection = nn.Linear(size, num_params, bias = True)
     
+    # f-forget, i-input, u-update, o-output, c-state, h-hidden
     def traverse(self, tree, node):
         input = torch.tensor([[tree.time(node)]])
         children = tree.children(node)
         if len(children) == 0:
-            i = F.sigmoid(self.Wi(input))
+            i = torch.sigmoid(self.Wi(input))
             u = F.relu(self.Wu(input))
             c = i * u
-            o = F.sigmoid(self.Wo(input))
+            o = torch.sigmoid(self.Wo(input))
             h = o * F.relu(c)
         if len(children) == 1:
             print("Error: unary node.", flush = True)
         if len(children) == 2:
-            left = children[0]
-            right = children[1]
-            output = self.activation(self.W(self.traverse(tree, left) + self.traverse(tree, right)) + self.Q(torch.tensor([[time]])))
+            c1, h1 = self.traverse(tree, children[0])
+            c2, h2 = self.traverse(tree, children[1])
+            f1 = torch.sigmoid(self.Uf(h1))
+            f2 = torch.sigmoid(self.Uf(h2))
+            i = torch.sigmoid(self.Wi(input) + self.Ui(h1) + self.Ui(h2))
+            u = torch.relu(self.Wu(input) + self.Uu(h1) + self.Uu(h2))
+            c = i * u + f1 * c1 + f2 * c2
+            o = torch.sigmoid(self.Wo(input) + self.Uo(h1) + self.Uo(h2))
+            h = o * F.relu(c)
         return c, h
     
     def forward(self, trees):
         predictions = []
         for tree in trees:
-          output = self.traverse(tree, tree.root)
-          prediction = self.projection(output)
+          c, h = self.traverse(tree, tree.root)
+          prediction = self.projection(h)
           predictions.append(prediction)
         results = torch.cat(predictions, 0)
         return results
@@ -61,40 +67,7 @@ class gRNN(nn.Module):
 
 
 
-class gRNN(nn.Module):
-    def __init__(self, size = 100, num_params = 5):
-        super(gRNN, self).__init__()
-        self.Q = nn.Linear(1, size, bias = True)
-        self.W = nn.Linear(size, size, bias = True)
-        self.activation = F.relu
-        self.projection = nn.Linear(size, num_params, bias = True)
-    
-    def traverse(self, tree, node):
-        time = tree.time(node)
-        children = tree.children(node)
-        if len(children) == 0:
-            output = self.activation(self.Q(torch.tensor([[time]])))
-        if len(children) == 1:
-            print("Error: unary node.", flush = True)
-        if len(children) == 2:
-            left = children[0]
-            right = children[1]
-            output = self.activation(self.W(self.traverse(tree, left) + self.traverse(tree, right)) + self.Q(torch.tensor([[time]])))
-        return output
-    
-    def forward(self, trees):
-        predictions = []
-        for tree in trees:
-          output = self.traverse(tree, tree.root)
-          prediction = self.projection(output)
-          predictions.append(prediction)
-        results = torch.cat(predictions, 0)
-        return results
-    
-    def getLoss(self, trees, target):
-        results = self.forward(trees)
-        loss = MAPE_loss(results, target)
-        return results, loss
+
 
 
 model = gRNN(num_params = 5)
@@ -103,7 +76,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, dampening
 for epoch in range(100):
     trees = []
     params = []
-    for i in range(1000):
+    for i in range(100):
         t = random.random()
         r = random.random()
         N_ab = random.random()
