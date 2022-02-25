@@ -108,7 +108,7 @@ optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, dampening
 for epoch in range(100):
     trees = []
     params = []
-    for i in range(1000):
+    for i in range(100):
         N = random.random() * 20000
         demo = single_demography(N)
         tree = msprime.sim_ancestry(demography = demo, samples = {"A":20}, ploidy = 1).first()
