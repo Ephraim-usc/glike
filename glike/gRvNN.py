@@ -16,6 +16,54 @@ def MAPE_loss(prediction, target):
 class gRNN(nn.Module):
     def __init__(self, size = 100, num_params = 5):
         super(gRNN, self).__init__()
+        self.Wf = nn.Linear(1, size, bias = True)
+        self.Wi = nn.Linear(1, size, bias = True)
+        self.Wu = nn.Linear(1, size, bias = True)
+        self.Wo = nn.Linear(1, size, bias = True)
+        self.Uf = nn.Linear(size, size, bias = True)
+        self.Ui = nn.Linear(size, size, bias = True)
+        self.Uu = nn.Linear(size, size, bias = True)
+        self.Uo = nn.Linear(size, size, bias = True)
+        self.activation = F.relu
+        self.projection = nn.Linear(size, num_params, bias = True)
+    
+    def traverse(self, tree, node):
+        input = torch.tensor([[tree.time(node)]])
+        children = tree.children(node)
+        if len(children) == 0:
+            i = F.sigmoid(self.Wi(input))
+            u = F.relu(self.Wu(input))
+            c = i * u
+            o = F.sigmoid(self.Wo(input))
+            h = o * F.relu(c)
+        if len(children) == 1:
+            print("Error: unary node.", flush = True)
+        if len(children) == 2:
+            left = children[0]
+            right = children[1]
+            output = self.activation(self.W(self.traverse(tree, left) + self.traverse(tree, right)) + self.Q(torch.tensor([[time]])))
+        return c, h
+    
+    def forward(self, trees):
+        predictions = []
+        for tree in trees:
+          output = self.traverse(tree, tree.root)
+          prediction = self.projection(output)
+          predictions.append(prediction)
+        results = torch.cat(predictions, 0)
+        return results
+    
+    def getLoss(self, trees, target):
+        results = self.forward(trees)
+        loss = MAPE_loss(results, target)
+        return results, loss
+    
+
+
+
+class gRNN(nn.Module):
+    def __init__(self, size = 100, num_params = 5):
+        super(gRNN, self).__init__()
         self.Q = nn.Linear(1, size, bias = True)
         self.W = nn.Linear(size, size, bias = True)
         self.activation = F.relu
