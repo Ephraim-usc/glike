@@ -56,17 +56,17 @@ for epoch in range(100):
     trees = []
     params = []
     for i in range(1000):
-        t = random.random() * 1000
+        t = random.random()
         r = random.random()
-        N_ab = random.random() * 20000
-        N_a = random.random() * 20000
-        N_b = random.random() * 20000
-        demo = twoway_admixture_demography(t, r, N_ab, N_a, N_b)
+        N_ab = random.random()
+        N_a = random.random()
+        N_b = random.random()
+        demo = twoway_admixture_demography(t * 1000, r, N_ab * 20000, N_a * 20000, N_b * 20000)
         tree = msprime.sim_ancestry(demography = demo, samples = {"AB":20}, ploidy = 1).first()
         trees.append(tree.copy())
         params.append([t, r, N_ab, N_a, N_b])
     
-    params = torch.tensor(params)
+    params = torch.tensor(params) * 10000
     results, loss = model.getLoss(trees, params)
     optimizer.zero_grad()
     loss.backward()
