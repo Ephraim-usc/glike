@@ -9,6 +9,143 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils import clip_grad_norm_
 
+
+import tskit
+import numpy as np
+
+def BFSencode(tree):
+    ns = []
+    ts = []
+    queue = [tree.root]
+    
+    while queue:
+        node = queue.pop(0)
+        ns.append(len(list(tree.samples(node))))
+        ts.append(tree.time(node))
+        children = tree.children(node)
+        
+        if len(children) == 2:
+            n1 = len(list(tree.samples(children[0])))
+            n2 = len(list(tree.samples(children[1])))
+            if n1 >= n2:
+                queue.append(children[0])
+                queue.append(children[1])
+            else:
+                queue.append(children[1])
+                queue.append(children[0])
+    
+    zs = [int(n == 1) for n in ns]
+    return np.array(ns + ts + zs)
+
+
+
+
+class gNN(nn.Module):
+    def __init__(self, N):
+        super(gNN, self).__init__()
+        size = 6 * N - 3
+        self.linear_relu_stack = nn.Sequential(
+            nn.Linear(size, 64),
+            nn.ReLU(),
+            nn.Linear(64, 4),
+            nn.ReLU(),
+            nn.Linear(4, 1),
+        )
+    
+    def forward(self, trees):
+        outputs = []
+        for tree in trees:
+            input = torch.tensor([BFSencode(tree)]).float()
+            output = self.linear_relu_stack(input)
+            outputs.append(output)
+        predictions = torch.sigmoid(torch.cat(outputs, 0))
+        return predictions
+    
+    def getLoss(self, trees, targets):
+        predictions = self.forward(trees)
+        criterion = nn.BCELoss()
+        loss = criterion(predictions, targets)
+        return predictions, loss
+
+
+
+model = gNN(N = 100)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, dampening=0.0)
+
+for epoch in range(100):
+    trees = []
+    targets = []
+    for i in range(100):
+        target = float(random.randint(0, 1))
+        if target == 1.0:
+            demo = twoway_admixture_demography(t = 10, r = 0.5, N_ab = 2000, N_a = 10000, N_b = 10000, m = 1e-6)
+        else:
+            demo = twoway_admixture_demography(t = 10, r = 0.8, N_ab = 2000, N_a = 10000, N_b = 10000, m = 1e-6)
+        tree = msprime.sim_ancestry(demography = demo, samples = {"AB":100}, ploidy = 1).first()
+        trees.append(tree.copy())
+        targets.append([target])
+    
+    targets = torch.tensor(targets)
+    predictions, loss = model.getLoss(trees, targets)
+    tags = torch.round(predictions)
+    accuracy = (tags == targets).float().mean()
+    
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    
+    print(accuracy, flush = True)
+
+
+
+
+
+model = gNN(N = 100)
+optimizer = torch.optim.SGD(model.parameters(), lr = 0.01)
+
+for epoch in range(100):
+    trees = []
+    targets = []
+    for i in range(100):
+        target = float(random.randint(0, 1))
+        if target == 1.0:
+            demo = single_demography(10000)
+        else:
+            demo = single_demography(20000)
+        tree = msprime.sim_ancestry(demography = demo, samples = {"A":100}, ploidy = 1).first()
+        trees.append(tree.copy())
+        targets.append([target])
+    
+    targets = torch.tensor(targets)
+    predictions, loss = model.getLoss(trees, targets)
+    tags = torch.round(predictions)
+    accuracy = (tags == targets).float().mean()
+    
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    
+    print(accuracy, flush = True)
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+
+
 def MAPE_loss(prediction, target):
     loss = torch.mean(torch.abs((prediction - target) / target))
     return loss
@@ -70,35 +207,6 @@ class gRNN(nn.Module):
 
 
 
-model = gRNN(num_params = 5)
-optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, dampening=0.0)
-
-for epoch in range(100):
-    trees = []
-    params = []
-    for i in range(100):
-        t = random.random()
-        r = random.random()
-        N_ab = random.random()
-        N_a = random.random()
-        N_b = random.random()
-        demo = twoway_admixture_demography(t * 1000, r, N_ab * 20000, N_a * 20000, N_b * 20000)
-        tree = msprime.sim_ancestry(demography = demo, samples = {"AB":20}, ploidy = 1).first()
-        trees.append(tree.copy())
-        params.append([t, r, N_ab, N_a, N_b])
-    
-    params = torch.tensor(params) * 10000
-    results, loss = model.getLoss(trees, params)
-    optimizer.zero_grad()
-    loss.backward()
-    
-    save_stdout = sys.stdout
-    sys.stdout = io.open('trash', 'w')
-    clip_grad_norm_(model.parameters(), 5, norm_type=2.)
-    sys.stdout = save_stdout
-    
-    optimizer.step()
-    print(loss, flush = True)
 
 
 
