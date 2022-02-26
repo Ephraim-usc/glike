@@ -135,14 +135,28 @@ def data_generate(size = 100):
         y = random.random()
         demo = twoway_admixture_demography(t = 10, r = y, N_ab = 1000, N_a = 20000, N_b = 5000, m = 1e-6)
         tree = msprime.sim_ancestry(demography = demo, samples = {"AB":1000}, ploidy = 1).first()
-        X.append(BFRencode(tree))
+        X.append(BFSencode(tree))
         Y.append(y)
     
     X = np.array(X)
     Y = np.array(Y)
     return X, Y
-  
-  
+
+def data_generate(size = 100):
+    X = []
+    Y = []
+    for i in range(size):
+        y = random.random() * 0.5
+        demo = twoway_admixture_demography(t = 10, r = 0.5 + y, N_ab = 1000, N_a = 10000, N_b = 10000, m = 1e-4)
+        tree = msprime.sim_ancestry(demography = demo, samples = {"AB":1000}, ploidy = 1).first()
+        X.append(BFSencode(tree))
+        Y.append(y)
+    
+    X = np.array(X)
+    Y = np.array(Y)
+    return X, Y
+
+
 model = RandomForestRegressor(warm_start = True, n_estimators = 10)
 
 for i in range(100):
