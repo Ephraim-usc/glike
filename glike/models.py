@@ -29,6 +29,49 @@ def popsize_variation_demography(ts, Ns):
   return demography
 
 
+def twoway_admixture_lmp(t, r, N, N_a, N_b, N_ab):
+  times = [0, t, 1e5]
+  mss = [np.zeros((4, 4))] * 3
+  nss = [[1/N, 1/N_a, 1/N_b, 1/N_ab]] * 3
+  Ps = [np.identity(4),
+        np.matrix([[0, r, 1-r, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]),
+        np.matrix([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 0, 1], [0, 0, 0, 1]])]
+  lmp = LMP(times, mss, nss, Ps = Ps)
+  return lmp
+
+def twoway_admixture_demography(t, r, N, N_a, N_b, N_ab):
+  demography = msprime.Demography()
+  demography.add_population(name = "O", initial_size = N)
+  demography.add_population(name = "A", initial_size = N_a)
+  demography.add_population(name = "B", initial_size = N_b)
+  demography.add_population(name = "AB", initial_size = N_ab)
+  
+  demography.add_admixture(time=t, derived="O", ancestral=["A", "B"], proportions = [r, 1-r])
+  demography.add_population_split(time=1e5, derived=["A", "B"], ancestral="AB")
+  return demography
+
+
+'''
+demography = twoway_admixture_demography(10, 0.7, 2000, 10000, 20000, 5000)
+trees = msprime.sim_ancestry({"O": 100}, sequence_length = 1e6, recombination_rate = 1e-8, 
+                         demography = demography, ploidy = 1)
+tree = trees.first()
+labels = ['0'] * 100
+
+loglike_tree(tree, labels, twoway_admixture_lmp(10, 0.6, 2000, 10000, 20000, 5000))[2]
+loglike_tree(tree, labels, twoway_admixture_lmp(10, 0.7, 2000, 10000, 20000, 5000))[2]
+loglike_tree(tree, labels, twoway_admixture_lmp(10, 0.8, 2000, 10000, 20000, 5000))[2]
+
+loglike_tree(tree, labels, twoway_admixture_lmp(10, 0.7, 1500, 10000, 20000, 5000))[2]
+loglike_tree(tree, labels, twoway_admixture_lmp(10, 0.7, 2000, 10000, 20000, 5000))[2]
+loglike_tree(tree, labels, twoway_admixture_lmp(10, 0.7, 2500, 10000, 20000, 5000))[2]
+
+
+'''
+
+
+
+
 def twoway_admixture_lmp(t, r, N_ab, N_a, N_b, m = 1e-4):
   times = [0, t]
   mss = [np.array([[0, m, m],
