@@ -32,17 +32,11 @@ class Stage: #lineage Markov Process
       pops = [pops]
     for pop in pops:
       for pop2 in pops:
-      self.QQ.loc[pop+pop2, pop+pop2] = -n
+        self.QQ.loc[pop+pop2, pop+pop2] = -n
   
   def add_migration_rate(self, source, dest, rate):
     self.Q.loc[source, dest] += rate
     self.Q.loc[source, source] -= rate
-    
-    for pop in self.out_pops:
-      self.QQ.loc[]
-  
-  def add_clone(self, pop1, pop2):
-    return
   
   def _finalize(self):
     pass
