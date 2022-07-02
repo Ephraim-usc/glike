@@ -18,6 +18,7 @@ def str2int(s):
 def encode(n,N=32,D="0123456789qwertyuiopasdfghjklzxc"):
     return (encode(n//N,N)+D[n%N]).lstrip("0") if n>0 else "0"
 
+ignore = 1e-20
 
 
 class NODE:
@@ -25,14 +26,16 @@ class NODE:
     self.pops = (pop1, pop2)
     self.links = [] # list that contains (u, v, pointer) tuples
   
-  def propagate(self):
-    if len(self.links) == 0:
+  def propagate(self, depth):
+    if depth == 0:
       self.logp = 0
+    elif len(self.links) == 0:
+      self.logp = - math.inf
     else:
       logps = []
       for u, _, pointer in self.links:
         if not hasattr(pointer, 'logp'):
-          pointer.propagate()
+          pointer.propagate(depth - 1)
         logps.append(pointer.logp + math.log(u))
       
       self.logp = logsumexp(logps)
@@ -55,32 +58,30 @@ class PPG: # path probability graph
   # U: two-lineage transition matrix
   # V: two-lineage transition matrix, assuming no coalescence
   def add_layer(self, U, V):
-    in_states = [''.join(pointer.pops) for pointer in self.links]
-    U_trim = U.loc[in_states]
-    U_trim = U_trim.loc[:, (U_trim != 0).any(axis=0)] # only columns that are not all zeros
-    out_states = U_trim.columns
-    
     buffer = PPG(*self.lins)
-    for out_state in out_states:
-      node = NODE(out_state[0], out_state[1])
-      for pointer in self.links:
-        in_state = ''.join(pointer.pops)
-        if U_trim.loc[in_state, out_state] == 0:
-          continue
-        u = U.loc[in_state, out_state]
+    lul = {}
+    for pointer in self.links:
+      in_state = ''.join(pointer.pops)
+      vector = U.loc[in_state]
+      for out_state, u in vector.items():
+        if out_state not in lul:
+          lul[out_state] = NODE(out_state[0], out_state[1])
         v = V.loc[in_state, out_state]
-        node.links.append((u, v, pointer))
+        if v <= ignore: continue
+        lul[out_state].links.append((u, v, pointer))
+    
+    for _, node in sorted(lul.items()):
       buffer.links.append(node)
     
     return buffer
   
-  def logp(self, ns):
+  def logp(self, ns, depth):
     logps = []
     for pointer in self.links:
       if pointer.pops[0] != pointer.pops[1]:
         continue
       if not hasattr(pointer, 'logp'):
-        pointer.propagate()
+        pointer.propagate(depth)
       logps.append(pointer.logp + math.log(ns[pointer.pops[0]]))
     
     return logsumexp(logps)
@@ -154,6 +155,9 @@ def node_product(ab, ac, bc, flag_ac, flag_bc, n):
         dc.links.append((u * n, v * n, node))
   
   return dc
+
+
+
 
 
 
@@ -306,35 +310,8 @@ class Demography:
     return U, V
 
 
-def twoway_admixture_demography(t, r, N, N_a, N_b, N_c):
-  demo = Demography()
-  demo.add_stage(ContinuousPhase(Q = np.array([[0]]), ns = [1/N], pops = ["O"]), t)
-  demo.add_stage(DiscretePhase(P = np.array([[r, 1-r]]), in_pops = ["O"], out_pops = ["A", "B"]), 0)
-  demo.add_stage(ContinuousPhase(Q = np.array([[0, 0], [0, 0]]), ns = [1/N_a, 1/N_b], pops = ["A", "B"]), 1e5)
-  demo.add_stage(DiscretePhase(P = np.array([[1], [1]]), in_pops = ["A", "B"], out_pops = ["C"]), 0)
-  demo.add_stage(ContinuousPhase(Q = np.array([[0]]), ns = [1/N_c], pops = ["D"]), 1e6)
-  return demo
-
-demo = twoway_admixture_demography(10, 0.7, 2000, 10000, 20000, 5000)
 
 
-
-def twoway_admixture_msdemography(t, r, N, N_a, N_b, N_ab):
-  demography = msprime.Demography()
-  demography.add_population(name = "O", initial_size = N)
-  demography.add_population(name = "A", initial_size = N_a)
-  demography.add_population(name = "B", initial_size = N_b)
-  demography.add_population(name = "AB", initial_size = N_ab)
-  
-  demography.add_admixture(time=t, derived="O", ancestral=["A", "B"], proportions = [r, 1-r])
-  demography.add_population_split(time=1e5, derived=["A", "B"], ancestral="AB")
-  return demography
-
-demography = twoway_admixture_msdemography(10, 0.7, 2000, 10000, 20000, 5000)
-trees = msprime.sim_ancestry({"O": 10}, sequence_length = 1e6, recombination_rate = 1e-8, 
-                             demography = demography, ploidy = 1)
-tree = trees.first()
-print(tree.draw_text())
 
 
 
@@ -378,14 +355,25 @@ def gLike(tree, demo): #currently only considering admixture population 'O'
       x, y = sorted((children[0], i), key = lins_all.index)
       bc = ppgs[epoch][y][x]
       
+      print("epoch " + str(epoch))
+      A = - time.time()
       ppgs[epoch][new_lin][i] = ppg_product(ab, ac, bc, ns = ns, lin_new = new_lin)
+      A += time.time()
+      print(A)
     
     lins_current.append(new_lin)
   
+  #return ppgs
   a, b = sorted(tree.children(tree.root), key = lins_all.index)
   ppg = ppgs[epoch][b][a]
-  logp = ppg.logp(ns)
+  logp = ppg.logp(ns, epoch)
   return ppg, logp
 
 
 ppg, logp = gLike(tree, demo)
+
+
+
+
+
+
