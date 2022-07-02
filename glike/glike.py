@@ -34,11 +34,18 @@ class NODE:
     else:
       logps = []
       for u, _, pointer in self.links:
-        if not hasattr(pointer, 'logp'):
-          pointer.propagate(depth - 1)
+        pointer.propagate(depth - 1)
         logps.append(pointer.logp + math.log(u))
-      
       self.logp = logsumexp(logps)
+    
+    if not hasattr(self, 'rlogp'): #需要一套反向传播算法，logp * rlogp / logp(root) 较低的节点被删去。
+      self.rlogp = 0
+    else:
+      for u, _, pointer in self.links:
+        if not hasattr(pointer, 'rlogp'):
+          pointer.rlogp = self.rlogp * u
+        else:
+          pointer.rlogp = self.rlogp * u
 
 
 
