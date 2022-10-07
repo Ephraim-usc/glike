@@ -5,94 +5,11 @@
 #include <math.h>
 #include <stdint.h>
 
+#include "list.h"
+
 typedef double DTYPE;
 typedef unsigned long ITYPE;
 
-
-typedef struct list // list of DTYPE numbers
-{
-  DTYPE *data;
-  ITYPE used;
-  ITYPE size;
-} list;
-
-list *new_list()
-{
-  list *lst = (list *)malloc(sizeof(list));
-  lst->data = malloc(4 * sizeof(DTYPE));
-  lst->used = 0;
-  lst->size = 4;
-  return lst;
-}
-
-void insert_list(list *lst, DTYPE a) 
-{
-  if (lst->used == lst->size)
-  {
-    lst->size *= 2;
-    lst->data = realloc(lst->data, lst->size * sizeof(DTYPE));
-  }
-  lst->data[lst->used++] = a;
-}
-
-void free_list(list *lst)
-{
-  free(lst->data);
-  lst->data = NULL;
-  lst->used = lst->size = 0;
-}
-
-
-typedef struct plist // list of pointers
-{
-  void **data;
-  ITYPE used;
-  ITYPE size;
-} list;
-
-list *new_list()
-{
-  list *lst = (list *)malloc(sizeof(list));
-  lst->data = malloc(4 * sizeof(void *));
-  lst->used = 0;
-  lst->size = 4;
-  return lst;
-}
-
-void insert_list(list *lst, void *ptr) 
-{
-  if (lst->used == lst->size)
-  {
-    lst->size *= 2;
-    lst->data = realloc(lst->data, lst->size * sizeof(void *));
-  }
-  lst->data[lst->used++] = ptr;
-}
-
-void free_list(list *lst)
-{
-  free(lst->data);
-  lst->data = NULL;
-  lst->used = lst->size = 0;
-}
-
-/*
-int main()
-{
-  list *lst = new_list();
-  
-  int i;
-  void * ptr = NULL;
-  for (i = 0; i < 100; i++)
-    insert_list(lst, ptr);
-  
-  printf("%p\n", lst->data[9]);
-  printf("%lu\n", lst->used);
-  free_list(lst);
-  
-  return 0;
-}
-*/
 
 
 
@@ -107,13 +24,11 @@ typedef struct state
   ITYPE *values; // population labels of the lineages
   DTYPE logp;
   
-  ITYPE num_anc; // number of ancestor states
-  struct state **links_anc; // links to ancestor states
-  DTYPE *logps_anc;
+  list *logps_anc;
+  plist *links_anc;
   
-  ITYPE num_des; // number of descendent states
-  struct state **links_des; // links to descendent states
-  DTYPE *logps_des;
+  list *logps_des;
+  plist *links_des;
 } state;
 
 state* new_state(ITYPE *values)
@@ -121,6 +36,7 @@ state* new_state(ITYPE *values)
   state* stt;
   stt = (state *)malloc(sizeof(state));
   stt->values = values;
+  stt->logp = 1.0; // any logp greater than 0 means nan.
   
   stt->num_anc = 0;
   stt->num_des = 0;
