@@ -28,6 +28,9 @@ setup(
         "tskit",
         "tqdm",
     ],
+    ext_modules=[
+        Extension("state", ["src/state.c"], include_dirs=[np.get_include()]),
+    ],
     classifiers=[
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: MIT License",
