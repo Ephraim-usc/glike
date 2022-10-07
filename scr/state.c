@@ -1,11 +1,10 @@
 #define PY_SSIZE_T_CLEAN
-#include <Python.h>
+#include <Python/Python.h>
+//#include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <stdint.h>
-
-#include "numpy/arrayobject.h"
 
 typedef double DTYPE;
 typedef unsigned long ITYPE;
@@ -27,7 +26,7 @@ typedef struct state
   DTYPE *logps_des;
 } state;
 
-matrix* new_state(ITYPE n, DTYPE t, ITYPE *lins, DTYPE *values)
+state* new_state(ITYPE n, DTYPE t, ITYPE *lins, ITYPE *values)
 {
   state* stt;
   stt = (state *)malloc(sizeof(state));
@@ -44,7 +43,7 @@ matrix* new_state(ITYPE n, DTYPE t, ITYPE *lins, DTYPE *values)
 void print_state(state* stt)
 {
   ITYPE n = stt->n;
-  ITYPE t = stt->t;
+  DTYPE t = stt->t;
   ITYPE *values = stt->values;
   
   printf("state of %lu lineages at time %lf\n", n, t);
@@ -55,14 +54,12 @@ void print_state(state* stt)
   printf("\n");
   
   for(i = 0; i < stt->num_anc; i++)
-    printf("%lf", *(stt->logs_anc+i));
+    printf("%lf", *(stt->logps_anc+i));
   printf("\n");
   
   for(i = 0; i < stt->num_des; i++)
-    printf("%lf", *(stt->logs_des+i));
+    printf("%lf", *(stt->logps_des+i));
   printf("\n");
-  
-  return 0;
 }
 
 
@@ -71,7 +68,7 @@ int main()
 {
   ITYPE lins[5] = {4,9,2,10,31};
   ITYPE values[5] = {0,1,1,2,0};
-  state *stt = state(5, 37.8, lins, values);
+  state *stt = new_state(5, 37.8, lins, values);
   print_state(stt);
   
   return 0;
