@@ -25,7 +25,6 @@ setup(
     python_requires=">=3",
     install_requires=[
         "numpy>=1.14.5",
-        "pandas>=1.2.0",
         "tskit",
         "tqdm",
     ],
