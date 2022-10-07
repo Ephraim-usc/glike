@@ -79,9 +79,7 @@ void free_plist(plist *lst)
 typedef struct hlist 
 {
   struct hlist *next;
-  ITYPE len;
-  ITYPE *key;
-  ITYPE val;
+  char *key;
 } hlist;
 
 typedef struct htable
@@ -98,31 +96,28 @@ def new_htable(ITYPE size)
 }
 
 
-ITYPE hash(ITYPE *key, ITYPE len, ITYPE size)
+ITYPE hash(char *key, ITYPE size)
 {
-  ITYPE pos;
   ITYPE val;
-  for (pos = 0; pos < len; pos++)
-    val = 31 * val + *(key+pos);
+  for (val = 0; *key; key++)
+    val = 31 * val + *key;
   return val % size;
 }
 
 
-
-
-hlist *lookup_htable(htable *htbl, ITYPE *key, ITYPE len)
+hlist *lookup_htable(htable *htbl, char *key)
 {
-  val = hash(key, len, htbl->size)
-  hlist *hlst = htable->hlsts[val];
+  ITYPE val = hash(key, htbl->size);
+  hlist *hlst;
   
-  for (; hlst != NULL; hlst = hlst->next)
-    if (compare(key, hlst->key, len) == 0)
+  for (hlst = htable->hlsts[val]; hlst != NULL; hlst = hlst->next)
+    if (strcmp(key, hlst->key) == 0)
       return hlst;
   
   return NULL;
 }
 
-void insert_htable(htable *htbl, ITYPE *key, ITYPE len)
+void insert_htable(htable *htbl, char *key)
 {
     hlist *hlst;
     ITYPE val;
