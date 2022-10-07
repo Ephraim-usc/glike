@@ -16,16 +16,27 @@ typedef struct state {
   ITYPE *lins; // lineages of the state
   DTYPE *values; // population labels of the lineages
   
-  struct state **links_prev;
-  struct state **links_next;
+  void *links_prev;
+  void *links_next;
 } state;
 
-matrix* new_state(ITYPE n)
+typedef struct link {
+  DTYPE logp;
+  state *ptr;
+  struct link *next;
+} link;
+
+matrix* new_state(ITYPE n, DTYPE t, ITYPE *lins, DTYPE *values)
 {
   state* stt;
   stt = (state *)malloc(sizeof(state));
-  mat->n = n;
-  mat->data = calloc(n*n,sizeof(DTYPE));
+  stt->n = n;
+  stt->t = t;
+  stt->lins = lins;
+  stt->values = values;
+  
+  stt->links_prev = (link *)malloc(sizeof(link))
+  stt->links_next = (link *)malloc(sizeof(link))
   return mat;
 }
 
