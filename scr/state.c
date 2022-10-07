@@ -1,6 +1,5 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python/Python.h>
-//#include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -8,6 +7,65 @@
 
 typedef double DTYPE;
 typedef unsigned long ITYPE;
+
+typedef struct list // list of pointers
+{
+  void **data;
+  ITYPE used;
+  ITYPE size;
+} list;
+
+list *new_list()
+{
+  list *lst = (list *)malloc(sizeof(list));
+  lst->data = malloc(4 * sizeof(void *));
+  lst->used = 0;
+  lst->size = 4;
+  return lst;
+}
+
+void insert_list(list *lst, void *ptr) 
+{
+  if (lst->used == lst->size)
+  {
+    lst->size *= 2;
+    lst->data = realloc(lst->data, lst->size * sizeof(void *));
+  }
+  lst->data[lst->used++] = ptr;
+}
+
+void free_list(list *lst)
+{
+  free(lst->data);
+  lst->data = NULL;
+  lst->used = lst->size = 0;
+}
+
+/*
+int main()
+{
+  list *lst = new_list();
+  
+  int i;
+  void * ptr = NULL;
+  for (i = 0; i < 100; i++)
+    insert_list(lst, ptr);
+  
+  printf("%p\n", lst->data[9]);
+  printf("%lu\n", lst->used);
+  free_list(lst);
+  
+  return 0;
+}
+*/
+
+
+
+
+
+
+
+
 
 typedef struct state
 {
