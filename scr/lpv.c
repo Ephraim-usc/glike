@@ -15,18 +15,17 @@ typedef struct state
   ITYPE n; // number of lineages of the state
   DTYPE t; // time of the state
   ITYPE *lins; // lineages of the state
-  DTYPE *values; // population labels of the lineages
-  
-  void *links_anc; // links to ancestor states
-  void *links_des; // links to descendent states
-} state;
-
-typedef struct link
-{
+  ITYPE *values; // population labels of the lineages
   DTYPE logp;
-  state *ptr;
-  struct link *next;
-} link;
+  
+  ITYPE num_anc; // number of ancestor states
+  void *links_anc; // links to ancestor states
+  DTYPE *logps_anc;
+  
+  ITYPE num_des; // number of descendent states
+  void *links_des; // links to descendent states
+  DTYPE *logps_des;
+} state;
 
 matrix* new_state(ITYPE n, DTYPE t, ITYPE *lins, DTYPE *values)
 {
@@ -37,34 +36,43 @@ matrix* new_state(ITYPE n, DTYPE t, ITYPE *lins, DTYPE *values)
   stt->lins = lins;
   stt->values = values;
   
-  stt->links_anc = (link *)malloc(sizeof(link))
-  stt->links_des = (link *)malloc(sizeof(link))
-  return mat;
+  stt->num_anc = 0;
+  stt->num_des = 0;
+  return stt;
 }
 
 void print_state(state* stt)
 {
   ITYPE n = stt->n;
   ITYPE t = stt->t;
+  ITYPE *values = stt->values;
   
   printf("state of %lu lineages at time %lf\n", n, t);
   
-  ITYPE i, j;
-  for (i=0; i<n; i++)
-  {
-    for (j=0; j<n; j++)
-      printf("%lf ", mat->data[i*n + j]);
-    printf("\n");
-  }
+  int i;
+  for(i = 0; i < n; i++)
+    printf("%lu", *(values+i));
+  printf("\n");
+  
+  for(i = 0; i < stt->num_anc; i++)
+    printf("%lf", *(stt->logs_anc+i));
+  printf("\n");
+  
+  for(i = 0; i < stt->num_des; i++)
+    printf("%lf", *(stt->logs_des+i));
+  printf("\n");
+  
+  return 0;
 }
 
 
 
 int main()
 {
-  //matrix* mat = newMatrix(10);
-  //int idx[3] = {2,5,7}; 
-  //addSquare(mat, idx, 3, 9);
-  printf("%d", fib_(10));
+  ITYPE lins[5] = {4,9,2,10,31};
+  ITYPE values[5] = {0,1,1,2,0};
+  state *stt = state(5, 37.8, lins, values);
+  print_state(stt);
+  
   return 0;
 }
