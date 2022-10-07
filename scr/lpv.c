@@ -10,17 +10,19 @@
 typedef double DTYPE;
 typedef unsigned long ITYPE;
 
-typedef struct state {
+typedef struct state
+{
   ITYPE n; // number of lineages of the state
   DTYPE t; // time of the state
   ITYPE *lins; // lineages of the state
   DTYPE *values; // population labels of the lineages
   
-  void *links_prev;
-  void *links_next;
+  void *links_anc; // links to ancestor states
+  void *links_des; // links to descendent states
 } state;
 
-typedef struct link {
+typedef struct link
+{
   DTYPE logp;
   state *ptr;
   struct link *next;
@@ -35,8 +37,8 @@ matrix* new_state(ITYPE n, DTYPE t, ITYPE *lins, DTYPE *values)
   stt->lins = lins;
   stt->values = values;
   
-  stt->links_prev = (link *)malloc(sizeof(link))
-  stt->links_next = (link *)malloc(sizeof(link))
+  stt->links_anc = (link *)malloc(sizeof(link))
+  stt->links_des = (link *)malloc(sizeof(link))
   return mat;
 }
 
