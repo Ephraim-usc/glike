@@ -17,9 +17,9 @@ typedef struct list // list of DTYPE numbers
 list *new_list()
 {
   list *lst = (list *)malloc(sizeof(list));
-  lst->data = malloc(4 * sizeof(DTYPE));
+  lst->data = malloc(1 * sizeof(DTYPE));
   lst->used = 0;
-  lst->size = 4;
+  lst->size = 1;
   return lst;
 }
 
@@ -73,6 +73,84 @@ void free_plist(plist *lst)
   lst->data = NULL;
   lst->used = lst->size = 0;
 }
+
+
+
+typedef struct hlist 
+{
+  struct hlist *next;
+  ITYPE len;
+  ITYPE *key;
+  ITYPE val;
+} hlist;
+
+typedef struct htable
+{
+  ITYPE size;
+  struct hlist **hlsts;
+} htable;
+
+def new_htable(ITYPE size)
+{
+  htable *htbl = (htable *)malloc(sizeof(htable));
+  htbl->size = size;
+  htbl->hlsts = (hlist **)malloc(size * sizeof(hlist *));
+}
+
+
+ITYPE hash(ITYPE *key, ITYPE len, ITYPE size)
+{
+  ITYPE pos;
+  ITYPE val;
+  for (pos = 0; pos < len; pos++)
+    val = 31 * val + *(key+pos);
+  return val % size;
+}
+
+
+
+
+hlist *lookup_htable(htable *htbl, ITYPE *key, ITYPE len)
+{
+  val = hash(key, len, htbl->size)
+  hlist *hlst = htable->hlsts[val];
+  
+  for (; hlst != NULL; hlst = hlst->next)
+    if (compare(key, hlst->key, len) == 0)
+      return hlst;
+  
+  return NULL;
+}
+
+void insert_htable(htable *htbl, ITYPE *key, ITYPE len)
+{
+    hlist *hlst;
+    ITYPE val;
+    if ((np = lookup(name)) == NULL) /* not found */
+    { 
+        np = (struct nlist *) malloc(sizeof(*np));
+        if (np == NULL || (np->name = strdup(name)) == NULL)
+          return NULL;
+        hashval = hash(name);
+        np->next = hashtab[hashval];
+        hashtab[hashval] = np;
+    } 
+  else /* already there */
+    free((void *) np->defn); /*free previous defn */
+  if ((np->defn = strdup(defn)) == NULL)
+    return NULL;
+  return np;
+}
+
+
+
+
+
+
+
+
+
+
 
 /*
 int main()
