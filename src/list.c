@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdint.h>
+
 typedef double DTYPE;
 typedef unsigned long ITYPE;
 
@@ -41,7 +46,7 @@ typedef struct plist // list of pointers
   void **data;
   ITYPE used;
   ITYPE size;
-} list;
+} plist;
 
 plist *new_plist()
 {
@@ -68,3 +73,33 @@ void free_plist(plist *lst)
   lst->data = NULL;
   lst->used = lst->size = 0;
 }
+
+/*
+int main()
+{
+  DTYPE a = 0.36;
+  void * ptr = NULL;
+  int i;
+  
+  
+  list *lst = new_list();
+  for (i = 0; i < 100; i++)
+    insert_list(lst, a);
+  
+  printf("%lf\n", lst->data[9]);
+  printf("%lu\n", lst->used);
+  free_list(lst);
+  
+  
+  plist *plst = new_plist();
+  for (i = 0; i < 100; i++)
+    insert_plist(plst, ptr);
+  
+  printf("%p\n", plst->data[9]);
+  printf("%lu\n", plst->used);
+  free_plist(plst);
+  
+  
+  return 0;
+}
+*/
