@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include <stdint.h>
 
 typedef double DTYPE;
@@ -74,79 +75,6 @@ void free_plist(plist *lst)
   lst->used = lst->size = 0;
 }
 
-
-
-typedef struct hlist 
-{
-  struct hlist *next;
-  char *key;
-} hlist;
-
-typedef struct htable
-{
-  ITYPE size;
-  struct hlist **hlsts;
-} htable;
-
-def new_htable(ITYPE size)
-{
-  htable *htbl = (htable *)malloc(sizeof(htable));
-  htbl->size = size;
-  htbl->hlsts = (hlist **)malloc(size * sizeof(hlist *));
-}
-
-
-ITYPE hash(char *key, ITYPE size)
-{
-  ITYPE val;
-  for (val = 0; *key; key++)
-    val = 31 * val + *key;
-  return val % size;
-}
-
-
-hlist *lookup_htable(htable *htbl, char *key)
-{
-  ITYPE val = hash(key, htbl->size);
-  hlist *hlst;
-  
-  for (hlst = htable->hlsts[val]; hlst != NULL; hlst = hlst->next)
-    if (strcmp(key, hlst->key) == 0)
-      return hlst;
-  
-  return NULL;
-}
-
-void insert_htable(htable *htbl, char *key)
-{
-    hlist *hlst;
-    ITYPE val;
-    if ((np = lookup(name)) == NULL) /* not found */
-    { 
-        np = (struct nlist *) malloc(sizeof(*np));
-        if (np == NULL || (np->name = strdup(name)) == NULL)
-          return NULL;
-        hashval = hash(name);
-        np->next = hashtab[hashval];
-        hashtab[hashval] = np;
-    } 
-  else /* already there */
-    free((void *) np->defn); /*free previous defn */
-  if ((np->defn = strdup(defn)) == NULL)
-    return NULL;
-  return np;
-}
-
-
-
-
-
-
-
-
-
-
-
 /*
 int main()
 {
@@ -176,3 +104,98 @@ int main()
   return 0;
 }
 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+typedef struct hlist 
+{
+  struct hlist *next;
+  char *key;
+} hlist;
+
+typedef struct htable
+{
+  ITYPE size;
+  struct hlist **hlsts;
+} htable;
+
+htable *new_htable(ITYPE size)
+{
+  htable *htbl = (htable *)malloc(sizeof(htable));
+  htbl->size = size;
+  htbl->hlsts = (hlist **)malloc(size * sizeof(hlist *));
+  return htbl;
+}
+
+
+ITYPE hash(char *key, ITYPE size)
+{
+  ITYPE val;
+  for (val = 0; *key; key++)
+    val = 31 * val + *key;
+  return val % size;
+}
+
+
+hlist *lookup_htable(htable *htbl, char *key)
+{
+  ITYPE val = hash(key, htbl->size);
+  hlist *hlst;
+  
+  for (hlst = htbl->hlsts[val]; hlst != NULL; hlst = hlst->next)
+    if (strcmp(key, hlst->key) == 0)
+      return hlst;
+  
+  return NULL;
+}
+
+hlist *insert_htable(htable *htbl, char *key)
+{
+  ITYPE val = hash(key, htbl->size);
+  hlist *hlst;
+  
+  for (hlst = htbl->hlsts[val]; hlst != NULL; hlst = hlst->next)
+    if (strcmp(key, hlst->key) == 0)
+      return hlst;
+  
+  hlst = (hlist *) malloc(sizeof(hlist));
+  hlst->key = key;
+  
+  hlst->next = htbl->hlsts[val];
+  htbl->hlsts[val] = hlst;
+  return hlst;
+}
+
+/*
+int main()
+{
+  htable *htbl = new_htable(10);
+  insert_htable(htbl, "AABBAB");
+  insert_htable(htbl, "ABBBAB");
+  insert_htable(htbl, "BBABAB");
+  
+  hlist *result = lookup_htable(htbl, "ABBBAB");
+  printf("%s", result->key);
+  return 0;
+}
+*/
+
+
+
+
+
+
+
+
+
+
