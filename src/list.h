@@ -110,17 +110,11 @@ int main()
 
 
 
-
-
-
-
-
-
-
 typedef struct hlist 
 {
   struct hlist *next;
   char *key;
+  void *ptr;
 } hlist;
 
 typedef struct htable
