@@ -68,7 +68,7 @@ static PyObject *Transition_print(TransitionObject *self, PyObject *args)
   for (i = 0; i < self->dim_in; i++)
   {
     for (j = 0; j < self->dim_out; j++)
-      printf("%lf", self->logP[i * self->dim_in + j]);
+      printf("%lf ", self->logP[i * self->dim_in + j]);
     printf("\n");
   }
   
