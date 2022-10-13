@@ -24,7 +24,7 @@ static PyObject *Transition_new(PyTypeObject *type, PyObject *args, PyObject *kw
   self = (TransitionObject *) type->tp_alloc(type, 0);
   if (self != NULL) 
   {
-    self->t = 0
+    self->t = 0;
   }
   return (PyObject *) self;
 }
@@ -46,12 +46,12 @@ static PyMemberDef Transition_members[] =
     {NULL}  /* Sentinel */
 };
 
-static PyObject * Transition_print(CustomObject *self, PyObject *args)
+static PyObject * Transition_print(TransitionObject *self, PyObject *args)
 {
     return printf("%lf\n", self->t);
 }
 
-static PyMethodDef Transition_Methods[] = 
+static PyMethodDef Transition_methods[] = 
 {
   {"print", (PyCFunction) Transition_print, METH_NOARGS, "print transition"},
   {NULL},
@@ -86,7 +86,7 @@ PyInit_state(void)
   if (PyType_Ready(&CustomType) < 0)
     return NULL;
   
-  m = PyModule_Create(&custommodule);
+  m = PyModule_Create(&statemodule);
   if (m == NULL)
     return NULL;
   
