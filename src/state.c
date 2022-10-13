@@ -5,94 +5,55 @@
 #include <math.h>
 #include <stdint.h>
 
-/*
-#include "list.h"
 
-typedef double DTYPE;
-typedef unsigned long ITYPE;
-
-
-
-
-
-
-
-
-
-
-typedef struct state
+typedef struct transition 
 {
-  ITYPE *values; // population labels of the lineages
-  DTYPE logp;
-  
-  list *logps_anc;
-  plist *links_anc;
-  
-  list *logps_des;
-  plist *links_des;
-} state;
+  double t;
+} transition;
 
-state* new_state(ITYPE *values)
+transition* new_transition(double t)
 {
-  state* stt;
-  stt = (state *)malloc(sizeof(state));
-  stt->values = values;
-  stt->logp = 1.0; // any logp greater than 0 means nan.
-  
-  stt->num_anc = 0;
-  stt->num_des = 0;
-  return stt;
+  transition* trn;
+  trn = (transition *)malloc(sizeof(transition));
+  trn->t = t;
+  return trn;
 }
 
-void print_state(state* stt)
+void print_transition(transition *trn)
 {
-  ITYPE n = stt->n;
-  DTYPE t = stt->t;
-  ITYPE *values = stt->values;
-  
-  printf("state of %lu lineages at time %lf\n", n, t);
-  
-  int i;
-  for(i = 0; i < n; i++)
-    printf("%lu", *(values+i));
-  printf("\n");
-  
-  printf("ancestral links: ")
-  for(i = 0; i < stt->num_anc; i++)
-    printf("%lf", *(stt->logps_anc+i));
-  printf("\n");
-  
-  printf("descendent links: ")
-  for(i = 0; i < stt->num_des; i++)
-    printf("%lf", *(stt->logps_des+i));
-  printf("\n");
+  printf("%lf", trn->t);
 }
 
-typedef struct bundle
-{
-  ITYPE n; // number of lineages of the state
-  DTYPE t; // time of the state
-  ITYPE *lins; // lineages of the state
-  state **states;
-} bundle;
 
-bundle* new_bundle(ITYPE n, DTYPE t, ITYPE *lins)
-{
-  bundle* bdl;
-  bdl = (bundle *)malloc(sizeof(bundle));
-  bdl->n = n;
-  bdl->t = t;
-  bdl->lins = lins;
+
+static PyObject* py_new_transition(PyObject* self, PyObject* args)
+{ 
+  double t;
+  PyArg_ParseTuple(args, "d", &t);
   
-  return bdl;
+  transition* trn = new_transition((int)t);
+  PyObject* py_trn = PyCapsule_New((void *)trn, "state._transition_C_API", NULL);
+  
+  return py_trn;
 }
 
-*/
+static PyObject* py_print_transition(PyObject* self, PyObject* args)
+{ 
+  PyObject* py_trn;
+  PyArg_UnpackTuple(args, NULL, 1, 1, &py_trn);
+  transition* trn = (transition *)PyCapsule_GetPointer(py_trn, "matrix._transition_C_API");
+  print_transition(trn);
+  
+  Py_RETURN_NONE;
+}
+
 
 
 
 static PyMethodDef myMethods[] = 
 {
+  {"new_transition", py_new_transition, METH_VARARGS, "new transition"},
+  {"print_transition", py_print_transition, METH_VARARGS, "print transition"},
   {NULL, NULL, 0, NULL},
 };
 
