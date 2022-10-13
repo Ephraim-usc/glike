@@ -1,5 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <numpy/arrayobject.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -11,6 +13,9 @@ typedef struct
 {
   PyObject_HEAD
   double t;
+  int dim_in;
+  int dim_out;
+  double *logP;
 } TransitionObject;
 
 static void Transition_dealloc(TransitionObject *self)
@@ -22,20 +27,28 @@ static PyObject *Transition_new(PyTypeObject *type, PyObject *args, PyObject *kw
 {
   TransitionObject *self;
   self = (TransitionObject *) type->tp_alloc(type, 0);
-  if (self != NULL) 
-  {
-    self->t = 0;
-  }
   return (PyObject *) self;
 }
 
 static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwds)
 {
   self->t = 0;
+  self->dim_in = 0;
+  self->dim_out = 0;
+  self->logP = NULL;
   
-  static char *kwlist[] = {"t", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|d", kwlist, &self->t))
+  PyObject *logP;
+  
+  static char *kwlist[] = {"t", "logP", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|dO", kwlist, &self->t, &logP))
     return -1;
+  
+  double *p = (double *)PyArray_DATA((PyArrayObject *)logP);
+  self->dim_in = PyArray_DIM(logP, 0);
+  self->dim_out = PyArray_DIM(logP, 1);
+  
+  self->logP = (double *)malloc(self->dim_in * self->dim_out * sizeof(double));
+  memcpy(self->logP, p, self->dim_in * self->dim_out * sizeof(double));
   
   return 0;
 }
@@ -49,6 +62,16 @@ static PyMemberDef Transition_members[] =
 static PyObject *Transition_print(TransitionObject *self, PyObject *args)
 {
   printf("%lf\n", self->t);
+  
+  int i;
+  int j;
+  for (i = 0; i < self->dim_in; i++)
+  {
+    for (j = 0; j < self->dim_out; j++)
+      printf("%lf", self->logP[i * self->dim_in + j]);
+    printf("\n");
+  }
+  
   Py_RETURN_NONE;
 }
 
