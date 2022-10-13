@@ -46,9 +46,9 @@ static PyMemberDef Transition_members[] =
     {NULL}  /* Sentinel */
 };
 
-static PyObject * Transition_print(TransitionObject *self, PyObject *args)
+static void Transition_print(TransitionObject *self, PyObject *args)
 {
-    return printf("%lf\n", self->t);
+    printf("%lf\n", self->t);
 }
 
 static PyMethodDef Transition_methods[] = 
@@ -58,7 +58,7 @@ static PyMethodDef Transition_methods[] =
 };
 
 
-static PyTypeObject CustomType = {
+static PyTypeObject TransitionType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "state.Transition",
     .tp_basicsize = sizeof(TransitionObject),
@@ -83,17 +83,17 @@ PyMODINIT_FUNC
 PyInit_state(void)
 {
   PyObject *m;
-  if (PyType_Ready(&CustomType) < 0)
+  if (PyType_Ready(&TransitionType) < 0)
     return NULL;
   
-  m = PyModule_Create(&statemodule);
+  m = PyModule_Create(&stateModule);
   if (m == NULL)
     return NULL;
   
-  Py_INCREF(&CustomType);
-  if (PyModule_AddObject(m, "Custom", (PyObject *) &CustomType) < 0) 
+  Py_INCREF(&TransitionType);
+  if (PyModule_AddObject(m, "Transition", (PyObject *) &TransitionType) < 0) 
   {
-    Py_DECREF(&CustomType);
+    Py_DECREF(&TransitionType);
     Py_DECREF(m);
     return NULL;
   }
