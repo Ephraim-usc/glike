@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stdint.h>
 
+/*
 #include "list.h"
 
 typedef double DTYPE;
@@ -85,6 +86,8 @@ bundle* new_bundle(ITYPE n, DTYPE t, ITYPE *lins)
   
   return bdl;
 }
+
+*/
 
 
 
