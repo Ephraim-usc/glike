@@ -42,13 +42,14 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
 
 static PyMemberDef Transition_members[] = 
 {
-    {"t", T_DOUBLE, offsetof(TransitionObject, t), 0, "transition time"},
-    {NULL}  /* Sentinel */
+  {"t", T_DOUBLE, offsetof(TransitionObject, t), 0, "transition time"},
+  {NULL}  /* Sentinel */
 };
 
-static void Transition_print(TransitionObject *self, PyObject *args)
+static PyObject *Transition_print(TransitionObject *self, PyObject *args)
 {
-    printf("%lf\n", self->t);
+  printf("%lf\n", self->t);
+  Py_RETURN_NONE;
 }
 
 static PyMethodDef Transition_methods[] = 
