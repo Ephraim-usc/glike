@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdint.h>
+#include "structmember.h"
 
 
 typedef struct transition 
@@ -71,14 +72,3 @@ PyMODINIT_FUNC PyInit_state(void)
   return PyModule_Create(&stateModule);
 }
 
-/*
-int main()
-{
-  ITYPE lins[5] = {4,9,2,10,31};
-  ITYPE values[5] = {0,1,1,2,0};
-  state *stt = new_state(5, 37.8, lins, values);
-  print_state(stt);
-  
-  return 0;
-}
-*/
