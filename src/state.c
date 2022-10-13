@@ -16,6 +16,7 @@ typedef struct
   int dim_in;
   int dim_out;
   double *logP;
+  double **logRR;
 } TransitionObject;
 
 static void Transition_dealloc(TransitionObject *self)
@@ -36,19 +37,27 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
   self->dim_in = 0;
   self->dim_out = 0;
   self->logP = NULL;
+  self->logRR = NULL;
   
   PyObject *logP;
+  PyObject *logRR;
   
-  static char *kwlist[] = {"t", "logP", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|dO", kwlist, &self->t, &logP))
+  static char *kwlist[] = {"t", "logP", "logRR", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|dO", kwlist, &self->t, &logP, &logRR))
     return -1;
   
   double *p = (double *)PyArray_DATA((PyArrayObject *)logP);
-  self->dim_in = PyArray_DIM(logP, 0);
-  self->dim_out = PyArray_DIM(logP, 1);
+  int dim_in = PyArray_DIM(logP, 0); self->dim_in = dim_in;
+  int dim_out = PyArray_DIM(logP, 1); self->dim_out = dim_out;
   
-  self->logP = (double *)malloc(self->dim_in * self->dim_out * sizeof(double));
-  memcpy(self->logP, p, self->dim_in * self->dim_out * sizeof(double));
+  self->logP = (double *)malloc(dim_in * dim_out * sizeof(double));
+  memcpy(self->logP, p, dim_in * dim_out * sizeof(double));
+  
+  double *rr = (double *)PyArray_DATA((PyArrayObject *)logRR);
+  self->logRR = (double **)malloc(dim_in * dim_out * sizeof(double *));
+  for (int i = 0; i < dim_in * dim_out; i++)
+    self->logRR[i] = (double *)malloc(dim_in * dim_out * sizeof(double));
+    memcpy(self->logRR[i], rr[i * dim_in * dim_out], dim_in * dim_out * sizeof(double));
   
   return 0;
 }
@@ -61,14 +70,18 @@ static PyMemberDef Transition_members[] =
 
 static PyObject *Transition_print(TransitionObject *self, PyObject *args)
 {
+  dim_in = self->dim_in;
+  dim_out = self->dim_out;
   printf("%lf\n", self->t);
   
-  int i;
-  int j;
-  for (i = 0; i < self->dim_in; i++)
+  for (int i = 0; i < dim_in * dim_out; i++)
+    printf("%lf ", self->logP[i]);
+  printf("\n");
+  
+  for (i = 0; i < dim_in * dim_out; i++)
   {
-    for (j = 0; j < self->dim_out; j++)
-      printf("%lf ", self->logP[i * self->dim_in + j]);
+    for (int j = 0; j < dim_in * dim_out; j++)
+      printf("%lf ", self->logRR[i][j];
     printf("\n");
   }
   
