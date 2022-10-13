@@ -7,68 +7,97 @@
 #include "structmember.h"
 
 
-typedef struct transition 
+typedef struct
 {
+  PyObject_HEAD
   double t;
-} transition;
+} TransitionObject;
 
-transition* new_transition(double t)
+static void Transition_dealloc(TransitionObject *self)
 {
-  transition* trn;
-  trn = (transition *)malloc(sizeof(transition));
-  trn->t = t;
-  return trn;
+  Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-void print_transition(transition *trn)
+static PyObject *Transition_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-  printf("%lf", trn->t);
+  TransitionObject *self;
+  self = (TransitionObject *) type->tp_alloc(type, 0);
+  if (self != NULL) 
+  {
+    self->t = 0
+  }
+  return (PyObject *) self;
 }
 
-
-
-static PyObject* py_new_transition(PyObject* self, PyObject* args)
-{ 
-  double t;
-  PyArg_ParseTuple(args, "d", &t);
+static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwds)
+{
+  self->t = 0;
   
-  transition* trn = new_transition((int)t);
-  PyObject* py_trn = PyCapsule_New((void *)trn, "state._transition_C_API", NULL);
+  static char *kwlist[] = {"t", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|d", kwlist, &self->t))
+    return -1;
   
-  return py_trn;
+  return 0;
 }
 
-static PyObject* py_print_transition(PyObject* self, PyObject* args)
+static PyMemberDef Transition_members[] = 
 {
-  PyObject* py_trn;
-  PyArg_UnpackTuple(self, NULL, 1, 1, &py_trn);
-  transition* trn = (transition *)PyCapsule_GetPointer(py_trn, "state._transition_C_API");
-  print_transition(trn);
-  
-  Py_RETURN_NONE;
+    {"t", T_DOUBLE, offsetof(TransitionObject, t), 0, "transition time"},
+    {NULL}  /* Sentinel */
+};
+
+static PyObject * Transition_print(CustomObject *self, PyObject *args)
+{
+    return printf("%lf\n", self->t);
 }
 
-
-
-
-static PyMethodDef myMethods[] = 
+static PyMethodDef Transition_Methods[] = 
 {
-  {"new_transition", py_new_transition, METH_VARARGS, "new transition"},
-  {"print", py_print_transition, METH_VARARGS, "print transition"},
-  {NULL, NULL, 0, NULL},
+  {"print", (PyCFunction) Transition_print, METH_NOARGS, "print transition"},
+  {NULL},
+};
+
+
+static PyTypeObject CustomType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "state.Transition",
+    .tp_basicsize = sizeof(TransitionObject),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_new = Transition_new,
+    .tp_init = (initproc) Transition_init,
+    .tp_dealloc = (destructor) Transition_dealloc,
+    .tp_members = Transition_members,
+    .tp_methods = Transition_methods,
 };
 
 static struct PyModuleDef stateModule =
 {
   PyModuleDef_HEAD_INIT,
-  "stateModule",
-  "state Module",
-  -1,
-  myMethods
+  .m_name = "stateModule",
+  .m_doc = "state Module",
+  .m_size = -1,
 };
 
-PyMODINIT_FUNC PyInit_state(void)
+PyMODINIT_FUNC 
+PyInit_state(void)
 {
-  return PyModule_Create(&stateModule);
+  PyObject *m;
+  if (PyType_Ready(&CustomType) < 0)
+    return NULL;
+  
+  m = PyModule_Create(&custommodule);
+  if (m == NULL)
+    return NULL;
+  
+  Py_INCREF(&CustomType);
+  if (PyModule_AddObject(m, "Custom", (PyObject *) &CustomType) < 0) 
+  {
+    Py_DECREF(&CustomType);
+    Py_DECREF(m);
+    return NULL;
+  }
+  
+  return m;
 }
 
