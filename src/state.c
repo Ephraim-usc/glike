@@ -1,5 +1,5 @@
 #define PY_SSIZE_T_CLEAN
-#include <Python/Python.h>
+#include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -88,7 +88,26 @@ bundle* new_bundle(ITYPE n, DTYPE t, ITYPE *lins)
 
 
 
+static PyMethodDef myMethods[] = 
+{
+  {NULL, NULL, 0, NULL},
+};
 
+static struct PyModuleDef stateModule =
+{
+  PyModuleDef_HEAD_INIT,
+  "stateModule",
+  "state Module",
+  -1,
+  myMethods
+};
+
+PyMODINIT_FUNC PyInit_state(void)
+{
+  return PyModule_Create(&stateModule);
+}
+
+/*
 int main()
 {
   ITYPE lins[5] = {4,9,2,10,31};
@@ -98,3 +117,4 @@ int main()
   
   return 0;
 }
+*/
