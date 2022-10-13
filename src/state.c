@@ -38,10 +38,10 @@ static PyObject* py_new_transition(PyObject* self, PyObject* args)
 }
 
 static PyObject* py_print_transition(PyObject* self, PyObject* args)
-{ 
+{
   PyObject* py_trn;
-  PyArg_UnpackTuple(args, NULL, 1, 1, &py_trn);
-  transition* trn = (transition *)PyCapsule_GetPointer(py_trn, "matrix._transition_C_API");
+  PyArg_UnpackTuple(self, NULL, 1, 1, &py_trn);
+  transition* trn = (transition *)PyCapsule_GetPointer(py_trn, "state._transition_C_API");
   print_transition(trn);
   
   Py_RETURN_NONE;
@@ -53,7 +53,7 @@ static PyObject* py_print_transition(PyObject* self, PyObject* args)
 static PyMethodDef myMethods[] = 
 {
   {"new_transition", py_new_transition, METH_VARARGS, "new transition"},
-  {"print_transition", py_print_transition, METH_VARARGS, "print transition"},
+  {"print", py_print_transition, METH_VARARGS, "print transition"},
   {NULL, NULL, 0, NULL},
 };
 
