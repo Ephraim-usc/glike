@@ -25,8 +25,8 @@ typedef struct State
   PyObject_HEAD
   int len;
   int *values;
-  struct StateObject **parents;
-  struct StateObject **children;
+  struct State **parents;
+  struct State **children;
 } State;
 
 State *State_new()
@@ -53,7 +53,7 @@ typedef struct BundleObject
   int len;
   int num_states;
   int *lineages;
-  StateObject **states;
+  State **states;
 } BundleObject;
 
 static void Bundle_dealloc(BundleObject *self)
@@ -85,7 +85,7 @@ static int Bundle_init(BundleObject *self, PyObject *args, PyObject *kwds)
   int len = PyArray_DIM(lineages, 0);
   int num_states = PyArray_DIM(values, 0);
   self->len = len;
-  self->num_state = num_states;
+  self->num_states = num_states;
   
   if (len != PyArray_DIM(values, 1))
   {
@@ -99,7 +99,7 @@ static int Bundle_init(BundleObject *self, PyObject *args, PyObject *kwds)
   
   int i;
   int *v = (int *)PyArray_DATA((PyArrayObject *)values);
-  self->states = (State **)malloc(num_state * sizeof(State *));
+  self->states = (State **)malloc(num_states * sizeof(State *));
   for (i = 0; i < num_states; i++)
   {
     State *state = State_new();
@@ -289,7 +289,7 @@ PyInit_state(void)
 {
   if (PyType_Ready(&TransitionType) < 0)
     return NULL;
-  if (PyType_Ready(&StateType) < 0)
+  if (PyType_Ready(&BundleType) < 0)
     return NULL;
   
   PyObject *m = PyModule_Create(&stateModule);
@@ -304,10 +304,10 @@ PyInit_state(void)
     return NULL;
   }
   
-  Py_INCREF(&StateType);
-  if (PyModule_AddObject(m, "State", (PyObject *) &StateType) < 0) 
+  Py_INCREF(&BundleType);
+  if (PyModule_AddObject(m, "Bundle", (PyObject *) &BundleType) < 0) 
   {
-    Py_DECREF(&StateType);
+    Py_DECREF(&BundleType);
     Py_DECREF(m);
     return NULL;
   }
