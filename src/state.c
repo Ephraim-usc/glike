@@ -42,16 +42,20 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
   PyObject *logP;
   PyObject *logRR;
   
-  static char *kwlist[] = {"t", "logP", "logRR", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|dOO", kwlist, &self->t, &logP, &logRR))
+  static char *kwlist[] = {"t", "dim_in", "dim_out", "logP", "logRR", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|diiOO", kwlist, &self->t, &self->dim_in, &self->dim_out, &logP, &logRR))
     return -1;
   
-  int dim_in = PyArray_DIM(logP, 0); self->dim_in = dim_in;
-  int dim_out = PyArray_DIM(logP, 1); self->dim_out = dim_out;
+  int dim_in = self->dim_in;
+  int dim_out = self->dim_out;
   
-  if ((PyArray_DIM(logRR, 0) != dim_in * dim_out)||(PyArray_DIM(logRR, 1) != dim_in * dim_out))
-    printf("error: dimensions do not match!");
+  if ((PyArray_DIM(logP, 0) != dim_in * dim_out)||
+      (PyArray_DIM(logRR, 0) != dim_in * dim_out)||
+      (PyArray_DIM(logRR, 1) != dim_in * dim_out))
+  {
+    printf("error: dimensions do not match!\n");
     return -1;
+  }
   
   double *p = (double *)PyArray_DATA((PyArrayObject *)logP);
   self->logP = (double *)malloc(dim_in * dim_out * sizeof(double));
@@ -85,17 +89,17 @@ static PyObject *Transition_print(TransitionObject *self, PyObject *args)
   int j;
   
   for (i = 0; i < dim_in * dim_out; i++)
-    printf("        %d%d", i/dim_in, i%dim_in);
+    printf("       %d%d", i/dim_in, i%dim_in);
   printf("\n\n");
   
   for (i = 0; i < dim_in * dim_out; i++)
-    printf("%9.4lf ", self->logP[i]);
+    printf("%9.4lf", self->logP[i]);
   printf("\n\n");
   
   for (i = 0; i < dim_in * dim_out; i++)
   {
     for (j = 0; j < dim_in * dim_out; j++)
-      printf("%9.4lf ", self->logRR[i][j]);
+      printf("%9.4lf", self->logRR[i][j]);
     printf("\n");
   }
   
