@@ -11,78 +11,155 @@
 
 
 
-typedef struct StateObject
+
+
+
+
+
+
+
+
+
+typedef struct State
 {
   PyObject_HEAD
   int len;
   int *values;
   struct StateObject **parents;
   struct StateObject **children;
-} StateObject;
+} State;
 
-static void State_dealloc(StateObject *self)
+State *State_new()
+{
+  State *state;
+  state = (State *)malloc(sizeof(state));
+  state->len = 0;
+  state->values = NULL;
+  state->parents = NULL;
+  state->children = NULL;
+  return state;
+}
+
+
+
+
+
+
+
+typedef struct BundleObject
+{
+  PyObject_HEAD
+  double t;
+  int len;
+  int num_states;
+  int *lineages;
+  StateObject **states;
+} BundleObject;
+
+static void Bundle_dealloc(BundleObject *self)
 {
   Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-static PyObject *State_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+static PyObject *Bundle_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-  StateObject *self;
-  self = (StateObject *) type->tp_alloc(type, 0);
+  BundleObject *self;
+  self = (BundleObject *) type->tp_alloc(type, 0);
   return (PyObject *) self;
 }
 
-static int State_init(StateObject *self, PyObject *args, PyObject *kwds)
+static int Bundle_init(BundleObject *self, PyObject *args, PyObject *kwds)
 {
+  self->t = 0;
   self->len = 0;
-  self->values = NULL;
-  self->parents = NULL;
-  self->children = NULL;
+  self->lineages = NULL;
+  self->states = NULL;
   
+  PyObject *lineages;
   PyObject *values;
   
-  static char *kwlist[] = {"values", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &values))
+  static char *kwlist[] = {"t", "lineages", "values", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|dOO", kwlist, &self->t, &lineages, &values))
     return -1;
   
-  self->len = PyArray_DIM(values, 0);
+  int len = PyArray_DIM(lineages, 0);
+  int num_states = PyArray_DIM(values, 0);
+  self->len = len;
+  self->num_state = num_states;
   
-  int *p = (int *)PyArray_DATA((PyArrayObject *)values);
-  self->values = (int *)malloc(self->len * sizeof(int));
-  memcpy(self->values, p, self->len * sizeof(int));
+  if (len != PyArray_DIM(values, 1))
+  {
+    printf("error: dimensions do not match!\n");
+    return -1;
+  }
+  
+  int *l = (int *)PyArray_DATA((PyArrayObject *)lineages);
+  self->lineages = (int *)malloc(len * sizeof(int));
+  memcpy(self->lineages, l, len * sizeof(int));
+  
+  int i;
+  int *v = (int *)PyArray_DATA((PyArrayObject *)values);
+  self->states = (State **)malloc(num_state * sizeof(State *));
+  for (i = 0; i < num_states; i++)
+  {
+    State *state = State_new();
+    state->len = len;
+    state->values = (int *)malloc(len * sizeof(int));
+    memcpy(state->values, v + i * len, len * sizeof(double));
+  }
   
   return 0;
 }
 
-static PyObject *State_print(StateObject *self, PyObject *args)
+
+static PyObject *Bundle_print(BundleObject *self, PyObject *args)
 {
+  double t = self->t;
   int len = self->len;
+  int num_states = self->num_states;
   
-  int i;
+  printf("%9.4lf\n\n", self->t);
+  
+  int i, j;
+  
   for (i = 0; i < len; i++)
-    printf("%d ", self->values[i]);
-  printf("\n");
+    printf("%d ", self->lineages[i]);
+  printf("\n\n");
+  
+  for (i = 0; i < num_states; i++)
+  {
+    for (j = 0; j < len; j++)
+      printf("%d ", self->states[i]->values[j]);
+    printf("\n");
+  }
   
   Py_RETURN_NONE;
 }
 
-static PyMethodDef State_methods[] = 
+static PyMethodDef Bundle_methods[] = 
 {
-  {"print", (PyCFunction) State_print, METH_NOARGS, "print state"},
+  {"print", (PyCFunction) Bundle_print, METH_NOARGS, "print state bundle"},
   {NULL},
 };
 
-static PyTypeObject StateType = {
+
+static PyTypeObject BundleType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "state.State",
-    .tp_basicsize = sizeof(StateObject),
+    .tp_name = "state.Bundle",
+    .tp_basicsize = sizeof(BundleObject),
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_new = State_new,
-    .tp_init = (initproc) State_init,
-    .tp_dealloc = (destructor) State_dealloc,
-    .tp_methods = State_methods,
+    .tp_new = Bundle_new,
+    .tp_init = (initproc) Bundle_init,
+    .tp_dealloc = (destructor) Bundle_dealloc,
+    .tp_methods = Bundle_methods,
 };
+
+
+
+
+
+
 
 
 
@@ -158,8 +235,7 @@ static PyObject *Transition_print(TransitionObject *self, PyObject *args)
   int dim_out = self->dim_out;
   printf("%9.4lf\n\n", self->t);
   
-  int i;
-  int j;
+  int i, j;
   
   for (i = 0; i < dim_in * dim_out; i++)
     printf("       %d%d", i/dim_in, i%dim_in);
