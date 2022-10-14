@@ -43,7 +43,7 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
   PyObject *logRR;
   
   static char *kwlist[] = {"t", "logP", "logRR", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|dO", kwlist, &self->t, &logP, &logRR))
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|dOO", kwlist, &self->t, &logP, &logRR))
     return -1;
   
   double *p = (double *)PyArray_DATA((PyArrayObject *)logP);
@@ -53,11 +53,14 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
   self->logP = (double *)malloc(dim_in * dim_out * sizeof(double));
   memcpy(self->logP, p, dim_in * dim_out * sizeof(double));
   
+  int i;
   double *rr = (double *)PyArray_DATA((PyArrayObject *)logRR);
   self->logRR = (double **)malloc(dim_in * dim_out * sizeof(double *));
-  for (int i = 0; i < dim_in * dim_out; i++)
+  for (i = 0; i < dim_in * dim_out; i++)
+  {
     self->logRR[i] = (double *)malloc(dim_in * dim_out * sizeof(double));
-    memcpy(self->logRR[i], rr[i * dim_in * dim_out], dim_in * dim_out * sizeof(double));
+    memcpy(self->logRR[i], rr + i * dim_in * dim_out, dim_in * dim_out * sizeof(double));
+  }
   
   return 0;
 }
@@ -70,18 +73,25 @@ static PyMemberDef Transition_members[] =
 
 static PyObject *Transition_print(TransitionObject *self, PyObject *args)
 {
-  dim_in = self->dim_in;
-  dim_out = self->dim_out;
-  printf("%lf\n", self->t);
+  int dim_in = self->dim_in;
+  int dim_out = self->dim_out;
+  printf("%9.4lf\n\n", self->t);
   
-  for (int i = 0; i < dim_in * dim_out; i++)
-    printf("%lf ", self->logP[i]);
-  printf("\n");
+  int i;
+  int j;
+  
+  for (i = 0; i < dim_in * dim_out; i++)
+    printf("        %d%d", i/dim_in, i%dim_in);
+  printf("\n\n");
+  
+  for (i = 0; i < dim_in * dim_out; i++)
+    printf("%9.4lf ", self->logP[i]);
+  printf("\n\n");
   
   for (i = 0; i < dim_in * dim_out; i++)
   {
-    for (int j = 0; j < dim_in * dim_out; j++)
-      printf("%lf ", self->logRR[i][j];
+    for (j = 0; j < dim_in * dim_out; j++)
+      printf("%9.4lf ", self->logRR[i][j]);
     printf("\n");
   }
   
