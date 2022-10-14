@@ -9,6 +9,85 @@
 #include "structmember.h"
 
 
+
+
+typedef struct StateObject
+{
+  PyObject_HEAD
+  int len;
+  int *values;
+  struct StateObject **parents;
+  struct StateObject **children;
+} StateObject;
+
+static void State_dealloc(StateObject *self)
+{
+  Py_TYPE(self)->tp_free((PyObject *) self);
+}
+
+static PyObject *State_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+  StateObject *self;
+  self = (StateObject *) type->tp_alloc(type, 0);
+  return (PyObject *) self;
+}
+
+static int State_init(StateObject *self, PyObject *args, PyObject *kwds)
+{
+  self->len = 0;
+  self->values = NULL;
+  self->parents = NULL;
+  self->children = NULL;
+  
+  PyObject *values;
+  
+  static char *kwlist[] = {"values", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &values))
+    return -1;
+  
+  self->len = PyArray_DIM(values, 0);
+  
+  int *p = (int *)PyArray_DATA((PyArrayObject *)values);
+  self->values = (int *)malloc(self->len * sizeof(int));
+  memcpy(self->values, p, self->len * sizeof(int));
+  
+  return 0;
+}
+
+static PyObject *State_print(StateObject *self, PyObject *args)
+{
+  int len = self->len;
+  
+  int i;
+  for (i = 0; i < len; i++)
+    printf("%d ", self->values[i]);
+  printf("\n");
+  
+  Py_RETURN_NONE;
+}
+
+static PyMethodDef State_methods[] = 
+{
+  {"print", (PyCFunction) State_print, METH_NOARGS, "print state"},
+  {NULL},
+};
+
+static PyTypeObject StateType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "state.State",
+    .tp_basicsize = sizeof(StateObject),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_new = State_new,
+    .tp_init = (initproc) State_init,
+    .tp_dealloc = (destructor) State_dealloc,
+    .tp_methods = State_methods,
+};
+
+
+
+
+
 typedef struct
 {
   PyObject_HEAD
@@ -73,12 +152,6 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
   return 0;
 }
 
-static PyMemberDef Transition_members[] = 
-{
-  {"t", T_DOUBLE, offsetof(TransitionObject, t), 0, "transition time"},
-  {NULL}  /* Sentinel */
-};
-
 static PyObject *Transition_print(TransitionObject *self, PyObject *args)
 {
   int dim_in = self->dim_in;
@@ -122,9 +195,10 @@ static PyTypeObject TransitionType = {
     .tp_new = Transition_new,
     .tp_init = (initproc) Transition_init,
     .tp_dealloc = (destructor) Transition_dealloc,
-    .tp_members = Transition_members,
     .tp_methods = Transition_methods,
 };
+
+
 
 static struct PyModuleDef stateModule =
 {
@@ -137,11 +211,12 @@ static struct PyModuleDef stateModule =
 PyMODINIT_FUNC 
 PyInit_state(void)
 {
-  PyObject *m;
   if (PyType_Ready(&TransitionType) < 0)
     return NULL;
+  if (PyType_Ready(&StateType) < 0)
+    return NULL;
   
-  m = PyModule_Create(&stateModule);
+  PyObject *m = PyModule_Create(&stateModule);
   if (m == NULL)
     return NULL;
   
@@ -149,6 +224,14 @@ PyInit_state(void)
   if (PyModule_AddObject(m, "Transition", (PyObject *) &TransitionType) < 0) 
   {
     Py_DECREF(&TransitionType);
+    Py_DECREF(m);
+    return NULL;
+  }
+  
+  Py_INCREF(&StateType);
+  if (PyModule_AddObject(m, "State", (PyObject *) &StateType) < 0) 
+  {
+    Py_DECREF(&StateType);
     Py_DECREF(m);
     return NULL;
   }
