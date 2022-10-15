@@ -25,6 +25,10 @@ typedef struct State
   PyObject_HEAD
   int len;
   int *values;
+  int num_parents;
+  int num_children;
+  double *logps_parents;
+  double *logps_children;
   struct State **parents;
   struct State **children;
 } State;
@@ -34,6 +38,10 @@ State *State_new()
   State *state = (State *)malloc(sizeof(State));
   state->len = 0;
   state->values = NULL;
+  state->num_parents = 0;
+  state->num_children = 0;
+  state->logps_parents = NULL;
+  state->logps_children = NULL;
   state->parents = NULL;
   state->children = NULL;
   return state;
