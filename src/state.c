@@ -31,8 +31,7 @@ typedef struct State
 
 State *State_new()
 {
-  State *state;
-  state = (State *)malloc(sizeof(state));
+  State *state = (State *)malloc(sizeof(State));
   state->len = 0;
   state->values = NULL;
   state->parents = NULL;
@@ -97,15 +96,16 @@ static int Bundle_init(BundleObject *self, PyObject *args, PyObject *kwds)
   self->lineages = (int *)malloc(len * sizeof(int));
   memcpy(self->lineages, l, len * sizeof(int));
   
-  int i;
+  int i; State *state;
   int *v = (int *)PyArray_DATA((PyArrayObject *)values);
   self->states = (State **)malloc(num_states * sizeof(State *));
   for (i = 0; i < num_states; i++)
   {
-    State *state = State_new();
+    state = State_new();
     state->len = len;
     state->values = (int *)malloc(len * sizeof(int));
-    memcpy(state->values, v + i * len, len * sizeof(double));
+    memcpy(state->values, v + i * len, len * sizeof(int));
+    self->states[i] = state;
   }
   
   return 0;
@@ -118,7 +118,7 @@ static PyObject *Bundle_print(BundleObject *self, PyObject *args)
   int len = self->len;
   int num_states = self->num_states;
   
-  printf("%9.4lf\n\n", self->t);
+  printf("%lf\n\n", self->t);
   
   int i, j;
   
