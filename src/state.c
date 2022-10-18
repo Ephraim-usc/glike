@@ -51,8 +51,6 @@ State *State_new()
 
 
 
-
-
 typedef struct BundleObject
 {
   PyObject_HEAD
@@ -137,9 +135,11 @@ static PyObject *Bundle_print(BundleObject *self, PyObject *args)
   
   for (i = 0; i < num_states; i++)
   {
+    State *state = self->states[i];
+    printf("[%d parents]  ", state->num_parents);
     for (j = 0; j < len; j++)
-      printf("%d ", self->states[i]->values[j]);
-    printf("\n");
+      printf("%d ", state->values[j]);
+    printf("  [%d children]\n", state->num_children);
   }
   
   Py_RETURN_NONE;
@@ -217,8 +217,15 @@ static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kw
     memcpy(state->values + index, self->states[i]->values + index + 1, (self->len - index - 1) * sizeof(int));
     for (j = self->len - 1; j < self->len - 1 + num_children; j++)
       state->values[j] = self->states[i]->values[index];
-    
     bundle->states[i] = state;
+    
+    self->states[i]->num_children = 1;
+    self->states[i]->children = (State **)malloc(sizeof(State *));
+    self->states[i]->children[0] = state;
+    
+    state->num_parents = 1;
+    state->parents = (State **)malloc(sizeof(State *));
+    state->parents[0] = self->states[i];
   }
   
   return (PyObject *) bundle;
