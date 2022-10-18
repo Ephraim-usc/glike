@@ -4,6 +4,125 @@
 #include <string.h>
 #include <stdint.h>
 
+
+
+typedef struct hnode
+{
+  struct hnode *next;
+  int *key;
+  int value;
+} hnode;
+
+typedef struct htable
+{
+  int size;
+  hnode **hnodes;
+} htable;
+
+htable *new_htable(int size)
+{
+  htable *htbl = (htable *)malloc(sizeof(htable));
+  htbl->size = size;
+  htbl->hnodes = (hnode **)malloc(size * sizeof(hnode *));
+  return htbl;
+}
+
+int hash(int *key, int len, int size)
+{
+  int *p = key;
+  int val = 0;
+  for (; p < key + len; p++)
+    val = 31 * val + *p;
+  return val % size;
+}
+
+int compare(int *a, int *b, int len)
+{
+  int i = 0;
+  while (*(a+i) == *(b+i) && i < len-1)
+    i++;
+  return (*(a+i) > *(b+i)) - (*(a+i) < *(b+i));
+}
+
+hnode *lookup_htable(htable *htbl, int *key, int len)
+{
+  int val = hash(key, len, htbl->size);
+  hnode *hnd;
+  
+  for (hnd = htbl->hnodes[val]; hnd != NULL; hnd = hnd->next)
+    if (compare(key, hnd->key, len) == 0)
+      return hnd;
+  
+  return NULL;
+}
+
+hnode *insert_htable(htable *htbl, int *key, int len)
+{
+  int val = hash(key, len, htbl->size);
+  hnode *hnd;
+  
+  for (hnd = htbl->hnodes[val]; hnd != NULL; hnd = hnd->next)
+    if (compare(key, hnd->key, len) == 0)
+      return hnd;
+  
+  hnd = (hnode *) malloc(sizeof(hnode));
+  hnd->key = key;
+  
+  hnd->next = htbl->hnodes[val];
+  htbl->hnodes[val] = hnd;
+  return hnd;
+}
+
+/*
+int main()
+{
+  int a[5] = {0,5,2,1,4};
+  int b[5] = {0,5,4,1,4};
+  int c[5] = {0,6,2,1,4};
+  int d[5] = {0,5,2,1,35};
+  int e[5] = {0,5,4,1,4};
+
+  htable *htbl = new_htable(10);
+  printf("%d\n", hash(a, 5, 10));
+  printf("%p\n", insert_htable(htbl, a, 5));
+  printf("%d\n", hash(b, 5, 10));
+  printf("%p\n", insert_htable(htbl, b, 5));
+  printf("%d\n", hash(c, 5, 10));
+  printf("%p\n", insert_htable(htbl, c, 5));
+  printf("%d\n", hash(d, 5, 10));
+  printf("%p\n", insert_htable(htbl, d, 5));
+  printf("%d\n", hash(e, 5, 10));
+  printf("%p\n", insert_htable(htbl, e, 5));
+  
+  return 0;
+}
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 typedef double DTYPE;
 typedef unsigned long ITYPE;
 
@@ -108,81 +227,6 @@ int main()
 
 
 
-
-
-typedef struct hlist 
-{
-  struct hlist *next;
-  char *key;
-  void *ptr;
-} hlist;
-
-typedef struct htable
-{
-  ITYPE size;
-  struct hlist **hlsts;
-} htable;
-
-htable *new_htable(ITYPE size)
-{
-  htable *htbl = (htable *)malloc(sizeof(htable));
-  htbl->size = size;
-  htbl->hlsts = (hlist **)malloc(size * sizeof(hlist *));
-  return htbl;
-}
-
-
-ITYPE hash(char *key, ITYPE size)
-{
-  ITYPE val;
-  for (val = 0; *key; key++)
-    val = 31 * val + *key;
-  return val % size;
-}
-
-
-hlist *lookup_htable(htable *htbl, char *key)
-{
-  ITYPE val = hash(key, htbl->size);
-  hlist *hlst;
-  
-  for (hlst = htbl->hlsts[val]; hlst != NULL; hlst = hlst->next)
-    if (strcmp(key, hlst->key) == 0)
-      return hlst;
-  
-  return NULL;
-}
-
-hlist *insert_htable(htable *htbl, char *key)
-{
-  ITYPE val = hash(key, htbl->size);
-  hlist *hlst;
-  
-  for (hlst = htbl->hlsts[val]; hlst != NULL; hlst = hlst->next)
-    if (strcmp(key, hlst->key) == 0)
-      return hlst;
-  
-  hlst = (hlist *) malloc(sizeof(hlist));
-  hlst->key = key;
-  
-  hlst->next = htbl->hlsts[val];
-  htbl->hlsts[val] = hlst;
-  return hlst;
-}
-
-/*
-int main()
-{
-  htable *htbl = new_htable(10);
-  insert_htable(htbl, "AABBAB");
-  insert_htable(htbl, "ABBBAB");
-  insert_htable(htbl, "BBABAB");
-  
-  hlist *result = lookup_htable(htbl, "ABBBAB");
-  printf("%s", result->key);
-  return 0;
-}
-*/
 
 
 
