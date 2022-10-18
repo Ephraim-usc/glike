@@ -61,6 +61,8 @@ typedef struct BundleObject
   int num_states;
   int *lineages;
   State **states;
+  struct BundleObject *parents;
+  struct BundleObject *children;
 } BundleObject;
 
 static void Bundle_dealloc(BundleObject *self)
@@ -122,7 +124,6 @@ static int Bundle_init(BundleObject *self, PyObject *args, PyObject *kwds)
 
 static PyObject *Bundle_print(BundleObject *self, PyObject *args)
 {
-  double t = self->t;
   int len = self->len;
   int num_states = self->num_states;
   
@@ -144,9 +145,12 @@ static PyObject *Bundle_print(BundleObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kwds);
+
 static PyMethodDef Bundle_methods[] = 
 {
   {"print", (PyCFunction) Bundle_print, METH_NOARGS, "print state bundle"},
+  {"diverge", (PyCFunction) Bundle_diverge, METH_VARARGS | METH_KEYWORDS, "bundle diverge"},
   {NULL},
 };
 
@@ -163,7 +167,62 @@ static PyTypeObject BundleType = {
     .tp_methods = Bundle_methods,
 };
 
-
+static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kwds)
+{
+  PyObject *parent;
+  PyObject *children;
+  
+  
+  static char *kwlist[] = {"children", "parent", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OO", kwlist, &children, &parent))
+    Py_RETURN_NONE;
+  
+  if (PyArray_DIM(parent, 0) != 1)
+  {
+    printf("error: parent must be of length 1!\n");
+    Py_RETURN_NONE;
+  }
+  
+  int num_children = PyArray_DIM(children, 0);
+  int *p = (int *)PyArray_DATA((PyArrayObject *)parent);
+  int *q = (int *)PyArray_DATA((PyArrayObject *)children);
+  
+  int i = 0, j = 0, index = 0;
+  for (; i<self->len; i++)
+  {
+    if (self->lineages[i] == *p)
+    {
+      index = i;
+      break;
+    }
+  }
+  
+  BundleObject *bundle = (BundleObject *) BundleType.tp_alloc(&BundleType, 0);
+  bundle->t = self->t;
+  bundle->len = self->len + num_children - 1;
+  bundle->num_states = self->num_states;
+  
+  bundle->lineages = (int *)malloc((bundle->len) * sizeof(int));
+  memcpy(bundle->lineages, self->lineages, index * sizeof(int));
+  memcpy(bundle->lineages + index, self->lineages + index + 1, (self->len - index - 1) * sizeof(int));
+  memcpy(bundle->lineages + self->len - 1, q, num_children * sizeof(int));
+  
+  bundle->states = (State **)malloc(self->num_states * sizeof(State *));
+  for (i = 0; i < self->num_states; i++)
+  {
+    State *state = State_new();
+    state->len = self->len + num_children - 1;
+    state->values = (int *)malloc(state->len * sizeof(int));
+    memcpy(state->values, self->states[i]->values, index * sizeof(int));
+    memcpy(state->values + index, self->states[i]->values + index + 1, (self->len - index - 1) * sizeof(int));
+    for (j = self->len - 1; j < self->len - 1 + num_children; j++)
+      state->values[j] = self->states[i]->values[index];
+    
+    bundle->states[i] = state;
+  }
+  
+  return (PyObject *) bundle;
+}
 
 
 
