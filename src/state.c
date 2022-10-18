@@ -24,6 +24,7 @@ typedef struct State
 {
   PyObject_HEAD
   int len;
+  double logp;
   int *values;
   int num_parents;
   int num_children;
@@ -37,6 +38,7 @@ State *State_new()
 {
   State *state = (State *)malloc(sizeof(State));
   state->len = 0;
+  state->logp = -INFINITY;
   state->values = NULL;
   state->num_parents = 0;
   state->num_children = 0;
@@ -47,6 +49,19 @@ State *State_new()
   return state;
 }
 
+void *State_print(State *state)
+{
+  printf("[%d parents]  ", state->num_parents);
+  
+  printf("logp=%.4lf ", state->logp);
+  printf("< ");
+  int i;
+  for (i = 0; i < state->len; i++)
+    printf("%d ", state->values[i]);
+  printf(">");
+  
+  printf("  [%d children]\n", state->num_children);
+}
 
 
 
@@ -111,6 +126,7 @@ static int Bundle_init(BundleObject *self, PyObject *args, PyObject *kwds)
   {
     state = State_new();
     state->len = len;
+    state->logp = 0.0;
     state->values = (int *)malloc(len * sizeof(int));
     memcpy(state->values, v + i * len, len * sizeof(int));
     self->states[i] = state;
@@ -127,19 +143,14 @@ static PyObject *Bundle_print(BundleObject *self, PyObject *args)
   
   printf("%lf\n\n", self->t);
   
-  int i, j;
-  
+  int i;
   for (i = 0; i < len; i++)
     printf("%d ", self->lineages[i]);
   printf("\n\n");
   
   for (i = 0; i < num_states; i++)
   {
-    State *state = self->states[i];
-    printf("[%d parents]  ", state->num_parents);
-    for (j = 0; j < len; j++)
-      printf("%d ", state->values[j]);
-    printf("  [%d children]\n", state->num_children);
+    State_print(self->states[i]);
   }
   
   Py_RETURN_NONE;
@@ -173,8 +184,8 @@ static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kw
   PyObject *children;
   
   
-  static char *kwlist[] = {"children", "parent", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OO", kwlist, &children, &parent))
+  static char *kwlist[] = {"parent", "children", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OO", kwlist, &parent, &children))
     Py_RETURN_NONE;
   
   if (PyArray_DIM(parent, 0) != 1)
