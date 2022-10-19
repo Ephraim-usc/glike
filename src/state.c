@@ -398,28 +398,49 @@ static void State_transition(State *state, TransitionObject *transition)
     num_children = num_children * num_outs[values[i]];
   
   /* migration counts and logp for each child state */
+  int *valueses = (int *)calloc(len * num_children, sizeof(int));
   int *C = (int *)calloc(len * num_children, sizeof(int));
   int *logps = (int *)calloc(num_children, sizeof(int));
-  int current_size = dim;
+  
+  int current_size_valueses = len;
+  int current_size_C = dim;
   for (i = len - 1; i >= 0; i--)
   {
     in = values[i];
     
-    for (j = 1; j < num_outs[in]; j++)
-      memcpy(C + current_size * j, C, current_size * sizeof(int));
+    for (j = 1; j < num_outs[in]; j++) // j is the index of out value
+    {
+      memcpy(C + current_size_C * j, C, current_size_C * sizeof(int));
+      memcpy(valueses + current_size_valueses * j, valueses, current_size_valueses * sizeof(int));
+    }
     
-    for (j = 0; j < num_outs[in]; j++) // out is the j-th destination value
+    for (j = 0; j < num_outs[in]; j++) // j is the index of out value
     {
       out = outs[in][j];
-      for (z = current_size * j + in * dim_out + out; z < current_size * (j + 1); z += dim)
+      for (z = current_size_C * j + in * dim_out + out; z < current_size_C * (j + 1); z += dim)
         C[z] += 1;
+      for (z = current_size_valueses * j + i; z < current_size_valueses * (j + 1); z += len)
+        valueses[z] = out;
     }
-    current_size = current_size * num_outs[in];
+    
+    current_size_C = current_size_C * num_outs[in];
+    current_size_valueses = current_size_valueses * num_outs[in];
   }
   
   for (i = 0; i < dim * num_children; i++)
+  {
+    if (i % dim == 0)
+      printf(" ");
     printf("%d", C[i]);
+  }
+  printf("\n");
   
+  for (i = 0; i < len * num_children; i++)
+  {
+    if (i % len == 0)
+      printf(" ");
+    printf("%d", valueses[i]);
+  }
   printf("\n");
 }
 
