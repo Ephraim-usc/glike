@@ -49,7 +49,7 @@ State *State_new()
   return state;
 }
 
-void *State_print(State *state)
+void State_print(State *state)
 {
   printf("[%d parents]  ", state->num_parents);
   
@@ -158,10 +158,13 @@ static PyObject *Bundle_print(BundleObject *self, PyObject *args)
 
 static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kwds);
 
+static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject *kwds);
+
 static PyMethodDef Bundle_methods[] = 
 {
   {"print", (PyCFunction) Bundle_print, METH_NOARGS, "print state bundle"},
   {"diverge", (PyCFunction) Bundle_diverge, METH_VARARGS | METH_KEYWORDS, "bundle diverge"},
+  {"transition", (PyCFunction) Bundle_transition, METH_VARARGS | METH_KEYWORDS, "bundle transition"},
   {NULL},
 };
 
@@ -182,7 +185,6 @@ static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kw
 {
   PyObject *parent;
   PyObject *children;
-  
   
   static char *kwlist[] = {"parent", "children", NULL};
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OO", kwlist, &parent, &children))
@@ -340,6 +342,7 @@ static PyObject *Transition_print(TransitionObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+
 static PyMethodDef Transition_methods[] = 
 {
   {"print", (PyCFunction) Transition_print, METH_NOARGS, "print transition"},
@@ -358,6 +361,28 @@ static PyTypeObject TransitionType = {
     .tp_dealloc = (destructor) Transition_dealloc,
     .tp_methods = Transition_methods,
 };
+
+
+
+static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject *kwds)
+{
+  TransitionObject *transition;
+  
+  static char *kwlist[] = {"transition", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O!", kwlist, &TransitionType, &transition))
+    Py_RETURN_NONE;
+  
+  int dim_in = transition->dim_in;
+  int dim_out = transition->dim_out;
+  int i;
+  for (i = 0; i < dim_in * dim_out; i++)
+    printf("       %d%d", i/dim_in, i%dim_in);
+  printf("\n\n");
+  
+  Py_RETURN_NONE;
+}
+
+
 
 
 
