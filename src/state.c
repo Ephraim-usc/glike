@@ -325,7 +325,7 @@ static PyObject *Transition_print(TransitionObject *self, PyObject *args)
   int i, j;
   
   for (i = 0; i < dim_in * dim_out; i++)
-    printf("       %d%d", i/dim_in, i%dim_in);
+    printf("       %d%d", i/dim_out, i%dim_out);
   printf("\n\n");
   
   for (i = 0; i < dim_in * dim_out; i++)
@@ -363,6 +363,59 @@ static PyTypeObject TransitionType = {
 };
 
 
+static void State_transition(State *state, TransitionObject *transition)
+{
+  int len = state->len;
+  int *values = state->values;
+  
+  int dim_in = transition->dim_in;
+  int dim_out = transition->dim_out;
+  double *logP =  transition->logP;
+  
+  /* out values and counts of which for each in value */
+  int in, out, i, j;
+  int *p;
+  int *num_outs = (int *)calloc(dim_in, sizeof(int));
+  int *outs = (int **)malloc(dim_in * sizeof(int *));
+  for (in = 0; in < dim_in; in++)
+  {
+    outs[in] = (int *)malloc(dim_out, sizeof(int));
+    p = outs[in];
+    for (out = 0; out < dim_out; out++)
+    {
+      if (logP[in * dim_out + out] == -INFINITY)
+        continue;
+      num_outs[in] += 1;
+      *p = out;
+      p++;
+    }
+  }
+  
+  /* number of children states */
+  int num_children = 1;
+  for (i = 0; i < len; i++)
+    num_children = num_children * num_outs[values[i]];
+  
+  /* migration counts and logp for each child state */
+  int *C = (int *)calloc(len * num_children, sizeof(int));
+  int *logps = (int *)calloc(num_children, sizeof(int));
+  int current_size = 1;
+  for (i = len - 1; i >= 0; i--)
+  {
+    in = values[i];
+    memcpy(C, C + current_size, (num_outs[i] - 1) * current_size * sizeof(int));
+    for (j = 0; j < num_outs[i]; j++)
+    {
+      out = outs[i][j];
+      for (z = current_size * j + in * dim_out + out; z < current_size * (j + 1); z += len)
+        C[z] += 1;
+    }
+    current_size = current_size * num_outs[i];
+  }
+    
+  
+  printf("\n");
+}
 
 static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject *kwds)
 {
@@ -374,10 +427,11 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
   
   int dim_in = transition->dim_in;
   int dim_out = transition->dim_out;
+  double *logP =  transition->logP;
+  
   int i;
-  for (i = 0; i < dim_in * dim_out; i++)
-    printf("       %d%d", i/dim_in, i%dim_in);
-  printf("\n\n");
+  for (i = 0; i < self->num_states; i++)
+    State_transition(self->states[i], transition);
   
   Py_RETURN_NONE;
 }
