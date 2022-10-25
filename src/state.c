@@ -8,9 +8,9 @@
 #include <stdint.h>
 #include "structmember.h"
 
+#include "list.h"
 
-
-static double dot(double *x, double *y, int len)
+static double dot(double *x, int *y, int len) // note that y is (int *), this is just for our algorithm.
 {
   double buffer = 0;
   int i;
@@ -484,9 +484,20 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
       current_size = current_size * num_outs[in];
     }
     
-    State *parent_state = hab
+    for (z = 0; z < num_children; z++)
+    {
+      hnode *node = insert_htable(hashtable, valueses + len * z, len);
+      if (node->pointer == NULL)
+      {
+        node->pointer = State_new();
+        printf("new state.\n");
+      }
+      else
+      {
+        printf("already exist.\n");
+      }
+    }
     
-    /*
     for (i = 0; i < len * num_children; i++)
     {
       if (i % len == 0)
@@ -495,6 +506,7 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
     }
     printf("\n\n");
     
+    /*
     for (i = 0; i < dim * num_children; i++)
     {
       if (i % dim == 0)
