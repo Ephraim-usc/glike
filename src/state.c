@@ -10,7 +10,16 @@
 
 
 
-
+static double dot(double *x, double *y, int len)
+{
+  double buffer = 0;
+  int i;
+  for (i = 0; i < len; i++)
+  {
+    buffer += x[i] * y[i];
+  }
+  return buffer;
+}
 
 
 
@@ -260,6 +269,8 @@ typedef struct
   int dim_out;
   double *logP;
   double **logRR;
+  int *num_outs; // fast track of number of out values for each in value
+  int **outs;  // fast track of out values for each in value
 } TransitionObject;
 
 static void Transition_dealloc(TransitionObject *self)
@@ -281,6 +292,8 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
   self->dim_out = 0;
   self->logP = NULL;
   self->logRR = NULL;
+  self->num_outs = NULL;
+  self->outs = NULL;
   
   PyObject *logP;
   PyObject *logRR;
@@ -313,6 +326,24 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
     memcpy(self->logRR[i], rr + i * dim_in * dim_out, dim_in * dim_out * sizeof(double));
   }
   
+  int in, out, k;
+  int *num_outs = (int *)calloc(dim_in, sizeof(int));
+  int **outs = (int **)malloc(dim_in * sizeof(int *));
+  for (in = 0; in < dim_in; in++)
+  {
+    outs[in] = (int *)malloc(dim_out * sizeof(int));
+    k = 0;
+    for (out = 0; out < dim_out; out++)
+    {
+      if (self->logP[in * dim_out + out] == -INFINITY)
+        continue;
+      num_outs[in] += 1;
+      outs[in][k++] = out;
+    }
+  }
+  self->num_outs = num_outs;
+  self->outs = outs;
+  
   return 0;
 }
 
@@ -339,6 +370,24 @@ static PyObject *Transition_print(TransitionObject *self, PyObject *args)
     printf("\n");
   }
   
+  /*
+  int in, k;
+  for (in = 0; in < dim_in; in ++)
+  {
+    printf("%d ", self->num_outs[in]);
+  }
+  printf("\n");
+  
+  for (in = 0; in < dim_in; in ++)
+  {
+    for (k = 0; k < self->num_outs[in]; k++)
+    {
+      printf("%d ", self->outs[in][k]);
+    }
+    printf("\n");
+  }
+  */
+  
   Py_RETURN_NONE;
 }
 
@@ -363,87 +412,6 @@ static PyTypeObject TransitionType = {
 };
 
 
-static void State_transition(State *state, TransitionObject *transition)
-{
-  int len = state->len;
-  int *values = state->values;
-  
-  int dim_in = transition->dim_in;
-  int dim_out = transition->dim_out;
-  int dim = dim_in * dim_out;
-  double *logP =  transition->logP;
-  
-  /* out values and counts of which for each in value */
-  int in, out, i, j, z;
-  int *p;
-  int *num_outs = (int *)calloc(dim_in, sizeof(int));
-  int **outs = (int **)malloc(dim_in * sizeof(int *));
-  for (in = 0; in < dim_in; in++)
-  {
-    outs[in] = (int *)malloc(dim_out * sizeof(int));
-    p = outs[in];
-    for (out = 0; out < dim_out; out++)
-    {
-      if (logP[in * dim_out + out] == -INFINITY)
-        continue;
-      num_outs[in] += 1;
-      *p = out;
-      p++;
-    }
-  }
-  
-  /* number of children states */
-  int num_children = 1;
-  for (i = 0; i < len; i++)
-    num_children = num_children * num_outs[values[i]];
-  
-  /* migration counts and logp for each child state */
-  int *valueses = (int *)calloc(len * num_children, sizeof(int));
-  int *C = (int *)calloc(len * num_children, sizeof(int));
-  int *logps = (int *)calloc(num_children, sizeof(int));
-  
-  int current_size_valueses = len;
-  int current_size_C = dim;
-  for (i = len - 1; i >= 0; i--)
-  {
-    in = values[i];
-    
-    for (j = 1; j < num_outs[in]; j++) // j is the index of out value
-    {
-      memcpy(C + current_size_C * j, C, current_size_C * sizeof(int));
-      memcpy(valueses + current_size_valueses * j, valueses, current_size_valueses * sizeof(int));
-    }
-    
-    for (j = 0; j < num_outs[in]; j++) // j is the index of out value
-    {
-      out = outs[in][j];
-      for (z = current_size_C * j + in * dim_out + out; z < current_size_C * (j + 1); z += dim)
-        C[z] += 1;
-      for (z = current_size_valueses * j + i; z < current_size_valueses * (j + 1); z += len)
-        valueses[z] = out;
-    }
-    
-    current_size_C = current_size_C * num_outs[in];
-    current_size_valueses = current_size_valueses * num_outs[in];
-  }
-  
-  for (i = 0; i < dim * num_children; i++)
-  {
-    if (i % dim == 0)
-      printf(" ");
-    printf("%d", C[i]);
-  }
-  printf("\n");
-  
-  for (i = 0; i < len * num_children; i++)
-  {
-    if (i % len == 0)
-      printf(" ");
-    printf("%d", valueses[i]);
-  }
-  printf("\n");
-}
-
 static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject *kwds)
 {
   TransitionObject *transition;
@@ -452,20 +420,87 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O!", kwlist, &TransitionType, &transition))
     Py_RETURN_NONE;
   
-  /*
+  int len = self->len;
+  
   int dim_in = transition->dim_in;
   int dim_out = transition->dim_out;
+  int dim = dim_in * dim_out;
   double *logP =  transition->logP;
-  */
+  double **logRR =  transition->logRR;
+  int *num_outs = transition->num_outs;
+  int **outs = transition->outs;
   
-  State_transition(self->states[0], transition);
-  
-  /*
-  int i;
-  for (i = 0; i < self->num_states; i++)
-    State_transition(self->states[i], transition);
-  */
-  
+  State *state;
+  int s;
+  for (s = 0; s < self->num_states; s++)
+  {
+    state = self->states[s];
+    int *values = state->values;
+    
+    int in, out;
+    int i; // index of lineage
+    int k; // index of out value
+    int z; // position to write
+    
+    int num_children = 1;
+    for (i = 0; i < len; i++)
+      num_children = num_children * num_outs[values[i]];
+    
+    int *valueses = (int *)calloc(len * num_children, sizeof(int));
+    int *Cs = (int *)calloc(len * num_children, sizeof(int));
+    double *logps = (int *)calloc(num_children, sizeof(double));
+    
+    int current_size_valueses = len;
+    int current_size_Cs = dim;
+    int current_size = 1;
+    for (i = len - 1; i >= 0; i--)
+    {
+      in = values[i];
+      
+      for (k = 1; k < num_outs[in]; k++)
+      {
+        memcpy(valueses + current_size_valueses * k, valueses, current_size_valueses * sizeof(int));
+        memcpy(Cs + current_size_Cs * k, Cs, current_size_Cs * sizeof(int));
+        memcpy(logps + current_size * k, logps, current_size * sizeof(double));
+      }
+      
+      for (k = 0; k < num_outs[in]; k++)
+      {
+        out = outs[in][k];
+        for (z = current_size * k; z < current_size * (k+1); k++)
+        {
+          logps[z] += logP[in * dim_out + out];
+          logps[k] += dot(logRR[in * dim_out + out], Cs + , dim);
+        }
+        for (z = current_size_valueses * k + i; z < current_size_valueses * (k + 1); z += len)
+          valueses[z] = out;
+        for (z = current_size_Cs * k + in * dim_out + out; z < current_size_Cs * (k + 1); z += dim)
+          Cs[z] += 1;
+      }
+      current_size_valueses = current_size_valueses * num_outs[in];
+      current_size_Cs = current_size_Cs * num_outs[in];
+      current_size = current_size * num_outs[in];
+    }
+    
+    /*
+    for (i = 0; i < len * num_children; i++)
+    {
+      if (i % len == 0)
+        printf(" ");
+      printf("%d", valueses[i]);
+    }
+    printf("\n");
+    
+    for (i = 0; i < dim * num_children; i++)
+    {
+      if (i % dim == 0)
+        printf(" ");
+      printf("%d", Cs[i]);
+    }
+    printf("\n\n");
+    */
+    
+  }
   Py_RETURN_NONE;
 }
 
