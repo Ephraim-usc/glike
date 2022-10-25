@@ -430,6 +430,8 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
   int *num_outs = transition->num_outs;
   int **outs = transition->outs;
   
+  htable *hashtable = new_htable(1000);
+  
   State *state;
   int s;
   for (s = 0; s < self->num_states; s++)
@@ -448,7 +450,7 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
     
     int *valueses = (int *)calloc(len * num_children, sizeof(int));
     int *Cs = (int *)calloc(len * num_children, sizeof(int));
-    double *logps = (int *)calloc(num_children, sizeof(double));
+    double *logps = (double *)calloc(num_children, sizeof(double));
     
     int current_size_valueses = len;
     int current_size_Cs = dim;
@@ -467,10 +469,10 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
       for (k = 0; k < num_outs[in]; k++)
       {
         out = outs[in][k];
-        for (z = current_size * k; z < current_size * (k+1); k++)
+        for (z = current_size * k; z < current_size * (k+1); z++)
         {
-          logps[z] += logP[in * dim_out + out];
-          logps[k] += dot(logRR[in * dim_out + out], Cs + , dim);
+          logps[z] += logP[in * dim_out + out]; // migration probability
+          logps[z] += dot(logRR[in * dim_out + out], Cs + z * dim, dim); // non-coalescence probability
         }
         for (z = current_size_valueses * k + i; z < current_size_valueses * (k + 1); z += len)
           valueses[z] = out;
@@ -482,6 +484,8 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
       current_size = current_size * num_outs[in];
     }
     
+    State *parent_state = hab
+    
     /*
     for (i = 0; i < len * num_children; i++)
     {
@@ -489,7 +493,7 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
         printf(" ");
       printf("%d", valueses[i]);
     }
-    printf("\n");
+    printf("\n\n");
     
     for (i = 0; i < dim * num_children; i++)
     {
@@ -498,6 +502,12 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
       printf("%d", Cs[i]);
     }
     printf("\n\n");
+    
+    for (i = 0; i < num_children; i++)
+    {
+      printf("%lf ", logps[i]);
+    }
+    printf("\n\n\n");
     */
     
   }
