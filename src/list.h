@@ -10,7 +10,7 @@ typedef struct hnode
 {
   struct hnode *next;
   int *key;
-  int value;
+  void *pointer;
 } hnode;
 
 typedef struct htable
