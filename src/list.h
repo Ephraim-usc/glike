@@ -23,7 +23,7 @@ htable *new_htable(int size)
 {
   htable *htbl = (htable *)malloc(sizeof(htable));
   htbl->size = size;
-  htbl->hnodes = (hnode **)malloc(size * sizeof(hnode *));
+  htbl->hnodes = (hnode **)calloc(size, sizeof(hnode *));
   return htbl;
 }
 
