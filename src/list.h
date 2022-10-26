@@ -4,27 +4,25 @@
 #include <string.h>
 #include <stdint.h>
 
-
-
-typedef struct hnode
+typedef struct Hnode
 {
-  struct hnode *next;
+  struct Hnode *next;
   int *key;
   void *pointer;
-} hnode;
+} Hnode;
 
-typedef struct htable
+typedef struct Htable
 {
   int size;
-  hnode **hnodes;
-} htable;
+  Hnode **hnodes;
+} Htable;
 
-htable *new_htable(int size)
+Htable *Htable_new(int size)
 {
-  htable *htbl = (htable *)malloc(sizeof(htable));
-  htbl->size = size;
-  htbl->hnodes = (hnode **)calloc(size, sizeof(hnode *));
-  return htbl;
+  Htable *htable = (Htable *)malloc(sizeof(Htable));
+  htable->size = size;
+  htable->hnodes = (Hnode **)calloc(size, sizeof(Hnode *));
+  return htable;
 }
 
 int hash(int *key, int len, int size)
@@ -44,34 +42,22 @@ int compare(int *a, int *b, int len)
   return (*(a+i) > *(b+i)) - (*(a+i) < *(b+i));
 }
 
-hnode *lookup_htable(htable *htbl, int *key, int len)
+Hnode *Htable_insert(Htable *htable, int *key, int len)
 {
-  int val = hash(key, len, htbl->size);
-  hnode *hnd;
+  int val = hash(key, len, htable->size);
+  Hnode *hnode;
   
-  for (hnd = htbl->hnodes[val]; hnd != NULL; hnd = hnd->next)
-    if (compare(key, hnd->key, len) == 0)
-      return hnd;
+  for (hnode = htable->hnodes[val]; hnode != NULL; hnode = hnode->next)
+    if (compare(key, hnode->key, len) == 0)
+      return hnode;
   
-  return NULL;
-}
-
-hnode *insert_htable(htable *htbl, int *key, int len)
-{
-  int val = hash(key, len, htbl->size);
-  hnode *hnd;
+  hnode = (Hnode *) malloc(sizeof(Hnode));
+  hnode->key = key;
+  hnode->pointer = NULL;
   
-  for (hnd = htbl->hnodes[val]; hnd != NULL; hnd = hnd->next)
-    if (compare(key, hnd->key, len) == 0)
-      return hnd;
-  
-  hnd = (hnode *) malloc(sizeof(hnode));
-  hnd->key = key;
-  hnd->pointer = NULL;
-  
-  hnd->next = htbl->hnodes[val];
-  htbl->hnodes[val] = hnd;
-  return hnd;
+  hnode->next = htable->hnodes[val];
+  htable->hnodes[val] = hnode;
+  return hnode;
 }
 
 /*
@@ -82,19 +68,18 @@ int main()
   int c[5] = {0,6,2,1,4};
   int d[5] = {0,5,2,1,35};
   int e[5] = {0,5,4,1,4};
-
-  htable *htbl = new_htable(10);
-  printf("%d\n", hash(a, 5, 10));
-  printf("%p\n", insert_htable(htbl, a, 5));
-  printf("%d\n", hash(b, 5, 10));
-  printf("%p\n", insert_htable(htbl, b, 5));
-  printf("%d\n", hash(c, 5, 10));
-  printf("%p\n", insert_htable(htbl, c, 5));
-  printf("%d\n", hash(d, 5, 10));
-  printf("%p\n", insert_htable(htbl, d, 5));
-  printf("%d\n", hash(e, 5, 10));
-  printf("%p\n", insert_htable(htbl, e, 5));
   
+  Htable *htable = Htable_new(10);
+  printf("%d\n", hash(a, 5, 10));
+  printf("%p\n", Htable_insert(htable, a, 5));
+  printf("%d\n", hash(b, 5, 10));
+  printf("%p\n", Htable_insert(htable, b, 5));
+  printf("%d\n", hash(c, 5, 10));
+  printf("%p\n", Htable_insert(htable, c, 5));
+  printf("%d\n", hash(d, 5, 10));
+  printf("%p\n", Htable_insert(htable, d, 5));
+  printf("%d\n", hash(e, 5, 10));
+  printf("%p\n", Htable_insert(htable, e, 5));
   return 0;
 }
 */
