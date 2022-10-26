@@ -540,7 +540,8 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
   bundle->lineages = (int *)malloc(len * sizeof(int));
   memcpy(bundle->lineages, self->lineages, len * sizeof(int));
   
-  Htable_export(hashtable, &bundle->num_states, bundle->states);
+  bundle->states = Htable_export(hashtable, &bundle->num_states);
+  
   self->child = bundle;
   bundle->parent = self;
   
