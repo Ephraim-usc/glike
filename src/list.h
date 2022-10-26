@@ -32,8 +32,8 @@ int hash(int *key, int len, int size)
   int *p = key;
   int val = 0;
   for (; p < key + len; p++)
-    val = 31 * val + *p;
-  return val % size;
+    val = (31 * val + *p) % size;
+  return val;
 }
 
 int compare(int *a, int *b, int len)
@@ -67,6 +67,7 @@ hnode *insert_htable(htable *htbl, int *key, int len)
   
   hnd = (hnode *) malloc(sizeof(hnode));
   hnd->key = key;
+  hnd->pointer = NULL;
   
   hnd->next = htbl->hnodes[val];
   htbl->hnodes[val] = hnd;
