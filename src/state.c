@@ -58,11 +58,6 @@ State *State_new()
   return state;
 }
 
-void State_connect(State *a, State *b)
-{
-  a->
-}
-
 void State_print(State *state)
 {
   printf("[%d parents]  ", state->num_parents);
@@ -88,8 +83,8 @@ typedef struct BundleObject
   int num_states;
   int *lineages;
   State **states;
-  struct BundleObject *parents;
-  struct BundleObject *children;
+  struct BundleObject *parent;
+  struct BundleObject *child;
 } BundleObject;
 
 static void Bundle_dealloc(BundleObject *self)
@@ -494,6 +489,7 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
     // export results from the three memory arrays
     state->num_children = num_children;
     state->logps_children = logps;
+    state->children = (State **)malloc(num_children * sizeof(State *));
     
     hnode *node;
     for (z = 0; z < num_children; z++)
@@ -502,11 +498,14 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
       if (node->pointer == NULL)
       {
         node->pointer = State_new();
-        node->pointer
+        node->pointer->len = len;
+        node->pointer->values = (int *)malloc(len * sizeof(int));
+        memcpy(node->pointer->values, valueses + len * z, len);
       }
-      
+      node->pointer->num_parents += 1;
     }
     
+    /*
     for (i = 0; i < len * num_children; i++)
     {
       if (i % len == 0)
@@ -515,7 +514,6 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
     }
     printf("\n\n");
     
-    /*
     for (i = 0; i < dim * num_children; i++)
     {
       if (i % dim == 0)
@@ -531,8 +529,22 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
     printf("\n\n\n");
     */
     
+    free(valueses);
+    free(Cs);
   }
-  Py_RETURN_NONE;
+  
+  // creating child bundle
+  BundleObject *bundle = (BundleObject *) BundleType.tp_alloc(&BundleType, 0);
+  bundle->t = self->t + transition->t;
+  bundle->len = self->len;
+  bundle->lineages = (int *)malloc(len * sizeof(int));
+  memcpy(bundle->lineages, self->lineages, len * sizeof(int));
+  
+  Htable_export(hashtable, &bundle->num_states, bundle->states);
+  self->child = bundle;
+  bundle->parent = self;
+  
+  return (PyObject *) bundle;
 }
 
 
