@@ -58,6 +58,11 @@ State *State_new()
   return state;
 }
 
+void State_connect(State *a, State *b)
+{
+  a->
+}
+
 void State_print(State *state)
 {
   printf("[%d parents]  ", state->num_parents);
@@ -444,10 +449,12 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
     int k; // index of out value
     int z; // position to write
     
+    // total number of children states
     int num_children = 1;
     for (i = 0; i < len; i++)
       num_children = num_children * num_outs[values[i]];
     
+    // computing three arrays using recursive memory operations
     int *valueses = (int *)calloc(len * num_children, sizeof(int));
     int *Cs = (int *)calloc(len * num_children, sizeof(int));
     double *logps = (double *)calloc(num_children, sizeof(double));
@@ -484,18 +491,20 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
       current_size = current_size * num_outs[in];
     }
     
+    // export results from the three memory arrays
+    state->num_children = num_children;
+    state->logps_children = logps;
+    
+    hnode *node;
     for (z = 0; z < num_children; z++)
     {
-      hnode *node = insert_htable(hashtable, valueses + len * z, len);
+      node = insert_htable(hashtable, valueses + len * z, len);
       if (node->pointer == NULL)
       {
         node->pointer = State_new();
-        printf("new state.\n");
+        node->pointer
       }
-      else
-      {
-        printf("already exist.\n");
-      }
+      
     }
     
     for (i = 0; i < len * num_children; i++)
