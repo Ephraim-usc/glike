@@ -60,6 +60,31 @@ Hnode *Htable_insert(Htable *htable, int *key, int len)
   return hnode;
 }
 
+void **Htable_export(Htable *htable, int *p_len)
+{
+  int size = htable->size;
+  *p_len = 0;
+  
+  int i;
+  Hnode *hnode;
+  for (i = 0; i < size; i++)
+  {
+    for (hnode = htable->hnodes[i]; hnode != NULL; hnode = hnode->next)
+      (*p_len)++;
+  }
+  
+  void **pointers = (void **)malloc(*p_len * sizeof(void *));
+  int k = 0;
+  for (i = 0; i < size; i++)
+  {
+    for (hnode = htable->hnodes[i]; hnode != NULL; hnode = hnode->next)
+      pointers[k++] = hnode->pointer;
+  }
+  
+  return pointers;
+}
+
+
 /*
 int main()
 {
