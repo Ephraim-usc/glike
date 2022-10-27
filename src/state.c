@@ -430,7 +430,7 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
   int *num_outs = transition->num_outs;
   int **outs = transition->outs;
   
-  htable *hashtable = new_htable(1000);
+  Htable *htable = Htable_new(1000);
   
   State *state;
   int s;
@@ -491,18 +491,21 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
     state->logps_children = logps;
     state->children = (State **)malloc(num_children * sizeof(State *));
     
-    hnode *node;
+    Hnode *node;
+    State *s;
     for (z = 0; z < num_children; z++)
     {
-      node = insert_htable(hashtable, valueses + len * z, len);
-      if (node->pointer == NULL)
+      node = Htable_insert(htable, valueses + len * z, len);
+      s = node->pointer;
+      if (s == NULL)
       {
-        node->pointer = State_new();
-        node->pointer->len = len;
-        node->pointer->values = (int *)malloc(len * sizeof(int));
-        memcpy(node->pointer->values, valueses + len * z, len);
+        s = State_new();
+        s->len = len;
+        s->values = (int *)malloc(len * sizeof(int));
+        memcpy(s->values, valueses + len * z, len);
+        node->pointer = s;
       }
-      node->pointer->num_parents += 1;
+      s->num_parents += 1;
     }
     
     /*
@@ -540,7 +543,7 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
   bundle->lineages = (int *)malloc(len * sizeof(int));
   memcpy(bundle->lineages, self->lineages, len * sizeof(int));
   
-  bundle->states = Htable_export(hashtable, &bundle->num_states);
+  bundle->states = (State **)Htable_export(htable, &bundle->num_states);
   
   self->child = bundle;
   bundle->parent = self;
