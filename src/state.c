@@ -502,7 +502,7 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
         s = State_new();
         s->len = len;
         s->values = (int *)malloc(len * sizeof(int));
-        memcpy(s->values, valueses + len * z, len);
+        memcpy(s->values, valueses + len * z, len * sizeof(int));
         node->pointer = s;
       }
       s->num_parents += 1;
