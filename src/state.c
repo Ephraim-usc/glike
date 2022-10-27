@@ -497,6 +497,8 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
     {
       node = Htable_insert(htable, valueses + len * z, len);
       s = node->pointer;
+      printf("[%d] ", s != NULL);
+      for (i = 0; i < len; i++) printf("%d ", *(valueses + len * z + i)); printf("\n");
       if (s == NULL)
       {
         s = State_new();
