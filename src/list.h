@@ -34,6 +34,14 @@ int hash(int *key, int len, int size)
   return val;
 }
 
+int equal(int *a, int *b, int len)
+{
+  int i = len - 1;
+  while (*(a+i) == *(b+i) && i >= 0)
+    i--;
+  return i < 0;
+}
+
 int compare(int *a, int *b, int len)
 {
   int i = 0;
@@ -48,7 +56,7 @@ Hnode *Htable_insert(Htable *htable, int *key, int len)
   Hnode *hnode;
   
   for (hnode = htable->hnodes[val]; hnode != NULL; hnode = hnode->next)
-    if (compare(key, hnode->key, len) == 0)
+    if (equal(key, hnode->key, len))
       return hnode;
   
   hnode = (Hnode *) malloc(sizeof(Hnode));
@@ -83,6 +91,25 @@ void **Htable_export(Htable *htable, int *p_len)
   
   return pointers;
 }
+
+
+
+/*
+int main()
+{
+  int a[11] = {1,1,1,1,1,1,1,1,1,1,1};
+  int b[11] = {1,1,1,1,1,1,1,1,1,1,1};
+  
+  Htable *htable = Htable_new(1000);
+  printf("%d\n", hash(a, 11, 1000));
+  printf("%p\n", Htable_insert(htable, a, 11));
+  printf("%d\n", hash(b, 11, 1000));
+  printf("%p\n", Htable_insert(htable, b, 11));
+  return 0;
+}
+*/
+
+
 
 
 /*
