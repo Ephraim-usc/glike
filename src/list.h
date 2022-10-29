@@ -60,7 +60,8 @@ Hnode *Htable_insert(Htable *htable, int *key, int len)
       return hnode;
   
   hnode = (Hnode *) malloc(sizeof(Hnode));
-  hnode->key = key;
+  hnode->key = (int *) malloc(len * sizeof(int));
+  memcpy(hnode->key, key, len * sizeof(int));
   hnode->pointer = NULL;
   
   hnode->next = htable->hnodes[val];
