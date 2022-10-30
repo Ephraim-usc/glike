@@ -135,7 +135,7 @@ static int Bundle_init(BundleObject *self, PyObject *args, PyObject *kwds)
   {
     state = State_new();
     state->len = len;
-    state->logp = 0.0;
+    state->logp = -INFINITY;
     state->values = (int *)malloc(len * sizeof(int));
     memcpy(state->values, v + i * len, len * sizeof(int));
     self->states[i] = state;
@@ -165,6 +165,48 @@ static PyObject *Bundle_print(BundleObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+static PyObject *Bundle_propagate(BundleObject *self, PyObject *args)
+{
+  int i; // index of state
+  int j; // index of link
+  for (i = 0; i < self->num_states; i++)
+    self->states[i]->logp = 0;
+  
+  BundleObject *bundle = self->parent;
+  while (bundle != NULL)
+  {
+    for (i = 0; i < bundle->num_states; i++)
+    {
+      State *state = bundle->states[i];
+      if (state->num_children == 0)
+        continue;
+      
+      double *buffer = (double *)malloc(state->num_children * sizeof(double));
+      memcpy(buffer, state->logps_children, state->num_children * sizeof(double));
+      
+      double tmp = 0;
+      double current_max = -INFINITY;
+      for (j = 0; j < state->num_children; j++)
+      {
+        *(buffer + j) += state->children[j]->logp;
+        if (*(buffer + j) > current_max) current_max = *(buffer + j);
+      }
+      
+      for (j = 0; j < state->num_children; j++)
+      {
+        tmp += exp(*(buffer + j) - current_max);
+      }
+      
+      state->logp = current_max + log(tmp);
+    }
+    
+    bundle = bundle->parent;
+  }
+  
+  Py_RETURN_NONE;
+}
+
+
 static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kwds);
 
 static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject *kwds);
@@ -172,6 +214,7 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
 static PyMethodDef Bundle_methods[] = 
 {
   {"print", (PyCFunction) Bundle_print, METH_NOARGS, "print state bundle"},
+  {"propagate", (PyCFunction) Bundle_propagate, METH_NOARGS, "logp propagation from this bundle"},
   {"diverge", (PyCFunction) Bundle_diverge, METH_VARARGS | METH_KEYWORDS, "bundle diverge"},
   {"transition", (PyCFunction) Bundle_transition, METH_VARARGS | METH_KEYWORDS, "bundle transition"},
   {NULL},
@@ -497,8 +540,7 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
     {
       node = Htable_insert(htable, valueses + len * z, len);
       s = node->pointer;
-      printf("[%d] ", s != NULL); printf("[%d] ", hash(valueses + len * z, len, 1000));
-      for (i = 0; i < len; i++) printf("%d ", *(valueses + len * z + i)); printf("\n");
+      
       if (s == NULL)
       {
         s = State_new();
@@ -507,7 +549,9 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
         memcpy(s->values, valueses + len * z, len * sizeof(int));
         node->pointer = s;
       }
+      
       s->num_parents += 1;
+      state->children[z] = s;
     }
     
     /*
