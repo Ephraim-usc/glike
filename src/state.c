@@ -314,6 +314,8 @@ typedef struct
   double **logRR;
   int *num_outs; // fast track of number of out values for each in value
   int **outs;  // fast track of out values for each in value
+  int *num_ins; // fast track of number of in values for each out value
+  int **ins;  // fast track of in values for each out value
 } TransitionObject;
 
 static void Transition_dealloc(TransitionObject *self)
@@ -335,22 +337,24 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
   self->dim_out = 0;
   self->logP = NULL;
   self->logRR = NULL;
+  
   self->num_outs = NULL;
   self->outs = NULL;
+  self->num_ins = NULL;
+  self->ins = NULL;
   
   PyObject *logP;
   PyObject *logRR;
   
-  static char *kwlist[] = {"t", "dim_in", "dim_out", "logP", "logRR", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|diiOO", kwlist, &self->t, &self->dim_in, &self->dim_out, &logP, &logRR))
+  static char *kwlist[] = {"t", "logP", "logRR", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|dOO", kwlist, &self->t, &logP, &logRR))
     return -1;
   
-  int dim_in = self->dim_in;
-  int dim_out = self->dim_out;
+  int dim_in = self->dim_in = PyArray_DIM(logP, 0);
+  int dim_out = self->dim_out = PyArray_DIM(logP, 1);
   
-  if ((PyArray_DIM(logP, 0) != dim_in * dim_out)||
-      (PyArray_DIM(logRR, 0) != dim_in * dim_out)||
-      (PyArray_DIM(logRR, 1) != dim_in * dim_out))
+  if ((PyArray_DIM(logRR, 0) != dim_in * dim_in)||
+      (PyArray_DIM(logRR, 1) != dim_out * dim_out))
   {
     printf("error: dimensions do not match!\n");
     return -1;
@@ -360,18 +364,24 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
   self->logP = (double *)malloc(dim_in * dim_out * sizeof(double));
   memcpy(self->logP, p, dim_in * dim_out * sizeof(double));
   
-  int i;
-  double *rr = (double *)PyArray_DATA((PyArrayObject *)logRR);
+  int in1, in2, out1, out2;
+  p = (double *)PyArray_DATA((PyArrayObject *)logRR);
   self->logRR = (double **)malloc(dim_in * dim_out * sizeof(double *));
-  for (i = 0; i < dim_in * dim_out; i++)
+  for (in1 = 0; in1 < dim_in; in1++)
   {
-    self->logRR[i] = (double *)malloc(dim_in * dim_out * sizeof(double));
-    memcpy(self->logRR[i], rr + i * dim_in * dim_out, dim_in * dim_out * sizeof(double));
+    for (out1 = 0; out1 < dim_out; out1++)
+    {
+      self->logRR[in1 * dim_out + out1] = (double *)malloc(dim_in * dim_out * sizeof(double));
+      for (in2 = 0; in2 < dim_in; in2++)
+        for (out2 = 0; out2 < dim_out; out2++)
+          self->logRR[in1 * dim_out + out1][in2 * dim_out + out2] = p[(in1 * dim_in + in2) * (dim_out * dim_out) + out1 * dim_out + out2];
+    }
   }
   
   int in, out, k;
   int *num_outs = (int *)calloc(dim_in, sizeof(int));
   int **outs = (int **)malloc(dim_in * sizeof(int *));
+  
   for (in = 0; in < dim_in; in++)
   {
     outs[in] = (int *)malloc(dim_out * sizeof(int));
@@ -384,8 +394,24 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
       outs[in][k++] = out;
     }
   }
+  
+  for (out = 0; out < dim_out; out++)
+  {
+    ins[out] = (int *)malloc(dim_in * sizeof(int));
+    k = 0;
+    for (in = 0; in < dim_in; in++)
+    {
+      if (self->logP[in * dim_out + out] == -INFINITY)
+        continue;
+      num_ins[out] += 1;
+      ins[out][k++] = in;
+    }
+  }
+  
   self->num_outs = num_outs;
   self->outs = outs;
+  self->num_ins = num_ins;
+  self->ins = ins;
   
   return 0;
 }
