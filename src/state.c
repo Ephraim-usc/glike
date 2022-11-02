@@ -221,6 +221,25 @@ static PyMethodDef Bundle_methods[] =
 };
 
 
+static PyObject *Bundle_getparent(BundleObject *self, void *closure)
+{
+    Py_INCREF(self->parent);
+    return (PyObject *)self->parent;
+}
+
+static PyObject *Bundle_getchild(BundleObject *self, void *closure)
+{
+    Py_INCREF(self->child);
+    return (PyObject *)self->child;
+}
+
+static PyGetSetDef Bundle_getsetters[] = {
+    {"parent", (getter) Bundle_getparent, NULL, "parent bundle", NULL},
+    {"child", (getter) Bundle_getchild, NULL, "child bundle", NULL},
+    {NULL}  /* Sentinel */
+};
+
+
 static PyTypeObject BundleType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "state.Bundle",
@@ -231,7 +250,9 @@ static PyTypeObject BundleType = {
     .tp_init = (initproc) Bundle_init,
     .tp_dealloc = (destructor) Bundle_dealloc,
     .tp_methods = Bundle_methods,
+    .tp_getset = Bundle_getsetters,
 };
+
 
 static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kwds)
 {
@@ -306,7 +327,7 @@ static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kw
     self->states[s]->num_children = 1;
     self->states[s]->children = (State **)malloc(sizeof(State *));
     self->states[s]->children[0] = state;
-    self->states[s]->logps_children = (double **)malloc(sizeof(double *));
+    self->states[s]->logps_children = (double *)malloc(sizeof(double *));
     self->states[s]->logps_children[0] = l[value];
   }
   
