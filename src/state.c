@@ -252,7 +252,7 @@ static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kw
   int num_children = PyArray_DIM(children, 0);
   int *p = (int *)PyArray_DATA((PyArrayObject *)parent);
   int *c = (int *)PyArray_DATA((PyArrayObject *)children);
-  int *l = (int *)PyArray_DATA((PyArrayObject *)logn);
+  double *l = (double *)PyArray_DATA((PyArrayObject *)logn);
   
   // find index of parent
   int i;
@@ -290,20 +290,24 @@ static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kw
   {
     State *state = State_new();
     state->len = self->len + num_children - 1;
+    
+    int value = self->states[s]->values[index];
     state->values = (int *)malloc(state->len * sizeof(int));
     memcpy(state->values, self->states[s]->values, index * sizeof(int));
     memcpy(state->values + index + num_children, self->states[s]->values + index + 1, (self->len - index - 1) * sizeof(int));
     for (i = index; i < index + num_children; i++)
-      state->values[i] = self->states[s]->values[index];
-    bundle->states[s] = state;
+      state->values[i] = value;
     
     state->num_parents = 1;
     state->parents = (State **)malloc(sizeof(State *));
     state->parents[0] = self->states[s];
+    bundle->states[s] = state;
     
     self->states[s]->num_children = 1;
     self->states[s]->children = (State **)malloc(sizeof(State *));
     self->states[s]->children[0] = state;
+    self->states[s]->logps_children = (double **)malloc(sizeof(double *));
+    self->states[s]->logps_children[0] = l[value];
   }
   
   self->child = bundle;
