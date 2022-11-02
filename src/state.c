@@ -383,7 +383,9 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
   
   int in, out, k;
   int *num_outs = (int *)calloc(dim_in, sizeof(int));
+  int *num_ins = (int *)calloc(dim_out, sizeof(int));
   int **outs = (int **)malloc(dim_in * sizeof(int *));
+  int **ins = (int **)malloc(dim_out * sizeof(int *));
   
   for (in = 0; in < dim_in; in++)
   {
@@ -459,6 +461,22 @@ static PyObject *Transition_print(TransitionObject *self, PyObject *args)
     printf("\n");
   }
   */
+  
+  int out, k;
+  for (out = 0; out < dim_out; out++)
+  {
+    printf("%d ", self->num_ins[out]);
+  }
+  printf("\n");
+  
+  for (out = 0; out < dim_out; out++)
+  {
+    for (k = 0; k < self->num_ins[out]; k++)
+    {
+      printf("%d ", self->ins[out][k]);
+    }
+    printf("\n");
+  }
   
   Py_RETURN_NONE;
 }
