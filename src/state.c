@@ -541,7 +541,7 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
     
     // computing three arrays using recursive memory operations
     int *valueses = (int *)calloc(len * num_children, sizeof(int));
-    int *Cs = (int *)calloc(len * num_children, sizeof(int));
+    int *Cs = (int *)calloc(dim * num_children, sizeof(int));
     double *logps = (double *)calloc(num_children, sizeof(double));
     
     int current_size_valueses = len;
@@ -684,7 +684,7 @@ static PyObject *Bundle_evolve(BundleObject *self, PyObject *args, PyObject *kwd
     
     // computing three arrays using recursive memory operations
     int *valueses = (int *)calloc(len * num_children, sizeof(int));
-    int *Cs = (int *)calloc(len * num_children, sizeof(int));
+    int *Cs = (int *)calloc(dim * num_children, sizeof(int));
     double *logps = (double *)calloc(num_children, sizeof(double));
     
     int current_size_valueses = len;
