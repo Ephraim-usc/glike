@@ -211,12 +211,15 @@ static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kw
 
 static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject *kwds);
 
+static PyObject *Bundle_evolve(BundleObject *self, PyObject *args, PyObject *kwds); // inverse of transition
+
 static PyMethodDef Bundle_methods[] = 
 {
   {"print", (PyCFunction) Bundle_print, METH_NOARGS, "print state bundle"},
   {"propagate", (PyCFunction) Bundle_propagate, METH_NOARGS, "logp propagation from this bundle"},
   {"diverge", (PyCFunction) Bundle_diverge, METH_VARARGS | METH_KEYWORDS, "bundle diverge"},
   {"transition", (PyCFunction) Bundle_transition, METH_VARARGS | METH_KEYWORDS, "bundle transition"},
+  {"evolve", (PyCFunction) Bundle_evolve, METH_VARARGS | METH_KEYWORDS, "bundle evolve (inverse of transition)"},
   {NULL},
 };
 
@@ -624,6 +627,147 @@ static PyObject *Bundle_transition(BundleObject *self, PyObject *args, PyObject 
 }
 
 
+static PyObject *Bundle_evolve(BundleObject *self, PyObject *args, PyObject *kwds)
+{
+  TransitionObject *transition;
+  
+  static char *kwlist[] = {"transition", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O!", kwlist, &TransitionType, &transition))
+    Py_RETURN_NONE;
+  
+  int len = self->len;
+  
+  int dim_in = transition->dim_in;
+  int dim_out = transition->dim_out;
+  int dim = dim_in * dim_out;
+  double *logP =  transition->logP;
+  double **logRR =  transition->logRR;
+  int *num_ins = transition->num_ins;
+  int **ins = transition->ins;
+  
+  Htable *htable = Htable_new(1000);
+  
+  State *state;
+  int s;
+  for (s = 0; s < self->num_states; s++)
+  {
+    state = self->states[s];
+    int *values = state->values;
+    
+    int in, out;
+    int i; // index of lineage
+    int k; // index of out value
+    int z; // position to write
+    
+    // total number of children states
+    int num_children = 1;
+    for (i = 0; i < len; i++)
+      num_children = num_children * num_ins[values[i]];
+    
+    // computing three arrays using recursive memory operations
+    int *valueses = (int *)calloc(len * num_children, sizeof(int));
+    int *Cs = (int *)calloc(len * num_children, sizeof(int));
+    double *logps = (double *)calloc(num_children, sizeof(double));
+    
+    int current_size_valueses = len;
+    int current_size_Cs = dim;
+    int current_size = 1;
+    for (i = len - 1; i >= 0; i--)
+    {
+      out = values[i];
+      
+      for (k = 1; k < num_ins[out]; k++)
+      {
+        memcpy(valueses + current_size_valueses * k, valueses, current_size_valueses * sizeof(int));
+        memcpy(Cs + current_size_Cs * k, Cs, current_size_Cs * sizeof(int));
+        memcpy(logps + current_size * k, logps, current_size * sizeof(double));
+      }
+      
+      for (k = 0; k < num_ins[out]; k++)
+      {
+        in = ins[out][k];
+        for (z = current_size * k; z < current_size * (k + 1); z++)
+        {
+          logps[z] += logP[in * dim_out + out]; // migration probability
+          logps[z] += dot(logRR[in * dim_out + out], Cs + z * dim, dim); // non-coalescence probability
+        }
+        for (z = current_size_valueses * k + i; z < current_size_valueses * (k + 1); z += len)
+          valueses[z] = in;
+        for (z = current_size_Cs * k + in * dim_out + out; z < current_size_Cs * (k + 1); z += dim)
+          Cs[z] += 1;
+      }
+      current_size_valueses = current_size_valueses * num_ins[out];
+      current_size_Cs = current_size_Cs * num_ins[out];
+      current_size = current_size * num_ins[out];
+    }
+    
+    // export results from the three memory arrays
+    state->num_children = num_children;
+    state->logps_children = logps;
+    state->children = (State **)malloc(num_children * sizeof(State *));
+    
+    Hnode *node;
+    State *s;
+    for (z = 0; z < num_children; z++)
+    {
+      node = Htable_insert(htable, valueses + len * z, len);
+      s = node->pointer;
+      
+      if (s == NULL)
+      {
+        s = State_new();
+        s->len = len;
+        s->values = (int *)malloc(len * sizeof(int));
+        memcpy(s->values, valueses + len * z, len * sizeof(int));
+        node->pointer = s;
+      }
+      
+      s->num_parents += 1;
+      state->children[z] = s;
+    }
+    
+    /*
+    for (i = 0; i < len * num_children; i++)
+    {
+      if (i % len == 0)
+        printf(" ");
+      printf("%d", valueses[i]);
+    }
+    printf("\n\n");
+    
+    for (i = 0; i < dim * num_children; i++)
+    {
+      if (i % dim == 0)
+        printf(" ");
+      printf("%d", Cs[i]);
+    }
+    printf("\n\n");
+    
+    for (i = 0; i < num_children; i++)
+    {
+      printf("%lf ", logps[i]);
+    }
+    printf("\n\n\n");
+    */
+    
+    free(valueses);
+    free(Cs);
+  }
+  
+  // creating child bundle
+  BundleObject *bundle = (BundleObject *) BundleType.tp_alloc(&BundleType, 0);
+  bundle->t = self->t - transition->t;
+  bundle->len = self->len;
+  bundle->lineages = (int *)malloc(len * sizeof(int));
+  memcpy(bundle->lineages, self->lineages, len * sizeof(int));
+  
+  bundle->states = (State **)Htable_export(htable, &bundle->num_states);
+  
+  self->child = bundle;
+  bundle->parent = self;
+  
+  return (PyObject *) bundle;
+}
 
 
 
