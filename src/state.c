@@ -200,6 +200,7 @@ static PyObject *Bundle_propagate(BundleObject *self, PyObject *args)
       }
       
       state->logp = current_max + log(tmp);
+      free(buffer);
     }
     
     bundle = bundle->parent;
