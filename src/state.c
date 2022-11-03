@@ -60,6 +60,16 @@ State *State_new()
   return state;
 }
 
+void State_free(State *state)
+{
+  if (state->values) free(state->values);
+  if (state->logps_parents) free(state->logps_parents);
+  if (state->logps_children) free(state->logps_children);
+  if (state->parents) free(state->parents);
+  if (state->children) free(state->children);
+  free(state);
+}
+
 void State_print(State *state)
 {
   printf("[%d parents]  ", state->num_parents);
@@ -88,6 +98,7 @@ typedef struct BundleObject
   struct BundleObject *parent;
   struct BundleObject *child;
 } BundleObject;
+
 
 static void Bundle_dealloc(BundleObject *self)
 {
@@ -146,6 +157,25 @@ static int Bundle_init(BundleObject *self, PyObject *args, PyObject *kwds)
   return 0;
 }
 
+static PyObject *Bundle_free(BundleObject *self)
+{
+  BundleObject *bundle = self;
+  while (bundle != NULL)
+  {
+    int i;
+    for (i = 0; i < bundle->num_states; i++)
+    {
+      State_free(bundle->states[i]);
+    }
+    if (self->lineages) free(self->lineages);
+    if (self->states) free(self->states);
+    
+    bundle = bundle->child;
+    free(bundle->parent);
+  }
+  
+  Py_RETURN_NONE;
+}
 
 static PyObject *Bundle_print(BundleObject *self, PyObject *args)
 {
@@ -236,6 +266,7 @@ static PyObject *Bundle_evolve(BundleObject *self, PyObject *args, PyObject *kwd
 
 static PyMethodDef Bundle_methods[] = 
 {
+  {"free", (PyCFunction) Bundle_free, METH_NOARGS, "release memory of this and all descendent bundles"},
   {"print", (PyCFunction) Bundle_print, METH_NOARGS, "print state bundle"},
   {"propagate", (PyCFunction) Bundle_propagate, METH_NOARGS, "logp propagation from this bundle"},
   {"logp", (PyCFunction) Bundle_logp, METH_NOARGS, "compute the total logp of this bundle"},
