@@ -498,7 +498,6 @@ static PyObject *Transition_print(TransitionObject *self, PyObject *args)
     }
     printf("\n");
   }
-  */
   
   int out, k;
   for (out = 0; out < dim_out; out++)
@@ -515,6 +514,7 @@ static PyObject *Transition_print(TransitionObject *self, PyObject *args)
     }
     printf("\n");
   }
+  */
   
   Py_RETURN_NONE;
 }
