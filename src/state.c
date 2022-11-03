@@ -223,14 +223,24 @@ static PyMethodDef Bundle_methods[] =
 
 static PyObject *Bundle_getparent(BundleObject *self, void *closure)
 {
+  if (self->parent)
+  {
     Py_INCREF(self->parent);
     return (PyObject *)self->parent;
+  }
+  else
+    Py_RETURN_NONE;
 }
 
 static PyObject *Bundle_getchild(BundleObject *self, void *closure)
 {
+  if (self->child)
+  {
     Py_INCREF(self->child);
     return (PyObject *)self->child;
+  }
+  else
+    Py_RETURN_NONE;
 }
 
 static PyGetSetDef Bundle_getsetters[] = {
