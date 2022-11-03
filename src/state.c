@@ -344,6 +344,7 @@ static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kw
   self->child = bundle;
   bundle->parent = self;
   
+  Py_INCREF(bundle);
   return (PyObject *) bundle;
 }
 
@@ -689,6 +690,7 @@ static PyObject *Bundle_evolve(BundleObject *self, PyObject *args, PyObject *kwd
   self->child = bundle;
   bundle->parent = self;
   
+  Py_INCREF(bundle);
   return (PyObject *) bundle;
 }
 
