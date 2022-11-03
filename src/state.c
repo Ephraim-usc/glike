@@ -16,6 +16,8 @@ static double dot(double *x, int *y, int len) // note that y is (int *), this is
   int i;
   for (i = 0; i < len; i++)
   {
+    if (isnan(x[i]))
+      continue;
     buffer += x[i] * y[i];
   }
   return buffer;
@@ -206,6 +208,26 @@ static PyObject *Bundle_propagate(BundleObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+static PyObject *Bundle_logp(BundleObject *self, PyObject *args)
+{
+  int s;
+  double tmp = 0;
+  double current_max = -INFINITY;
+  double logp_;
+  for (s = 0; s < self->num_states; s++)
+  {
+    logp_ = self->states[s]->logp;
+    if (logp_ > current_max) current_max = logp_;
+  }
+  for (s = 0; s < self->num_states; s++)
+  {
+    logp_ = self->states[s]->logp;
+    tmp += exp(logp_ - current_max);
+  }
+  
+  return Py_BuildValue("d", current_max + log(tmp));
+}
+
 
 static PyObject *Bundle_diverge(BundleObject *self, PyObject *args, PyObject *kwds);
 
@@ -215,6 +237,7 @@ static PyMethodDef Bundle_methods[] =
 {
   {"print", (PyCFunction) Bundle_print, METH_NOARGS, "print state bundle"},
   {"propagate", (PyCFunction) Bundle_propagate, METH_NOARGS, "logp propagation from this bundle"},
+  {"logp", (PyCFunction) Bundle_logp, METH_NOARGS, "compute the total logp of this bundle"},
   {"diverge", (PyCFunction) Bundle_diverge, METH_VARARGS | METH_KEYWORDS, "bundle diverge"},
   {"evolve", (PyCFunction) Bundle_evolve, METH_VARARGS | METH_KEYWORDS, "bundle evolve (inverse of transition)"},
   {NULL},
