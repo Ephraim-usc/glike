@@ -709,6 +709,7 @@ static PyObject *Bundle_evolve(BundleObject *self, PyObject *args, PyObject *kwd
   memcpy(bundle->lineages, self->lineages, len * sizeof(int));
   
   bundle->states = (State **)Htable_export(htable, &bundle->num_states);
+  Htable_free(htable); htable = NULL;
   
   self->child = bundle;
   bundle->parent = self;
