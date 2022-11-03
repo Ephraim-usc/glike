@@ -167,11 +167,10 @@ static PyObject *Bundle_free(BundleObject *self)
     {
       State_free(bundle->states[i]);
     }
-    //if (self->lineages) free(self->lineages);
-    //if (self->states) free(self->states);
+    if (bundle->lineages) free(bundle->lineages);
+    if (bundle->states) free(bundle->states);
     
     bundle = bundle->child;
-    //free(bundle->parent);
   }
   
   Py_RETURN_NONE;
@@ -425,6 +424,7 @@ typedef struct
   int **ins;  // fast track of in values for each out value
 } TransitionObject;
 
+
 static void Transition_dealloc(TransitionObject *self)
 {
   Py_TYPE(self)->tp_free((PyObject *) self);
@@ -525,6 +525,29 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
   return 0;
 }
 
+static PyObject *Transition_free(TransitionObject *self)
+{
+  int i;
+  free(self->logP);
+  free(self->num_outs);
+  free(self->num_ins);
+  
+  int dim = self->dim_in * self->dim_out;
+  for (i = 0; i < dim; i++)
+    free(self->logRR[i]);
+  free(self->logRR);
+  
+  for (i = 0; i < self->dim_in; i++)
+    free(self->outs[i]);
+  free(self->outs);
+  
+  for (i = 0; i < self->dim_out; i++)
+    free(self->ins[i]);
+  free(self->ins);
+  
+  Py_RETURN_NONE;
+}
+
 static PyObject *Transition_print(TransitionObject *self, PyObject *args)
 {
   int dim_in = self->dim_in;
@@ -588,6 +611,7 @@ static PyObject *Transition_print(TransitionObject *self, PyObject *args)
 
 static PyMethodDef Transition_methods[] = 
 {
+  {"free", (PyCFunction) Transition_free, METH_NOARGS, "free memory of this transition"},
   {"print", (PyCFunction) Transition_print, METH_NOARGS, "print transition"},
   {NULL},
 };
