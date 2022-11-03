@@ -167,11 +167,11 @@ static PyObject *Bundle_free(BundleObject *self)
     {
       State_free(bundle->states[i]);
     }
-    if (self->lineages) free(self->lineages);
-    if (self->states) free(self->states);
+    //if (self->lineages) free(self->lineages);
+    //if (self->states) free(self->states);
     
     bundle = bundle->child;
-    free(bundle->parent);
+    //free(bundle->parent);
   }
   
   Py_RETURN_NONE;
