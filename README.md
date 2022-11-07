@@ -19,3 +19,8 @@ download the package and install from local:
     git clone https://github.com/Ephraim-usc/glike.git
     
     pip install ./glike
+
+
+About this project
+-------------
+![](images/poster_ashg.pdf)
