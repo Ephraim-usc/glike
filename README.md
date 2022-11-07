@@ -17,6 +17,18 @@ download the package and install from local:
     pip install ./glike
 
 
+Full likelihood of genealogical trees
+------------
+
+Core functionality
+
+    glike_trees(trees, demo)
+    
+Where `trees` is any enumerable that contains `tskit` genealogical trees.
+And `demo` is the hypothesized demography created manually or from provided models in `models.py`.
+It returns the probability that such genealogical trees are generated under hypothesized demography.
+
+
 About this project
 -------------
 
