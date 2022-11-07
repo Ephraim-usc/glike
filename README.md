@@ -22,4 +22,6 @@ About this project
 
 This is an ongoing project, please refer to our poster at ASHG 2022 for a brief introduction.
 
+If you are interested in knowing more, please let us know. Email the author: caoqifan@usc.edu
+
 ![](images/poster_ashg.png)
