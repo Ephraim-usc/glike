@@ -23,4 +23,4 @@ download the package and install from local:
 
 About this project
 -------------
-![](images/poster_ashg.pdf)
+![](images/poster_ashg.png)
