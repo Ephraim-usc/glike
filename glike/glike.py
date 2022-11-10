@@ -13,7 +13,7 @@ import state
 np.seterr(all = 'ignore')
 np.set_printoptions(suppress=True)
 
-
+# this is surprisingly faster than vectorized methods
 def paired(x, log = False):
   dim1, dim2 = x.shape
   buffer = np.zeros((dim1**2, dim2**2))
