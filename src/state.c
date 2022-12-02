@@ -105,7 +105,7 @@ static void Bundle_dealloc(BundleObject *self)
   Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-static PyObject *Bundle_free(BundleObject *self)
+static void Bundle_free(BundleObject *self)
 {
   int i;
   for (i = 0; i < self->num_states; i++)
@@ -116,6 +116,14 @@ static PyObject *Bundle_free(BundleObject *self)
   if (self->states) free(self->states);
   
   Py_DECREF(self);
+}
+
+static PyObject *Bundle_rfree(BundleObject *self)
+{
+  if (self->child)
+    Bundle_rfree(self->child);
+  Bundle_free(self);
+  
   Py_RETURN_NONE;
 }
 
@@ -282,7 +290,7 @@ static PyObject *Bundle_evolve(BundleObject *self, PyObject *args, PyObject *kwd
 
 static PyMethodDef Bundle_methods[] = 
 {
-  {"free", (PyCFunction) Bundle_free, METH_NOARGS, "free bundle"},
+  {"rfree", (PyCFunction) Bundle_rfree, METH_NOARGS, "free this bundle and all its descendants"},
   {"print", (PyCFunction) Bundle_print, METH_NOARGS, "print state bundle"},
   {"propagate", (PyCFunction) Bundle_propagate, METH_NOARGS, "logp propagation from this bundle"},
   {"logp", (PyCFunction) Bundle_logp, METH_NOARGS, "compute the total logp of this bundle"},
