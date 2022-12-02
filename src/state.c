@@ -290,7 +290,7 @@ static PyObject *Bundle_evolve(BundleObject *self, PyObject *args, PyObject *kwd
 
 static PyMethodDef Bundle_methods[] = 
 {
-  {"rfree", (PyCFunction) Bundle_rfree, METH_NOARGS, "free this bundle and all its descendants"},
+  {"rfree", (PyCFunction) Bundle_rfree, METH_NOARGS, "recursively release memory"},
   {"print", (PyCFunction) Bundle_print, METH_NOARGS, "print state bundle"},
   {"propagate", (PyCFunction) Bundle_propagate, METH_NOARGS, "logp propagation from this bundle"},
   {"logp", (PyCFunction) Bundle_logp, METH_NOARGS, "compute the total logp of this bundle"},
@@ -449,6 +449,12 @@ typedef struct
   int **ins;  // fast track of in values for each out value
 } TransitionObject;
 
+
+static void Transition_dealloc(TransitionObject *self)
+{
+  Py_TYPE(self)->tp_free((PyObject *) self);
+}
+
 static void Transition_free(TransitionObject *self)
 {
   free(self->logP);
@@ -468,18 +474,15 @@ static void Transition_free(TransitionObject *self)
   for (i = 0; i < self->dim_out; i++)
     free(self->ins[i]);
   free(self->ins);
-}
-
-static void Transition_dealloc(TransitionObject *self)
-{
-  Transition_free(self);
-  Py_TYPE(self)->tp_free((PyObject *) self);
+  
+  Py_DECREF(self);
 }
 
 static PyObject *Transition_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
   TransitionObject *self;
   self = (TransitionObject *) type->tp_alloc(type, 0);
+  Py_INCREF(self);
   return (PyObject *) self;
 }
 
@@ -634,6 +637,7 @@ static PyObject *Transition_print(TransitionObject *self, PyObject *args)
 
 static PyMethodDef Transition_methods[] = 
 {
+  {"free", (PyCFunction) Transition_free, METH_NOARGS, "release memory"},
   {"print", (PyCFunction) Transition_print, METH_NOARGS, "print transition"},
   {NULL},
 };
