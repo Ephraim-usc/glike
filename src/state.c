@@ -99,14 +99,14 @@ typedef struct BundleObject
   struct BundleObject *child;
 } BundleObject;
 
-Bundle_traverse(CustomObject *self, visitproc visit, void *arg)
+Bundle_traverse(BundleObject *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->parent);
     Py_VISIT(self->child);
     return 0;
 }
 
-static int Bundle_clear(CustomObject *self)
+static int Bundle_clear(BundleObject *self)
 {
     Py_CLEAR(self->parent);
     Py_CLEAR(self->child);
