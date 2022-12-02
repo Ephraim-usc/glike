@@ -99,9 +99,33 @@ typedef struct BundleObject
   struct BundleObject *child;
 } BundleObject;
 
+Bundle_traverse(CustomObject *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->parent);
+    Py_VISIT(self->child);
+    return 0;
+}
+
+static int Bundle_clear(CustomObject *self)
+{
+    Py_CLEAR(self->parent);
+    Py_CLEAR(self->child);
+    return 0;
+}
 
 static void Bundle_dealloc(BundleObject *self)
 {
+  PyObject_GC_UnTrack(self);
+  Bundle_clear(self);
+  
+  int i;
+  for (i = 0; i < self->num_states; i++)
+  {
+    State_free(self->states[i]);
+  }
+  if (self->lineages) free(self->lineages);
+  if (self->states) free(self->states);
+  
   Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
@@ -157,6 +181,7 @@ static int Bundle_init(BundleObject *self, PyObject *args, PyObject *kwds)
   return 0;
 }
 
+/*
 static PyObject *Bundle_free(BundleObject *self)
 {
   BundleObject *bundle = self;
@@ -175,6 +200,7 @@ static PyObject *Bundle_free(BundleObject *self)
   
   Py_RETURN_NONE;
 }
+*/
 
 static PyObject *Bundle_print(BundleObject *self, PyObject *args)
 {
@@ -265,7 +291,6 @@ static PyObject *Bundle_evolve(BundleObject *self, PyObject *args, PyObject *kwd
 
 static PyMethodDef Bundle_methods[] = 
 {
-  {"free", (PyCFunction) Bundle_free, METH_NOARGS, "release memory of this and all descendent bundles"},
   {"print", (PyCFunction) Bundle_print, METH_NOARGS, "print state bundle"},
   {"propagate", (PyCFunction) Bundle_propagate, METH_NOARGS, "logp propagation from this bundle"},
   {"logp", (PyCFunction) Bundle_logp, METH_NOARGS, "compute the total logp of this bundle"},
@@ -313,6 +338,8 @@ static PyTypeObject BundleType = {
     .tp_new = Bundle_new,
     .tp_init = (initproc) Bundle_init,
     .tp_dealloc = (destructor) Bundle_dealloc,
+    .tp_traverse = (traverseproc) Bundle_traverse,
+    .tp_clear = (inquiry) Bundle_clear,
     .tp_methods = Bundle_methods,
     .tp_getset = Bundle_getsetters,
 };
