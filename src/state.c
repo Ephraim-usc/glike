@@ -99,25 +99,14 @@ typedef struct BundleObject
   struct BundleObject *child;
 } BundleObject;
 
-Bundle_traverse(BundleObject *self, visitproc visit, void *arg)
-{
-    Py_VISIT(self->parent);
-    Py_VISIT(self->child);
-    return 0;
-}
-
-static int Bundle_clear(BundleObject *self)
-{
-    Py_CLEAR(self->parent);
-    Py_CLEAR(self->child);
-    return 0;
-}
 
 static void Bundle_dealloc(BundleObject *self)
 {
-  PyObject_GC_UnTrack(self);
-  Bundle_clear(self);
-  
+  Py_TYPE(self)->tp_free((PyObject *) self);
+}
+
+static PyObject *Bundle_free(BundleObject *self)
+{
   int i;
   for (i = 0; i < self->num_states; i++)
   {
@@ -126,13 +115,15 @@ static void Bundle_dealloc(BundleObject *self)
   if (self->lineages) free(self->lineages);
   if (self->states) free(self->states);
   
-  Py_TYPE(self)->tp_free((PyObject *) self);
+  Py_DECREF(self);
+  Py_RETURN_NONE;
 }
 
 static PyObject *Bundle_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
   BundleObject *self;
   self = (BundleObject *) type->tp_alloc(type, 0);
+  Py_INCREF(self);
   return (PyObject *) self;
 }
 
@@ -291,6 +282,7 @@ static PyObject *Bundle_evolve(BundleObject *self, PyObject *args, PyObject *kwd
 
 static PyMethodDef Bundle_methods[] = 
 {
+  {"free", (PyCFunction) Bundle_free, METH_NOARGS, "free bundle"},
   {"print", (PyCFunction) Bundle_print, METH_NOARGS, "print state bundle"},
   {"propagate", (PyCFunction) Bundle_propagate, METH_NOARGS, "logp propagation from this bundle"},
   {"logp", (PyCFunction) Bundle_logp, METH_NOARGS, "compute the total logp of this bundle"},
@@ -334,12 +326,10 @@ static PyTypeObject BundleType = {
     .tp_name = "state.Bundle",
     .tp_basicsize = sizeof(BundleObject),
     .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = Bundle_new,
     .tp_init = (initproc) Bundle_init,
     .tp_dealloc = (destructor) Bundle_dealloc,
-    .tp_traverse = (traverseproc) Bundle_traverse,
-    .tp_clear = (inquiry) Bundle_clear,
     .tp_methods = Bundle_methods,
     .tp_getset = Bundle_getsetters,
 };
@@ -451,9 +441,30 @@ typedef struct
   int **ins;  // fast track of in values for each out value
 } TransitionObject;
 
+static void Transition_free(TransitionObject *self)
+{
+  free(self->logP);
+  free(self->num_outs);
+  free(self->num_ins);
+  
+  int i;
+  int dim = self->dim_in * self->dim_out;
+  for (i = 0; i < dim; i++)
+    free(self->logRR[i]);
+  free(self->logRR);
+  
+  for (i = 0; i < self->dim_in; i++)
+    free(self->outs[i]);
+  free(self->outs);
+  
+  for (i = 0; i < self->dim_out; i++)
+    free(self->ins[i]);
+  free(self->ins);
+}
 
 static void Transition_dealloc(TransitionObject *self)
 {
+  Transition_free(self);
   Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
@@ -552,29 +563,6 @@ static int Transition_init(TransitionObject *self, PyObject *args, PyObject *kwd
   return 0;
 }
 
-static PyObject *Transition_free(TransitionObject *self)
-{
-  int i;
-  free(self->logP);
-  free(self->num_outs);
-  free(self->num_ins);
-  
-  int dim = self->dim_in * self->dim_out;
-  for (i = 0; i < dim; i++)
-    free(self->logRR[i]);
-  free(self->logRR);
-  
-  for (i = 0; i < self->dim_in; i++)
-    free(self->outs[i]);
-  free(self->outs);
-  
-  for (i = 0; i < self->dim_out; i++)
-    free(self->ins[i]);
-  free(self->ins);
-  
-  Py_RETURN_NONE;
-}
-
 static PyObject *Transition_print(TransitionObject *self, PyObject *args)
 {
   int dim_in = self->dim_in;
@@ -638,7 +626,6 @@ static PyObject *Transition_print(TransitionObject *self, PyObject *args)
 
 static PyMethodDef Transition_methods[] = 
 {
-  {"free", (PyCFunction) Transition_free, METH_NOARGS, "free memory of this transition"},
   {"print", (PyCFunction) Transition_print, METH_NOARGS, "print transition"},
   {NULL},
 };
@@ -649,7 +636,7 @@ static PyTypeObject TransitionType = {
     .tp_name = "state.Transition",
     .tp_basicsize = sizeof(TransitionObject),
     .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = Transition_new,
     .tp_init = (initproc) Transition_init,
     .tp_dealloc = (destructor) Transition_dealloc,
