@@ -455,7 +455,7 @@ static void Transition_dealloc(TransitionObject *self)
   Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-static void Transition_free(TransitionObject *self)
+static PyObject *Transition_free(TransitionObject *self)
 {
   free(self->logP);
   free(self->num_outs);
@@ -476,6 +476,7 @@ static void Transition_free(TransitionObject *self)
   free(self->ins);
   
   Py_DECREF(self);
+  Py_RETURN_NONE;
 }
 
 static PyObject *Transition_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
