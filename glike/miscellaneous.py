@@ -1,10 +1,13 @@
+import math
 import numpy as np
 import gzip
 
 
 def write_relate_input(arg, name):
   haps_file = gzip.open(name + ".haps.gz", "wt")
+  current_position = 0
   for variant in arg.variants():
+    position = 
     string = "1 snp" + str(variant.index + 1) + " " + str(variant.position) + " A" + " T "
     string = string + " ".join(map(str, variant.genotypes)) + "\n"
     haps_file.write(string)
