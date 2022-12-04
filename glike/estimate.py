@@ -2,18 +2,21 @@ from .glike import *
 
 
 class Searchspace():
-  def __init__(self, names, values, limits = None):
+  def __init__(self, names, values, limits = None, names_fixed = None):
     self.names = names
     self.values = dict(zip(names, values))
     if limits is None:
       limits = [(0, math.inf) for _ in names]
     self.limits = dict(zip(names, limits))
+    if names_fixed is None:
+      names_fixed = []
+    self.names_fixed = names_fixed
     self.lrs = {name:0.1 for name in self.names}
   
-  def now(self):
+  def get(self):
     return list(self.values.values())
   
-  def assign(self, values):
+  def set(self, values):
     self.values = dict(zip(self.names, values))
   
   def limit(self, name):
@@ -54,40 +57,44 @@ class Searchspace():
   
   def slower(self, name):
     self.lrs[name] = max(0.1, self.lrs[name] * 0.5)
-
-
-
-def estimate(model, trees, x_ref, x, fixed):
-  steps = [new_step_func("regular") for _ in range(2)] + [new_step_func("porportion") for _ in range(2)] + [new_step_func("regular") for _ in range(len(x) - 4)]
   
-  logp_ref = glike_trees(trees, model(*x_ref))
-  print(str(x_ref) + " " + str(logp_ref))
+  def all_slow(self):
+    for name in self.names:
+      if self.lrs[name] > 0.1:
+        return False
+    return True
+
+
+def estimate(trees, model, searchspace):
+  x = searchspace.get()
   logp_max = glike_trees(trees, model(*x))
   print(str(x) + " " + str(logp_max))
   
   x_prev = x.copy()
   for _ in range(100):
-    for i in [_ for _ in range(len(x)) if _ not in fixed]:
-      x_inc = x.copy(); x_inc[i] = steps[i](x[i], True)
-      logp_inc = glike_trees(trees, model(*x_inc))
-      x_dec = x.copy(); x_dec[i] = steps[i](x[i], False)
-      logp_dec = glike_trees(trees, model(*x_dec))
+    for name in [name for name in searchspace.names if name not in searchspace.names_fixed]:
+      x_up = searchspace.up(name)
+      logp_up = glike_trees(trees, model(*x_up))
+      x_down = searchspace.down(name)
+      logp_down = glike_trees(trees, model(*x_down))
       
-      if ((logp_inc > logp_dec) and (logp_inc > logp_max)):
-        x = x_inc
-        logp_max = logp_inc
-        steps[i].lr = min(0.5, steps[i].lr * 1.5)
-      if ((logp_dec > logp_inc) and (logp_dec > logp_max)):
-        x = x_dec
-        logp_max = logp_dec
-        steps[i].lr = min(0.5, steps[i].lr * 1.5)
-      if ((logp_max > logp_inc) and (logp_max > logp_dec)):
-        pass
-        steps[i].lr = max(0.1, steps[i].lr * 0.5)
+      if (logp_up > max(logp_down, logp_max)):
+        searchspace.set(x_up)
+        searchspace.faster(name)
+        logp_max = logp_up
+      
+      if (logp_down > max(logp_up, logp_max)):
+        searchspace.set(x_down)
+        searchspace.faster(name)
+        logp_max = logp_down
+      
+      if (logp_max > max(logp_up, logp_down)):
+        searchspace.slower(name)
     
+    x = searchspace.get()
     print(str(x) + " " + str(logp_max))
-    #print([step.lr for step in steps])
-    if x_prev == x and min([step.lr <= 0.1 for step in steps]):
+    
+    if x_prev == x and searchspace.all_slow():
       break
-    x_prev = x
+    x_prev = x.copy()
 
