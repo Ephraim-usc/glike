@@ -113,7 +113,6 @@ class ContinuousPhase(Phase):
 
 
 class Demography:
-  
   def __init__(self):
     self.phases = []
   
