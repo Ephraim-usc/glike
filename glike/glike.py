@@ -196,7 +196,7 @@ def glike(tree, demo):
   bundle_origin.propagate()
   
   logp = bundle_root.logp()
-  bundle_root.free()
+  bundle_root.rfree()
   return logp
 
 
