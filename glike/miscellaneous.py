@@ -1,12 +1,13 @@
 import math
 import numpy as np
 import gzip
+from tqdm import tqdm
 
 
 def write_relate_input(arg, name):
-  haps_file = gzip.open(name + ".haps.gz", "wt")
+  haps_file = open(name + ".haps", "wt")
   prev_position = 0
-  for variant in arg.variants():
+  for variant in tqdm(arg.variants(), total = arg.num_mutations):
     position = math.ceil(variant.position)
     if position == prev_position:
       continue
