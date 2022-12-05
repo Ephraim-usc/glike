@@ -102,7 +102,7 @@ void Htable_free(Htable *htable)
     for (hnode = htable->hnodes[i]; hnode != NULL; hnode = hnode->next)
     {
       free(hnode->key);
-      free(hnode);
+      free(hnode); // mysteriously causing error in linux
     }
   }
   free(htable->hnodes);
