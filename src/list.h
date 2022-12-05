@@ -121,6 +121,10 @@ int main()
   printf("%p\n", Htable_insert(htable, a, 11));
   printf("%d\n", hash(b, 11, 1000));
   printf("%p\n", Htable_insert(htable, b, 11));
+  
+  int c = 0;
+  Htable_export(htable, &c);
+  Htable_free(htable);
   return 0;
 }
 */
