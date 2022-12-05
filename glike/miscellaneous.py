@@ -3,6 +3,8 @@ import numpy as np
 import gzip
 from tqdm import tqdm
 
+import tsinfer
+
 
 def write_relate_input(arg, name):
   haps_file = open(name + ".haps", "wt")
@@ -38,3 +40,18 @@ def write_relate_input(arg, name):
     string = string + str(variant.position / 1000000) + "\n"
     map_file.write(string)
   map_file.close()
+
+
+def get_tsinfer_sample(arg):
+  sample_data = tsinfer.SampleData(sequence_length = l)
+  prev_position = 0
+  for variant in tqdm(arg.variants(), total = arg.num_mutations):
+    position = math.ceil(variant.position)
+    if position == prev_position:
+      continue
+    prev_position = position
+    sample_data.add_site(position, variant.genotypes)
+  sample_data.finalise()
+  return sample_data
+
+  
