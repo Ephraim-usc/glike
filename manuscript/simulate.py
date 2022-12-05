@@ -6,7 +6,10 @@ l = 30000000
 demography = threeway_admixture_demography(20, 50, 0.4, 0.7, 2000, 10000, 3000, 20000, 15000, 5000, 5e-3, 1e-3)
 arg = msprime.sim_ancestry({"O": N}, sequence_length = l, recombination_rate = 1e-8, demography = demography, ploidy = 1)
 arg = msprime.sim_mutations(arg, rate = 1e-8, discrete_genome = False)
-trees = [arg.at(pos).copy() for pos in range(0, l, 1000000)]
+arg.dump("arg.trees")
+
+
+
 
 write_relate_input(arg, "twa")
 
@@ -26,6 +29,9 @@ sample_data = get_tsinfer_sample(arg)
 arg_tsinfer = tsinfer.infer(sample_data, recombination_rate = 1e-8)
 arg_tsinfer_simplified = arg_tsinfer.simplify(filter_populations = False, filter_individuals = False, filter_sites = False, keep_unary = False)
 arg_tsdate = tsdate.date(arg_tsinfer_simplified, Ne=10000, mutation_rate = 1e-8)
+arg_tsdate.dump("arg_tsdate.trees")
+
+trees = [arg.at(pos).copy() for pos in range(0, l, 1000000)]
 trees_tsdate = [arg_tsdate.at(pos).copy() for pos in range(0, l, 1000000)]
 
 
