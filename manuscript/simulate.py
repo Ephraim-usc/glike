@@ -4,7 +4,7 @@ import tsdate
 
 
 N = 1000
-l = 5000000
+l = 30000000
 
 demography = threeway_admixture_demography(20, 50, 0.4, 0.7, 2000, 10000, 3000, 20000, 15000, 5000, 5e-3, 1e-3)
 arg = msprime.sim_ancestry({"O": N}, sequence_length = l, recombination_rate = 1e-10, demography = demography, ploidy = 1)
@@ -38,14 +38,14 @@ arg_tsdate = tsdate.date(arg_tsinfer_simplified, Ne=14587, mutation_rate = 1e-8)
 arg_tsdate.dump("arg_tsdate.trees")
 
 trees = [arg.at(pos).copy() for pos in range(0, l, 1000000)]
-trees_tsdate = [arg_tsdate.at(pos).copy() for pos in range(100000, l, 200000)]
+trees_tsdate = [arg_tsdate.at(pos).copy() for pos in range(100000, l, 1000000)]
 
 
 
 
-names = ["t1", "t2", "r1", "r2", "N", "N_a", "N_b", "N_c", "N_d", "N_e", "m_ab", "m_cd"]
-values = [40, 70, 0.4, 0.7, 2000, 10000, 3000, 20000, 15000, 5000, 0, 0]
-limits = [(0,"t2"),("t1",100),(0,1),(0,1),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000),(0,0),(0,0)]
+names = ["t1", "t2", "t3", "r1", "r2", "N", "N_a", "N_b", "N_c", "N_d", "N_e", "m_ab", "m_cd"]
+values = [40, 60, 5e4, 0.4, 0.7, 2000, 10000, 3000, 20000, 15000, 5000, 0, 0]
+limits = [(0,"t2"),("t1",100),(1e4, 2e5),(0,1),(0,1),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000),(0,0),(0,0)]
 fixed = ["m_ab", "m_cd"]
 
 searchspace = Searchspace(names, values, limits, fixed)
