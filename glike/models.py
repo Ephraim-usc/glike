@@ -26,7 +26,7 @@ def threeway_admixture_soft_demo(t1, t2, r1, r2, N, N_a, N_b, N_c, N_d, N_e, m_a
   return demo
 '''
 
-def threeway_admixture_demography(t1, t2, r1, r2, N, N_a, N_b, N_c, N_d, N_e, m_ab, m_cd):
+def threeway_admixture_demography(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e, m_ab, m_cd):
   demography = msprime.Demography()
   demography.add_population(name = "O", initial_size = N)
   demography.add_population(name = "A", initial_size = N_a)
@@ -43,7 +43,7 @@ def threeway_admixture_demography(t1, t2, r1, r2, N, N_a, N_b, N_c, N_d, N_e, m_
   demography.add_symmetric_migration_rate_change(time=t2, populations = ["C", "D"], rate = m_cd)
   demography.add_symmetric_migration_rate_change(time=100, populations = ["C", "D"], rate = 0)
   
-  demography.add_population_split(time=1e5, derived=["A", "C", "D"], ancestral="E")
+  demography.add_population_split(time=t3, derived=["A", "C", "D"], ancestral="E")
   
   return demography
 
