@@ -68,7 +68,7 @@ class Searchspace():
 def estimate(trees, model, searchspace):
   x = searchspace.get()
   logp_max = glike_trees(trees, model(*x))
-  print(str(x) + " " + str(logp_max))
+  print(str(x) + " " + str(logp_max), flush = True)
   
   x_prev = x.copy()
   for _ in range(100):
@@ -92,7 +92,7 @@ def estimate(trees, model, searchspace):
         searchspace.slower(name)
     
     x = searchspace.get()
-    print(str(x) + " " + str(logp_max))
+    print(str(x) + " " + str(logp_max), flush = True)
     
     if x_prev == x and searchspace.all_slow():
       break
