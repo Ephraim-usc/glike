@@ -54,6 +54,7 @@ A discrete Phase is created by
 Where t is the time of the event, and P is the transition matrix.
 
 
+When adding new Phases into Demogrpahy, the times and dimensions should match. Specifically, the t1 or t of the newly added Phase should equal the t2 or t of the last Phase, and the Q.shape[0] or 
 
 
 About this project
