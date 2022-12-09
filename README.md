@@ -42,19 +42,37 @@ And a number of discrete or continuous Phases are added into this Demography
 
 A continuous Phase is created by
 
-    phase = ContinuousPhase(t1, t2, Q, n)
+    phase = glike.ContinuousPhase(t1, t2, Q, n)
 
 Where (t1, t2) is the time interval, Q is the infinitesimal generator of the Markov process for a single lineage (i.e., migration rate matrix with negative diagonal elements so that row sums are zero), and n is the vector of coalescent rates.
 
 
 A discrete Phase is created by
 
-    phase = DiscretePhase(t, P)
+    phase = glike.DiscretePhase(t, P)
 
 Where t is the time of the event, and P is the transition matrix.
 
 
-When adding new Phases into Demogrpahy, the times and dimensions should match. Specifically, the t1 or t of the newly added Phase should equal the t2 or t of the last Phase, and the Q.shape[0] or 
+When adding new Phases into Demogrpahy, the times and dimensions should match. Specifically, the t1 or t of the newly added Phase should equal the t2 or t of the last Phase, and the Q.shape[0] or P.shape[0] should math the Q.shape[1] or P.shape[1] of the last Phase.
+
+
+To make a demographic model containing variable parameters, the idiom is
+
+    def model(...):
+      demo = glike.Demography()
+      # add Phases that depend on the parameters
+      return demo
+
+
+Demography parameter estimation
+------------
+
+We provide an function for estimating parameters 
+
+    glike.estimate(trees, model, searchspace)
+
+Which is a maximum likelihood 
 
 
 About this project
