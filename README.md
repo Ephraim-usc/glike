@@ -54,7 +54,7 @@ A discrete Phase is created by
 Where `t` is the time of the event, and `P` is the transition matrix.
 
 
-When adding new Phases into Demogrpahy, the times and dimensions should match. Specifically, the `t1` or `t` of the newly added Phase should equal the `t2` or `t` of the last Phase, and the `Q.shape[0]` or `P.shape[0]` should math the `Q.shape[1]` or `P.shape[1]` of the last Phase.
+When adding new Phases into Demogrpahy, the times and dimensions should match. Specifically, the `t1` or `t` of the newly added Phase should equal the `t2` or `t` of the last existing Phase, and the `Q.shape[0]` or `P.shape[0]` of the newly added Phase should match the `Q.shape[1]` or `P.shape[1]` of the last existing Phase.
 
 
 To make a demographic model containing variable parameters, the idiom is
