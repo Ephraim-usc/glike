@@ -22,11 +22,38 @@ Full likelihood of genealogical trees
 
 Core functionality
 
-    glike_trees(trees, demo)
+    logp = glike.glike_trees(trees, demo)
     
 Where `trees` is any enumerable that contains `tskit` genealogical trees.
-And `demo` is the hypothesized demography created manually or from provided models in `models.py`.
+And `demo` is the hypothesized Demography created manually or from provided models in `models.py`.
 It returns the probability that such genealogical trees are generated under hypothesized demography.
+
+
+Demography customization
+------------
+
+A Demography object is initialized with
+
+    demo = glike.Demography()
+    
+And a number of discrete or continuous Phases are added into this Demography
+
+    demo.add_phase(phase)
+
+A continuous Phase is created by
+
+    phase = ContinuousPhase(t1, t2, Q, n)
+
+Where (t1, t2) is the time interval, Q is the infinitesimal generator of the Markov process for a single lineage (i.e., migration rate matrix with negative diagonal elements so that row sums are zero), and n is the vector of coalescent rates.
+
+
+A discrete Phase is created by
+
+    phase = DiscretePhase(t, P)
+
+Where t is the time of the event, and P is the transition matrix.
+
+
 
 
 About this project
