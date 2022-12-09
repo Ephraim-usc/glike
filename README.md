@@ -77,9 +77,7 @@ We use a Searchspace object to tell the information about initial values and res
 
     searchspace = Searchspace(names, values, limits, fixed)
 
-Where `names` is a list of the names of the parameters, `values` is a list of initial parameter values, `fixed` is a list of names of fixed parameters. 
-
-`limits` is a list of tuples `(low, high)` where `low` and `high` could be a number or the name of another parameter. For example, if our model has three events happening between 0 and 100 generations ago, we want to estimate the times of these three events, we could do
+Where `names` is a list of the names of the parameters, `values` is a list of initial parameter values, `fixed` is a list of the names of fixed parameters so that their values will keep untouched. `limits` is a list of tuples `(low, high)` where `low` and `high` could be a number or the name of another parameter. For example, if our model has three events happening between 0 and 100 generations ago, in order to estimate the times of these three events we could do
 
     names = ["t1", "t2", "t3"]
     values = [25, 50, 75]
