@@ -83,6 +83,8 @@ Where `names` is a list of the names of the parameters, `values` is a list of in
     values = [25, 50, 75] # or other initial values you see fit
     limits = [(0, "t2"), ("t1", "t3"), ("t2", 100)]
 
+Empirically, if the output parameters take values very close to the lower or upper limits, it's very likely that the estimation is stuck in a local optimal, or the proposed model is not well compatible with the genealogical trees. If that's the case, it's suggested to try other initial values or demography models.
+
 
 About this project
 -------------
