@@ -70,12 +70,12 @@ Demography parameter estimation
 
 We provide an function for estimating parameters 
 
-    glike.estimate(trees, model, searchspace)
+    glike.estimate(trees, model, search)
 
 Which runs a smart maximum likelihood protocol specially designed for glike to find the estimated parameters.
-We use a Searchspace object to tell the information about initial values and restrictions of the parameters. It is created with
+We use a Search object to tell the information about initial values and restrictions of the parameters. It is created with
 
-    searchspace = Searchspace(names, values, limits, fixed)
+    search = Search(names, values, limits, fixed)
 
 Where `names` is a list of the names of the parameters, `values` is a list of initial parameter values, `fixed` is a list of the names of fixed parameters so that their values will keep untouched. `limits` is a list of tuples `(low, high)` where `low` and `high` could be a number or the name of another parameter. For example, if our model has three events happening between 0 and 100 generations ago, in order to estimate the times of these three events we could do
 
