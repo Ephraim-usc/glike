@@ -1,7 +1,7 @@
 from .glike import *
 
 
-class Searchspace():
+class Search():
   def __init__(self, names, values, limits = None, names_fixed = None):
     self.names = names
     self.values = dict(zip(names, values))
@@ -65,36 +65,37 @@ class Searchspace():
     return True
 
 
-def estimate(trees, model, searchspace):
-  x = searchspace.get()
+def estimate(trees, model, search):
+  x = search.get()
   logp_max = glike_trees(trees, model(*x))
   print(str(x) + " " + str(logp_max), flush = True)
   
   x_prev = x.copy()
   for _ in range(100):
-    for name in [name for name in searchspace.names if name not in searchspace.names_fixed]:
-      x_up = searchspace.up(name)
+    for name in [name for name in search.names if name not in search.names_fixed]:
+      x_up = search.up(name)
       logp_up = glike_trees(trees, model(*x_up))
-      x_down = searchspace.down(name)
+      x_down = search.down(name)
       logp_down = glike_trees(trees, model(*x_down))
       
       if (logp_up > max(logp_down, logp_max)):
-        searchspace.set(x_up)
-        searchspace.faster(name)
+        search.set(x_up)
+        search.faster(name)
         logp_max = logp_up
       
       if (logp_down > max(logp_up, logp_max)):
-        searchspace.set(x_down)
-        searchspace.faster(name)
+        search.set(x_down)
+        search.faster(name)
         logp_max = logp_down
       
       if (logp_max > max(logp_up, logp_down)):
-        searchspace.slower(name)
+        search.slower(name)
     
-    x = searchspace.get()
+    x = search.get()
     print(str(x) + " " + str(logp_max), flush = True)
     
-    if x_prev == x and searchspace.all_slow():
+    if x_prev == x and search.all_slow():
       break
     x_prev = x.copy()
-
+  
+  return search.get()
