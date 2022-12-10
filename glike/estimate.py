@@ -98,4 +98,4 @@ def estimate(trees, model, search):
       break
     x_prev = x.copy()
   
-  return search.get()
+  return search.get(), logp_max
