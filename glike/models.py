@@ -36,7 +36,7 @@ def threeway_admixture_demography(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e
   return demography
 
 
-def two_admixture_demo(t1, t2, r, N, N_a, N_b, N_c, m_ab):
+def twoway_admixture_demo(t1, t2, r, N, N_a, N_b, N_c, m_ab):
   demo = Demography()
   demo.add_phase(ContinuousPhase(0, t1, Q = np.zeros([1,1]), n = [1/N]))
   demo.add_phase(DiscretePhase(t1, P = np.array([[r, 1-r]])))
