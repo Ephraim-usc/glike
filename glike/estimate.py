@@ -37,7 +37,7 @@ class Search():
     else:
       value = high - (high - value) * (1 - lr)
     values = self.values.copy()
-    values[name] = round(value, 6)
+    values[name] = round(value, 5)
     return list(values.values())
   
   def down(self, name):
@@ -49,7 +49,7 @@ class Search():
     else:
       value = high - (high - value) * (1 + lr)
     values = self.values.copy()
-    values[name] = round(value, 6)
+    values[name] = round(value, 5)
     return list(values.values())
   
   def faster(self, name):
