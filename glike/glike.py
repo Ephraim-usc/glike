@@ -1,12 +1,9 @@
-import enum
 import math
 import numpy as np
 import tskit
-from itertools import chain
-from itertools import product
-import scipy.integrate as integrate
-from scipy.special import logsumexp
-from time import time as now
+import itertools
+import scipy
+import scipy.special
 
 def logp_n(n, a):
   if type(n) is float:
@@ -32,7 +29,7 @@ def logp_intn(n, a, b):
     n_0, r = n
     return - n_0 / r * (math.exp(b*r) - math.exp(a*r))
   elif callable(n):
-    return - integrate.quad(n, a, b)
+    return - scipy.integrate.quad(n, a, b)
   else:
     raise Exception("not supported n type: not a number, a tuple or a function")
 
@@ -87,7 +84,6 @@ class Phase:
         N -= 1
     return buffer
 
-
 class Demo:
   def __init__(self):
     self.phases = []
@@ -98,47 +94,6 @@ class Demo:
       assert self.phases[-1].K == phase.P.shape[0], "shape error when adding phase!"
       self.phases[-1].t_end = phase.t
     self.phases.append(phase)
-
-
-
-
-def test_demo(t1, t2, t3, r, N_a, N_b, N_c, N_d, N_e, N_f, N_g):
-  demo = Demo()
-  demo.add_phase(Phase(0, np.array([N_a, N_b, N_c, N_d, N_e])))
-  demo.add_phase(Phase(t1, np.array([N_a, N_c, N_d, N_e]), np.array([[1, 0, 0, 0], [r, 1-r, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])))
-  demo.add_phase(Phase(t2, np.array([N_a, N_c, N_f]), np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1], [0, 0, 1]])))
-  demo.add_phase(Phase(t3, np.array([N_g]), np.array([[1], [1], [1]])))
-  return demo
-
-demo = test_demo(30, 80, 700, 0.3, 5000, 2000, 10000, 20000, 5000, 2000, 10000)
-
-
-def twoway_admixture_demo(t1, t2, r, N, N_a, N_b, N_c):
-  demo = Demo()
-  demo.add_phase(Phase(0, [1/N, 1/N_a, 1/N_b]))
-  demo.add_phase(Phase(t1, [1/N_a, 1/N_b], P = np.array([[r, 1-r],[1, 0],[0, 1]])))
-  demo.add_phase(Phase(t2, [1/N_c], P = np.array([[1], [1]])))
-  return demo
-
-def twoway_admixture_demography(t1, t2, r, N, N_a, N_b, N_c):
-  import msprime
-  demography = msprime.Demography()
-  demography.add_population(name = "O", initial_size = N)
-  demography.add_population(name = "A", initial_size = N_a)
-  demography.add_population(name = "B", initial_size = N_b)
-  demography.add_population(name = "C", initial_size = N_c)
-  
-  demography.add_admixture(time=t1, derived="O", ancestral=["A", "B"], proportions = [r, 1-r])
-  demography.add_population_split(time=t2, derived=["A", "B"], ancestral="C")
-  
-  return demography
-
-demo = twoway_admixture_demo(20, 500, 0.3, 2000, 10000, 30000, 5000)
-demography = twoway_admixture_demography(20, 500, 0.3, 2000, 10000, 30000, 5000)
-
-
-
-
 
 
 class State:
@@ -162,6 +117,7 @@ class Bundle:
     
     self.lins = lins; self.N = len(lins)
     self.dict = {lin:i for i, lin in enumerate(lins)} # for fast indexing lineages
+    self.ghosts = [] # indices of ghost lineages that are going to be deleted
     
     self.dests = [{lin} for lin in lins] # list of sets of descendents
     self.coals = [[] for _ in lins] # list of lists of coalescent times
@@ -177,24 +133,25 @@ class Bundle:
   # backward in time through continuous demography
   # summarizing coalescent results
   def coalesce(self, t, children, parent):
-    global A, B, C, D, E
-    D += 1
-    idx = [self.dict[child] for child in children]
+    self.dict[parent] = len(self.lins)
     self.lins.append(parent)
+    
+    idx = [self.dict[child] for child in children]
     self.dests.append(set.union(*[self.dests[i] for i in idx]))
     self.pops.append(set.intersection(*[self.pops[i] for i in idx]))
     self.coals.append([coal for i in idx for coal in self.coals[i]] + [t] * (len(children) - 1))
-    #print(str(parent) + " " + str(children) + " " + str(self.dests[-1]) + " " + str([self.pops[i] for i in idx]) + " " + str(self.pops[-1]))
     
-    for i in sorted(idx, reverse=True):
+    self.N -= len(children) - 1
+    self.ghosts.extend(idx)
+  
+  def simplify(self):
+    for i in sorted(self.ghosts, reverse=True):
       del self.lins[i]
       del self.dests[i]
       del self.pops[i]
       del self.coals[i]
-    B -= now()
-    self.dict = {lin:i for i, lin in enumerate(self.lins)}; C += 1
-    B += now()
-    self.N -= len(children) - 1
+    self.dict = {lin:i for i, lin in enumerate(self.lins)}
+    self.ghosts = []
   
   # backward in time through mass migrations
   # creating new Bundle, computing possible populations for each lineage
@@ -209,7 +166,7 @@ class Bundle:
   # make it the root bundle
   def root(self):
     self.t_end = max([coal for coals in self.coals for coal in coals])
-    for value in product(*self.pops):
+    for value in itertools.product(*self.pops):
       state = State()
       self.states[value] = state
   
@@ -241,7 +198,7 @@ class Bundle:
           outs[child.dict[dest]] = pop
       
       pops_child = [set.intersection(child.pops[i], outs2ins[outs[i]]) for i in range(child.N)]
-      for ins in product(*pops_child):
+      for ins in itertools.product(*pops_child):
         migrations = np.zeros(self.phase.P.shape)
         for in_, out in zip(ins, outs):
           migrations[in_, out] += 1
@@ -264,9 +221,8 @@ class Bundle:
       return
     for state in self.states.values():
       logps = [logp + child.logp for logp, child in state.children]
-      state.logp = logsumexp(logps) + state.logp_evolve
-    self.logp = logsumexp([state.logp for state in self.states.values()])
-
+      state.logp = scipy.special.logsumexp(logps) + state.logp_evolve
+    self.logp = scipy.special.logsumexp([state.logp for state in self.states.values()])
 
 
 def glike(tree, demo, pops = None):
@@ -275,14 +231,14 @@ def glike(tree, demo, pops = None):
   origin = Bundle(None, samples, pops)
   
   # backward in time
-  bundle = origin
-  node, time = next(nodes_times)
-  for phase in demo.phases:
-    bundle = bundle.transit(phase)
-    while time < phase.t_end:
-      bundle.coalesce(time, tree.children(node), node)
-      try: node, time = next(nodes_times)
-      except StopIteration: break
+  phases = iter(demo.phases)
+  bundle = origin.transit(next(phases))
+  for node, time in nodes_times:
+    while time > bundle.phase.t_end:
+      bundle.simplify()
+      bundle = bundle.transit(next(phases))
+    bundle.coalesce(time, tree.children(node), node)
+  bundle.simplify()
   
   # forward in time
   root = bundle
@@ -304,17 +260,4 @@ def glike_trees(trees, demo, pops = None): # trees: generator or list of trees
   logp = 0
   for tree in trees:
     logp += glike(tree, demo, pops = pops)
-  
   return logp
-
-
-import msprime
-demography = twoway_admixture_demography(20, 500, 0.3, 2000, 10000, 30000, 5000)
-arg = msprime.sim_ancestry({"O": 1000, "A":1000, "B":1000}, sequence_length = 3e7, recombination_rate = 1e-8, demography = demography, ploidy = 1)
-trees = [arg.at(pos).copy() for pos in range(int(3e5), int(3e7), int(3e5))]
-pops = [0]*1000 + [1]*1000 + [2]*1000
-
-demo = twoway_admixture_demo(20, 500, 0.3, 2000, 10000, 30000, 5000)
-glike_trees(trees, twoway_admixture_demo(20, 500, 0.3, 2000, 10000, 30000, 5000), pops = pops)
-
-A = B = C = D = E = F = 0
