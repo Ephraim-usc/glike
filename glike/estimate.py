@@ -1,5 +1,13 @@
 from .glike import *
 
+def floor(number, digits):
+  u = 0.1**digits
+  return round(math.floor(number/u) * u, digits)
+
+def ceil(number, digits):
+  u = 0.1**digits
+  return round(math.ceil(number/u) * u, digits)
+
 
 class Search():
   def __init__(self, names, values, limits = None, names_fixed = None):
@@ -37,7 +45,7 @@ class Search():
     else:
       value = high - (high - value) * (1 - lr)
     values = self.values.copy()
-    values[name] = math.floor(value, 5)
+    values[name] = floor(value, 5)
     return list(values.values())
   
   def down(self, name):
@@ -49,7 +57,7 @@ class Search():
     else:
       value = high - (high - value) * (1 + lr)
     values = self.values.copy()
-    values[name] = math.ceil(value, 5)
+    values[name] = ceil(value, 5)
     return list(values.values())
   
   def faster(self, name):
