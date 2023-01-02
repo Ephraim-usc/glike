@@ -2,7 +2,7 @@ import msprime
 from .glike import *
 
 
-def ancient_european_demo(t1, t2, t3, t4, t5, t6, r1, r2, r3, N_ana, N_neo, N_whg, N_bronze, N_yam, N_ehg, N_chg, N_ne, N_wa, N_ooa, gr):
+def ancient_europe_demo(t1, t2, t3, t4, t5, t6, r1, r2, r3, N_ana, N_neo, N_whg, N_bronze, N_yam, N_ehg, N_chg, N_ne, N_wa, N_ooa, gr):
   demo = Demo()
   demo.add_phase(Phase(0, [1/N_ana, 1/N_neo, 1/N_whg, (1/N_bronze, gr), 1/N_yam, 1/N_ehg, 1/N_chg]))
   P_bronze_admixture = np.array([
@@ -52,7 +52,7 @@ def ancient_european_demo(t1, t2, t3, t4, t5, t6, r1, r2, r3, N_ana, N_neo, N_wh
   demo.add_phase(Phase(t6, [1/N_ooa], P = P_ooa_split))
   return demo
 
-def ancient_european_demography(t1, t2, t3, t4, t5, t6, r1, r2, r3, N_ana, N_neo, N_whg, N_bronze, N_yam, N_ehg, N_chg, N_ne, N_wa, N_ooa, gr):
+def ancient_europe_demography(t1, t2, t3, t4, t5, t6, r1, r2, r3, N_ana, N_neo, N_whg, N_bronze, N_yam, N_ehg, N_chg, N_ne, N_wa, N_ooa, gr):
   demography = msprime.Demography()
   demography.add_population(name = "ana", initial_size = N_ana)
   demography.add_population(name = "neo", initial_size = N_neo)
