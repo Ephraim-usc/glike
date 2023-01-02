@@ -1,6 +1,30 @@
 import msprime
 from .glike import *
 
+def american_admixture_demo(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admix, N_ooa, N_anc, gr_eur, gr_asia, gr_admix):
+  demo = Demo()
+  demo.add_phase(Phase(0, [1/N_afr, (1/N_eur, gr_eur), (1/N_asia, gr_asia), (1/N_admix, gr_admix)]))
+  P_admixture = np.array([
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+      [r1, r2, 1-r1-r2]
+  ])
+  demo.add_phase(Phase(t1, [1/N_afr, (1/N_eur*math.exp(gr_eur*t1), gr_eur), (1/N_asia*math.exp(gr_asia*t1), gr_asia)], P = P_admixture))
+  P_asia_split = np.array([
+      [1, 0],
+      [0, 1],
+      [0, 1]
+  ])
+  demo.add_phase(Phase(t2, [1/N_afr, 1/N_ooa], P = P_asia_split))
+  P_ooa_split = np.array([
+      [1],
+      [1]
+  ])
+  demo.add_phase(Phase(t3, [1/N_afr], P = P_ooa_split))
+  demo.add_phase(Phase(t4, [1/N_anc]))
+  return demo
+
 
 def ancient_europe_demo(t1, t2, t3, t4, t5, t6, r1, r2, r3, N_ana, N_neo, N_whg, N_bronze, N_yam, N_ehg, N_chg, N_ne, N_wa, N_ooa, gr):
   demo = Demo()
