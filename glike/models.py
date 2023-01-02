@@ -1,6 +1,7 @@
 import msprime
 from .glike import *
 
+########## American Admixture ###########
 def american_admixture_demo(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admix, N_ooa, N_anc, gr_eur, gr_asia, gr_admix):
   demo = Demo()
   demo.add_phase(Phase(0, [1/N_afr, (1/N_eur, gr_eur), (1/N_asia, gr_asia), (1/N_admix, gr_admix)]))
@@ -25,7 +26,25 @@ def american_admixture_demo(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admi
   demo.add_phase(Phase(t4, [1/N_anc]))
   return demo
 
+def american_admixture_demography(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admix, N_ooa, N_anc, gr_eur, gr_asia, gr_admix):
+  demography = msprime.Demography()
+  demography.add_population(name = "afr", initial_size = N_afr)
+  demography.add_population(name = "eur", initial_size = N_eur, growth_rate = gr_eur)
+  demography.add_population(name = "asia", initial_size = N_asia, growth_rate = gr_asia)
+  demography.add_population(name = "admix", initial_size = N_admix, growth_rate = gr_admix)
+  
+  demography.add_admixture(time=t1, derived="admix", ancestral=["afr", "eur", "asia"], proportions = [r1, r2, 1-r1-r2])
+  
+  demography.add_population_split(time=t2, derived=["eur", "asia"], ancestral="eur")
+  demography.add_population_parameters_change(time=t2, initial_size = N_ooa, growth_rate=0, population="eur")
+  
+  demography.add_population_split(time=t3, derived=["afr", "eur"], ancestral="afr")
+  
+  demography.add_population_parameters_change(time=t4, initial_size = N_anc, growth_rate=0, population="afr")
+  return demography
 
+
+########## Ancient Europe ###########
 def ancient_europe_demo(t1, t2, t3, t4, t5, t6, r1, r2, r3, N_ana, N_neo, N_whg, N_bronze, N_yam, N_ehg, N_chg, N_ne, N_wa, N_ooa, gr):
   demo = Demo()
   demo.add_phase(Phase(0, [1/N_ana, 1/N_neo, 1/N_whg, (1/N_bronze, gr), 1/N_yam, 1/N_ehg, 1/N_chg]))
