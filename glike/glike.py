@@ -227,23 +227,24 @@ class Bundle:
 
 def glike(tree, demo, pops = None):
   samples = sorted(list(tree.samples()))
-  nodes_times = iter(sorted([(node, round(tree.time(node),5)) for node in tree.nodes() if tree.children(node)]))
+  times_nodes = iter(sorted([(round(tree.time(node),5), node) for node in tree.nodes() if tree.children(node)]))
   origin = Bundle(None, samples, pops)
   
   # backward in time
   phases = iter(demo.phases)
   bundle = origin.transit(next(phases))
-  for node, time in nodes_times:
-    while time > bundle.phase.t_end:
+  for t, node in times_nodes:
+    while t > bundle.phase.t_end:
       bundle.simplify()
       bundle = bundle.transit(next(phases))
-    bundle.coalesce(time, tree.children(node), node)
+    bundle.coalesce(t, tree.children(node), node)
   bundle.simplify()
   
   # forward in time
   root = bundle
   root.root()
   while bundle.phase is not None:
+    #print("bundle from {} to {} has {} states".format(bundle.t, bundle.t_end, len(bundle.states)), flush = True)
     bundle.evolve()
     bundle.migrate()
     bundle = bundle.child
@@ -256,8 +257,35 @@ def glike(tree, demo, pops = None):
   
   return root.logp
 
-def glike_trees(trees, demo, pops = None): # trees: generator or list of trees
+
+def topology_check(tree, demo, pops = None):
+  samples = sorted(list(tree.samples()))
+  times_nodes = iter(sorted([(round(tree.time(node),5), node) for node in tree.nodes() if tree.children(node)]))
+  origin = Bundle(None, samples, pops)
+  
+  # backward in time
+  phases = iter(demo.phases)
+  bundle = origin.transit(next(phases))
+  for t, node in times_nodes:
+    while t > bundle.phase.t_end:
+      bundle.simplify()
+      bundle = bundle.transit(next(phases))
+    bundle.coalesce(t, tree.children(node), node)
+  bundle.simplify()
+  
+  root = bundle
+  return len(root.pops[0]) > 0
+
+
+def glike_trees(trees, demo, pops = None, tolerance = 0): # trees: generator or list of trees
+  if tolerance > 0:
+    checks = [topology_check(tree, demo, pops) for tree in trees]
+    if 1 - sum(checks)/len(checks) > tolerance:
+      return -math.inf
+    trees = [tree for (tree, check) in zip(trees, checks) if check]
+  
   logp = 0
   for tree in trees:
     logp += glike(tree, demo, pops = pops)
   return logp
+
