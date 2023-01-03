@@ -35,10 +35,10 @@ def american_admixture_demography(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, 
   
   demography.add_admixture(time=t1, derived="admix", ancestral=["afr", "eur", "asia"], proportions = [r1, r2, 1-r1-r2])
   
-  demography.add_population_split(time=t2, derived=["eur", "asia"], ancestral="eur")
+  demography.add_mass_migration(time=t2, source="asia", dest="eur", proportion=1)
   demography.add_population_parameters_change(time=t2, initial_size = N_ooa, growth_rate=0, population="eur")
   
-  demography.add_population_split(time=t3, derived=["afr", "eur"], ancestral="afr")
+  demography.add_mass_migration(time=t3, source="eur", dest="afr", proportion=1)
   
   demography.add_population_parameters_change(time=t4, initial_size = N_anc, growth_rate=0, population="afr")
   return demography
