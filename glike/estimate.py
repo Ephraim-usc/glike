@@ -1,5 +1,6 @@
 from .glike import *
 
+"""
 def floor(number, digits):
   u = 0.1**digits
   return round(math.floor(number/u) * u, digits)
@@ -7,6 +8,7 @@ def floor(number, digits):
 def ceil(number, digits):
   u = 0.1**digits
   return round(math.ceil(number/u) * u, digits)
+"""
 
 
 class Search():
@@ -41,11 +43,12 @@ class Search():
     lr = self.lrs[name]
     low, high = self.limit(name)
     if value < (low + high)/2:
-      value = low + (value - low) * (1 + lr)
+      step = (value - low) * lr
     else:
-      value = high - (high - value) * (1 - lr)
+      step = (high - value) * lr
+    step = max(step, 1e-5)
     values = self.values.copy()
-    values[name] = floor(value, 5)
+    values[name] = round(min(high - 1e-5, value + step), 5)
     return list(values.values())
   
   def down(self, name):
@@ -53,11 +56,12 @@ class Search():
     lr = self.lrs[name]
     low, high = self.limit(name)
     if value < (low + high)/2:
-      value = low + (value - low) * (1 - lr)
+      step = (value - low) * lr
     else:
-      value = high - (high - value) * (1 + lr)
+      step = (high - value) * lr
+    step = max(step, 1e-5)
     values = self.values.copy()
-    values[name] = ceil(value, 5)
+    values[name] = round(max(low + 1e-5, value - step), 5)
     return list(values.values())
   
   def faster(self, name):
@@ -90,13 +94,11 @@ def estimate(trees, model, search, pops = None, tolerance = 0):
         search.set(x_up)
         search.faster(name)
         logp_max = logp_up
-      
-      if (logp_down > max(logp_up, logp_max)):
+      elif (logp_down > max(logp_up, logp_max)):
         search.set(x_down)
         search.faster(name)
         logp_max = logp_down
-      
-      if (logp_max > max(logp_up, logp_down)):
+      else:
         search.slower(name)
     
     x = search.get()
