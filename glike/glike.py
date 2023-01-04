@@ -240,8 +240,12 @@ def glike(tree, demo, pops = None):
     bundle.coalesce(t, tree.children(node), node)
   bundle.simplify()
   
-  # forward in time
+  # if topology is not possible
   root = bundle
+  if len(root.pops[0]) == 0:
+    return -math.inf
+  
+  # forward in time
   root.root()
   while bundle.phase is not None:
     #print("bundle from {} to {} has {} states".format(bundle.t, bundle.t_end, len(bundle.states)), flush = True)
@@ -258,34 +262,9 @@ def glike(tree, demo, pops = None):
   return root.logp
 
 
-def topology_check(tree, demo, pops = None):
-  samples = sorted(list(tree.samples()))
-  times_nodes = iter(sorted([(round(tree.time(node),5), node) for node in tree.nodes() if tree.children(node)]))
-  origin = Bundle(None, samples, pops)
-  
-  # backward in time
-  phases = iter(demo.phases)
-  bundle = origin.transit(next(phases))
-  for t, node in times_nodes:
-    while t > bundle.phase.t_end:
-      bundle.simplify()
-      bundle = bundle.transit(next(phases))
-    bundle.coalesce(t, tree.children(node), node)
-  bundle.simplify()
-  
-  root = bundle
-  return len(root.pops[0]) > 0
-
-
-def glike_trees(trees, demo, pops = None, tolerance = 0): # trees: generator or list of trees
-  if tolerance > 0:
-    checks = [topology_check(tree, demo, pops) for tree in trees]
-    if 1 - sum(checks)/len(checks) > tolerance:
-      return -math.inf
-    trees = [tree for (tree, check) in zip(trees, checks) if check]
-  
-  logp = 0
-  for tree in trees:
-    logp += glike(tree, demo, pops = pops)
+def glike_trees(trees, demo, pops = None, prune = 0): # trees: generator or list of trees
+  logps = [glike(tree, demo, pops = pops) for tree in trees]
+  logps.sort()
+  logp = sum(logps[math.ceil(prune * len(logps)):])
   return logp
 
