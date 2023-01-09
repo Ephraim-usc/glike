@@ -1,6 +1,37 @@
 import msprime
 from .glike import *
 
+########## Threeway Admixture ###########
+def threeway_admixture_demo(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e):
+  demo = Demography()
+  demo.add_phase(Phase(0, [1/N]))
+  demo.add_phase(Phase(t1, [1/N_a, 1/N_b], P = np.array([[r1, 1-r1]])))
+  demo.add_phase(Phase(t2, [1/N_a, 1/N_c, 1/N_d], P = np.array([[1, 0, 0], [0, r2, 1-r2]])))
+  demo.add_phase(Phase(t3, [1/N_e], P = np.array([[1], [1], [1]])))
+  return demo
+
+def threeway_admixture_demography(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e, m_ab, m_cd):
+  demography = msprime.Demography()
+  demography.add_population(name = "O", initial_size = N)
+  demography.add_population(name = "A", initial_size = N_a)
+  demography.add_population(name = "B", initial_size = N_b)
+  demography.add_population(name = "C", initial_size = N_c)
+  demography.add_population(name = "D", initial_size = N_d)
+  demography.add_population(name = "E", initial_size = N_e)
+  
+  demography.add_admixture(time=t1, derived="O", ancestral=["A", "B"], proportions = [r1, 1-r1])
+  demography.add_symmetric_migration_rate_change(time=t1, populations = ["A", "B"], rate = m_ab)
+  demography.add_symmetric_migration_rate_change(time=t2, populations = ["A", "B"], rate = 0)
+  
+  demography.add_admixture(time=t2, derived="B", ancestral=["C", "D"], proportions = [r2, 1-r2])
+  demography.add_symmetric_migration_rate_change(time=t2, populations = ["C", "D"], rate = m_cd)
+  demography.add_symmetric_migration_rate_change(time=100, populations = ["C", "D"], rate = 0)
+  
+  demography.add_population_split(time=t3, derived=["A", "C", "D"], ancestral="E")
+  
+  return demography
+
+
 ########## American Admixture ###########
 def american_admixture_demo(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admix, N_ooa, N_anc, gr_eur, gr_asia, gr_admix):
   demo = Demo()
