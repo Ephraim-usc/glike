@@ -3,7 +3,7 @@ from .glike import *
 
 ########## Threeway Admixture ###########
 def threeway_admixture_demo(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e):
-  demo = Demography()
+  demo = Demo()
   demo.add_phase(Phase(0, [1/N]))
   demo.add_phase(Phase(t1, [1/N_a, 1/N_b], P = np.array([[r1, 1-r1]])))
   demo.add_phase(Phase(t2, [1/N_a, 1/N_c, 1/N_d], P = np.array([[1, 0, 0], [0, r2, 1-r2]])))
