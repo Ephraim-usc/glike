@@ -10,6 +10,8 @@ def write_relate_input(arg, name):
   haps_file = open(name + ".haps", "wt")
   prev_position = 0
   for variant in tqdm(arg.variants(), total = arg.num_mutations):
+    if variant.genotypes.max() > 1:
+      continue
     position = math.ceil(variant.position)
     if position == prev_position:
       continue
@@ -46,6 +48,8 @@ def write_tsinfer_input(arg, name):
   sample_data = tsinfer.SampleData(path = name + ".samples", sequence_length = arg.last().interval[1])
   prev_position = 0
   for variant in tqdm(arg.variants(), total = arg.num_mutations):
+    if variant.genotypes.max() > 1:
+      continue
     position = math.ceil(variant.position)
     if position == prev_position:
       continue
