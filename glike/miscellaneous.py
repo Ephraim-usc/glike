@@ -45,7 +45,11 @@ def write_relate_input(arg, name):
 
 
 def write_tsinfer_input(arg, name):
-  sample_data = tsinfer.SampleData(path = name + ".samples", sequence_length = arg.last().interval[1])
+  sample_data = tsinfer.SampleData(path = name + ".samples", sequence_length = math.ceil(arg.last().interval[1]))
+  first = arg.first()
+  for sample in arg.samples():
+    sample_data.add_individual(time = first.time(sample))
+  
   prev_position = 0
   for variant in tqdm(arg.variants(), total = arg.num_mutations):
     if variant.genotypes.max() > 1:
@@ -55,6 +59,8 @@ def write_tsinfer_input(arg, name):
       continue
     prev_position = position
     sample_data.add_site(position, variant.genotypes)
+  
   sample_data.finalise()
+  return sample_data
 
   
