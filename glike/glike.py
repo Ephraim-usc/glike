@@ -5,42 +5,42 @@ import itertools
 import scipy
 import scipy.special
 
+def is_identity(x):
+  return (x.shape[0] == x.shape[1]) and (x == np.eye(x.shape[0])).all()
+
+# probability of coalescence at time a
 def logp_n(n, a):
   if type(n) is float:
     return math.log(n)
-  elif type(n) is tuple and n[1] == 0:
-    n = n[0]
-    return math.log(n)
   elif type(n) is tuple:
-    n_0, r = n
-    return math.log(n_0) + r * a
+    return math.log(n[0]) + n[1] * a
   elif callable(n):
     return math.log(n(a))
   else:
-    raise Exception("not supported n type: not a number, a tuple or a function")
+    raise Exception("not supported n type: not a float, a tuple or a callable")
 
+# probability of non-coalescence between a and b
 def logp_intn(n, a, b):
   if type(n) is float:
     return - n * (b - a)
-  if type(n) is tuple and n[1] == 0:
-    n = n[0]
-    return - n * (b - a)
   if type(n) is tuple:
-    n_0, r = n
-    return - n_0 / r * (math.exp(b*r) - math.exp(a*r))
+    return - n[0] / n[1] * (math.exp(b*n[1]) - math.exp(a*n[1]))
   elif callable(n):
     return - scipy.integrate.quad(n, a, b)
   else:
-    raise Exception("not supported n type: not a number, a tuple or a function")
+    raise Exception("not supported n type: not a float, a tuple or a callable")
 
 
 class Phase:
   # t: beginning time of Phase
   # ns: list of coalescent rates, each could be a number, a (initial_rate, growth_rate) tuple, or any function f(t)
   # P: transition matrix at beginning of Phase
-  def __init__(self, t, ns, P = None):
+  def __init__(self, t, ns, P = None, populations = None):
     self.t = t
     self.t_end = math.inf
+    self.parent = None
+    self.child = None
+    
     self.ns = ns
     self.K = len(ns) # number of populations (during continuous period)
     
@@ -51,14 +51,19 @@ class Phase:
       self.P = np.identity(self.K)
     
     with np.errstate(divide='ignore'):
+      self.ins_outs_mapping()
       logP = np.log(self.P)
-      logP[np.isneginf(logP)] = 0
+      logP[np.isneginf(logP)] = 0 # this is necessary because otherwise "-inf * 0 = nan" will cause trouble
       self.logP = logP
     
-    self.ins_outs_mappings()
+    if populations is not None:
+      assert len(populations) == self.K
+      self.populations = populations
+    else:
+      self.populations = ['ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i] for i in range(self.K)]
   
   # build fasting mappings of non-zero migrations in P
-  def ins_outs_mappings(self):
+  def ins_outs_mapping(self):
     self.ins2outs = [set() for _ in range(self.P.shape[0])]
     self.outs2ins = [set() for _ in range(self.P.shape[1])]
     ins, outs = np.where(self.P > 0)
@@ -67,105 +72,188 @@ class Phase:
       self.outs2ins[out].add(in_)
   
   # this function computes the logp of a genealogical tree during a non-migration period, given populations of lineages
-  # Ns: list of initial samples in each population
-  # coals: list of sorted lists of coalescences in each population
-  # t: start time
-  # t_end: end time
-  def logp(self, Ns, coals, t, t_end):
+  # N: number of lineages at t_end
+  def logq(self, pop, N, births):
+    n = self.ns[pop]
+    births.sort(reverse=True)
+    
     buffer = 0
-    for pop in range(self.K):
-      N = Ns[pop]
-      ts = coals[pop]
-      ts_intervals = list(zip([t]+ts, ts+[t_end]))
-      for a in ts:
-        buffer += logp_n(self.ns[pop], a-self.t)
-      for a, b in ts_intervals:
-        buffer += N*(N-1)/2 * logp_intn(self.ns[pop], a-self.t, b-self.t)
-        N -= 1
+    time_ = self.t_end
+    for time, delta in births:
+      buffer += 0.5*N*(N-1) * logp_intn(n, time, time_) if time_ > time and N >= 2 else 0 # think of a better way to deal with present samples!!!
+      buffer += delta * logp_n(n, time) if delta >= 1 else 0
+      N += delta; time_ = time
+    buffer += 0.5*N*(N-1) * logp_intn(n, self.t, time_) if N >= 2 else 0
     return buffer
 
 class Demo:
-  def __init__(self):
+  def __init__(self, demography = None):
     self.phases = []
+    if demography:
+      self.from_demography(demography)
   
   def add_phase(self, phase):
     if len(self.phases):
-      assert self.phases[-1].t < phase.t, "time error when adding phase!"
-      assert self.phases[-1].K == phase.P.shape[0], "shape error when adding phase!"
-      self.phases[-1].t_end = phase.t
+      child = self.phases[-1]
+      assert child.t < phase.t, "time error when adding phase!"
+      assert child.K == phase.P.shape[0], "shape error when adding phase!"
+      child.t_end = phase.t
+      child.parent = phase
+      phase.child = child
+    else:
+      assert is_identity(phase.P), "first phase should have identity P!"
     self.phases.append(phase)
+  
+  def at(self, t):
+    for phase in self.phases:
+      if t < phase.t_end:
+        return phase
+  
+  def print(self):
+    import pandas as pd
+    populations = None
+    for phase in self.phases:
+      print(f"phase at {phase.t}")
+      if not is_identity(phase.P):
+        print(pd.DataFrame(phase.P, index = populations, columns = phase.populations))
+      print(dict(zip(phase.populations, phase.ns)))
+      print("")
+      populations = phase.populations
+  
+  def from_demography(self, demography):
+    import msprime
+    import pandas as pd
+    t = 0
+    ns = []
+    populations = []
+    for population in demography.populations:
+      populations.append(population.name)
+      if population.growth_rate != 0:
+        ns.append((1/population.initial_size, population.growth_rate))
+      else:
+        ns.append(1/population.initial_size)
+    self.add_phase(Phase(0, ns, populations = populations))
+    
+    for event in demography.events:
+      if type(event) is msprime.demography.Admixture:
+        populations_ = populations; populations = populations.copy(); 
+        populations.remove(event.derived)
+        P = pd.DataFrame(0, index = populations_, columns = populations)
+        for population in populations:
+          P.loc[population, population] = 1
+        for anc, prop in zip(event.ancestral, event.proportions):
+          P.loc[event.derived, anc] = prop
+        P = P.values
+      elif type(event) is msprime.demography.PopulationSplit:
+        populations_ = populations; populations = populations.copy()
+        for derived in event.derived:
+          populations.remove(derived)
+        P = pd.DataFrame(0, index = populations_, columns = populations)
+        for population in populations:
+          P.loc[population, population] = 1
+        for derived in event.derived:
+          P.loc[derived, event.ancestral] = 1
+        P = P.values
+      elif type(event) is msprime.demography.PopulationParametersChange:
+        populations_ = populations; populations = populations.copy()
+        P = None
+      else:
+        continue
+      
+      t_ = t; t = event.time
+      ns_ = ns.copy()
+      ns = [None for _ in populations]
+      for population in populations:
+        n = ns_[populations_.index(population)]
+        if type(n) is float:
+          ns[populations.index(population)] = n
+        else:
+          ns[populations.index(population)] = (math.log(n[0]) + n[1] * (t-t_), n[1])
+      
+      if type(event) is msprime.demography.PopulationParametersChange:
+        if event.population == -1:
+          tmp = populations.copy()
+        else:
+          tmp = [event.population]
+        for population in tmp:
+          ns[populations.index(population)] = (1/event.initial_size, event.growth_rate) if event.growth_rate and event.growth_rate>0 else 1/event.initial_size
+      
+      self.add_phase(Phase(t, ns, P = P, populations = populations))
 
 
 class State:
   def __init__(self):
-    self.logp_evolve = math.nan # evolve log probability of this State
-    self.logp = math.nan # log probability of non-coalescence and coalescence during this period
+    self.logq = math.nan # evolution (coalescence and non-coalescence) log probability of this State
+    self.logp = math.nan # absolute probability P(state|origin)
+    self.logp_ = math.nan # absolute probability P(root|state), currently not used
     self.children = []
 
 class Bundle:
   # phase: the Phase this Bundle is in, the origin Bundle should have None phase
   # lins: list of lineages
   # pops: list of deterministic populations for each lineage
-  def __init__(self, phase, lins, pops = None):
+  def __init__(self, phase):
     self.phase = phase
-    if phase is not None:
-      self.t = phase.t
-      self.t_end = phase.t_end
-    else:
-      self.t = 0
-      self.t_end = 0
+    self.t = phase.t
+    self.t_end = phase.t_end
     
-    self.lins = lins; self.N = len(lins)
-    self.dict = {lin:i for i, lin in enumerate(lins)} # for fast indexing lineages
+    self.N = 0
+    self.dict = dict() # for fast finding index of lineage
+    self.lins = [] # list of lineages
+    self.pops = [] # list of sets of possible populations for each subtree
+    self.dests = [] # list of sets of descendents for each subtree
+    self.births = [] # list of lists of (time, num_children - 1) tuples of nodes for each subtree
+    
     self.ghosts = [] # indices of ghost lineages that are going to be deleted
-    
-    self.dests = [{lin} for lin in lins] # list of sets of descendents
-    self.coals = [[] for _ in lins] # list of lists of coalescent times
-    if pops is not None:
-      self.pops = [{pop} for pop in pops] # list of sets of possible populations
-    else:
-      self.pops = [{0} for _ in lins]
-    
-    self.states = {}
+    self.states = {} # dict of (value, state) tuples
     self.parent = None
     self.child = None
   
+  def refresh(self):
+    if self.ghosts:
+      ghosts = set(self.ghosts); self.ghosts = []
+      self.lins = [lin for i, lin in enumerate(self.lins) if i not in ghosts]
+      self.dests = [dests for i, dests in enumerate(self.dests) if i not in ghosts]
+      self.pops = [pops for i, pops in enumerate(self.pops) if i not in ghosts]
+      self.births = [births for i, births in enumerate(self.births) if i not in ghosts]
+    
+    self.N = len(self.lins)
+    self.dict = {lin:i for i, lin in enumerate(self.lins)}
+  
+  # backward in time through mass migrations
+  # creating new Bundle, computing possible populations for each lineage
+  def transit(self):
+    bundle = Bundle(self.phase.parent)
+    bundle.lins = self.lins.copy(); bundle.refresh()
+    bundle.dests = [{lin} for lin in bundle.lins]
+    bundle.births = [[] for _ in bundle.lins]
+    bundle.pops = [set().union(*[bundle.phase.ins2outs[in_] for in_ in pops]) for pops in self.pops] # set().union() can handle empty pops
+    
+    bundle.child = self
+    self.parent = bundle
+  
   # backward in time through continuous demography
   # summarizing coalescent results
-  def coalesce(self, t, children, parent):
+  def birth(self, time, parent, children, pop):
     self.dict[parent] = len(self.lins)
     self.lins.append(parent)
     
     idx = [self.dict[child] for child in children]
-    self.dests.append(set.union(*[self.dests[i] for i in idx]))
-    self.pops.append(set.intersection(*[self.pops[i] for i in idx]))
-    self.coals.append([coal for i in idx for coal in self.coals[i]] + [t] * (len(children) - 1))
-    
-    self.N -= len(children) - 1
     self.ghosts.extend(idx)
-  
-  def simplify(self):
-    for i in sorted(self.ghosts, reverse=True):
-      del self.lins[i]
-      del self.dests[i]
-      del self.pops[i]
-      del self.coals[i]
-    self.dict = {lin:i for i, lin in enumerate(self.lins)}
-    self.ghosts = []
-  
-  # backward in time through mass migrations
-  # creating new Bundle, computing possible populations for each lineage
-  def transit(self, phase):
-    bundle = Bundle(phase, self.lins.copy())
-    bundle.pops = [set().union(*[phase.ins2outs[in_] for in_ in pops]) for pops in self.pops] # set().union() can handle empty pops
+    self.dests.append(set().union(*[self.dests[i] for i in idx]))
+    self.births.append([birth for i in idx for birth in self.births[i]] + [(time, len(children) - 1)])
     
-    bundle.child = self
-    self.parent = bundle
-    return bundle
+    if pop: # designated by user
+      if type(pop) is str:
+        pop = self.phase.populations.index(pop)
+      self.pops.append({pop})
+    elif children: # intersection of children pops
+      self.pops.append(set.intersection(*[self.pops[i] for i in idx]))
+    else: # end node without designation, could be in any population
+      self.pops.append(set(range(len(self.phase.ns))))
   
   # make it the root bundle
   def root(self):
-    self.t_end = max([coal for coals in self.coals for coal in coals])
     for value in itertools.product(*self.pops):
       state = State()
       self.states[value] = state
@@ -175,15 +263,14 @@ class Bundle:
   def evolve(self):
     K = self.phase.K
     for value, state in self.states.items():
-      Ns = [0 for pop in range(K)]
-      coals = [[] for pop in range(K)]
+      Ns = [0 for _ in range(K)]
+      births = [[] for _ in range(K)]
       for i in range(self.N):
         Ns[value[i]] += 1
-        coals[value[i]].extend(self.coals[i])
+        births[value[i]].extend(self.births[i])
+      state.logq = 0
       for pop in range(K):
-        Ns[pop] += len(coals[pop])
-        coals[pop].sort()
-      state.logp_evolve = self.phase.logp(Ns, coals, self.t, self.t_end)
+        state.logq += self.phase.logq(pop, Ns[pop], births[pop])
   
   # forward in time through mass migrations
   # creating children states and computing migration probabilities
@@ -192,7 +279,7 @@ class Bundle:
     logP = self.phase.logP
     child = self.child
     for value, state in self.states.items():
-      outs = [math.nan for _ in child.lins]
+      outs = [None for _ in child.lins]
       for i,pop in enumerate(value):
         for dest in self.dests[i]:
           outs[child.dict[dest]] = pop
@@ -202,68 +289,62 @@ class Bundle:
         migrations = np.zeros(self.phase.P.shape)
         for in_, out in zip(ins, outs):
           migrations[in_, out] += 1
-        logp = (logP * migrations).sum()
+        logq = (logP * migrations).sum()
         
         state_child = child.states.setdefault(ins, State())
-        state.children.append((logp, state_child))
+        state.children.append((logq, state_child))
   
-  def origin(self):
-    if self.states:
-      self.logp = 0
+  def evaluate(self):
+    if not self.child:
+      for state in self.states.values():
+        state.logp = state.logq
     else:
-      self.logp = -math.inf
-    for state in self.states.values():
-      state.logp = 0
-  
-  def get_logp(self):
-    if len(self.states) == 0:
-      self.logp = -math.inf
-      return
-    for state in self.states.values():
-      logps = [logp + child.logp for logp, child in state.children]
-      state.logp = scipy.special.logsumexp(logps) + state.logp_evolve
-    self.logp = scipy.special.logsumexp([state.logp for state in self.states.values()])
+      for state in self.states.values():
+        state.logp = scipy.special.logsumexp([logq + child.logp for logq, child in state.children]) + state.logq
+    
+    if not self.parent:
+      self.logp = scipy.special.logsumexp([state.logp for state in self.states.values()]) if self.states else -math.inf
 
 
-def glike(tree, demo, pops = None):
-  samples = sorted(list(tree.samples()))
-  times_nodes = iter(sorted([(round(tree.time(node),5), node) for node in tree.nodes() if tree.children(node)]))
-  origin = Bundle(None, samples, pops)
+def glike(tree, demo, samples = None):
+  if not samples:
+    samples = {}
+  times_nodes = iter(sorted([(round(tree.time(node),5), node) for node in tree.nodes()]))
+  origin = Bundle(demo.phases[0])
   
   # backward in time
-  phases = iter(demo.phases)
-  bundle = origin.transit(next(phases))
+  bundle = origin
   for t, node in times_nodes:
-    while t > bundle.phase.t_end:
-      bundle.simplify()
-      bundle = bundle.transit(next(phases))
-    bundle.coalesce(t, tree.children(node), node)
-  bundle.simplify()
+    while t >= bundle.phase.t_end:
+      bundle.refresh()
+      bundle.transit()
+      bundle = bundle.parent
+    bundle.birth(t, node, tree.children(node), samples.get(node, None))
+  bundle.refresh()
   
-  # if topology is not possible
   root = bundle
-  if len(root.pops[0]) == 0:
+  root.root()
+  if len(root.states) == 0:
     return -math.inf
   
   # forward in time
-  root.root()
-  while bundle.phase is not None:
-    #print("bundle from {} to {} has {} states".format(bundle.t, bundle.t_end, len(bundle.states)), flush = True)
-    bundle.evolve()
+  bundle = root
+  while bundle.child:
     bundle.migrate()
     bundle = bundle.child
+    #print("bundle from {} to {} has {} states".format(bundle.t, bundle.t_end, len(bundle.states)), flush = True)
   
   # backward in time
-  origin.origin()
-  while bundle.parent:
+  bundle = origin
+  while bundle:
+    bundle.evolve()
+    bundle.evaluate()
     bundle = bundle.parent
-    bundle.get_logp()
   
   return root.logp
 
-
-def glike_trees(trees, demo, pops = None, prune = 0): # trees: generator or list of trees
-  logps = [glike(tree, demo, pops = pops) for tree in trees]
+def glike_trees(trees, demo, samples = None, prune = 0): # trees: generator or list of trees
+  logps = [glike(tree, demo, samples = samples) for tree in trees]
   logps.sort()
   logp = sum(logps[math.ceil(prune * len(logps)):])
   return logp
