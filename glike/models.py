@@ -51,15 +51,15 @@ def american_admixture_demo(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admi
       [0, 1]
   ])
   demo.add_phase(Phase(t2, [1/N_afr, 1/N_ooa], P = P_asia_split,
-                      populations = ["afr", "ooa"]))
+                      populations = ["afr", "eur"]))
   P_ooa_split = np.array([
       [1],
       [1]
   ])
   demo.add_phase(Phase(t3, [1/N_afr], P = P_ooa_split,
-                       populations = ["ooa"]))
+                       populations = ["afr"]))
   demo.add_phase(Phase(t4, [1/N_anc],
-                       populations = ["ooa"]))
+                       populations = ["afr"]))
   return demo
 
 def american_admixture_demography(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admix, N_ooa, N_anc, gr_eur, gr_asia, gr_admix):
