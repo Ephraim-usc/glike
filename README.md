@@ -14,7 +14,7 @@ download the package and install from local:
 
     git clone https://github.com/Ephraim-usc/glike.git
     
-    pip3 install ./glike
+    python3 -m pip install ./glike
 
 
 Full likelihood of genealogical trees
