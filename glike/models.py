@@ -1,6 +1,31 @@
 import msprime
 from .glike import *
 
+
+########## Twoway Admixture ###########
+def twoway_admixture_demo(t1, t2, r, N, N_a, N_b, N_c):
+  demo = Demo()
+  demo.add_phase(Phase(0, [1/N]))
+  demo.add_phase(Phase(t1, [1/N_a, 1/N_b], P = np.array([[r1, 1-r1]])))
+  demo.add_phase(Phase(t2, [1/N_c], P = np.array([[1], [1]])))
+  return demo
+
+def twoway_admixture_demography(t1, t2, r, N, N_a, N_b, N_c, m):
+  demography = msprime.Demography()
+  demography.add_population(name = "O", initial_size = N)
+  demography.add_population(name = "A", initial_size = N_a)
+  demography.add_population(name = "B", initial_size = N_b)
+  demography.add_population(name = "C", initial_size = N_c)
+  
+  demography.add_admixture(time=t1, derived="O", ancestral=["A", "B"], proportions = [r, 1-r])
+  demography.add_symmetric_migration_rate_change(time=t1, populations = ["A", "B"], rate = m)
+  demography.add_symmetric_migration_rate_change(time=t2, populations = ["A", "B"], rate = 0)
+  
+  demography.add_population_split(time=t2, derived=["A", "B"], ancestral="C")
+  
+  return demography
+
+
 ########## Threeway Admixture ###########
 def threeway_admixture_demo(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e):
   demo = Demo()
