@@ -6,7 +6,7 @@ from .glike import *
 def twoway_admixture_demo(t1, t2, r, N, N_a, N_b, N_c):
   demo = Demo()
   demo.add_phase(Phase(0, [1/N]))
-  demo.add_phase(Phase(t1, [1/N_a, 1/N_b], P = np.array([[r1, 1-r1]])))
+  demo.add_phase(Phase(t1, [1/N_a, 1/N_b], P = np.array([[r, 1-r]])))
   demo.add_phase(Phase(t2, [1/N_c], P = np.array([[1], [1]])))
   return demo
 
