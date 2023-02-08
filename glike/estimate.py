@@ -33,9 +33,9 @@ class Search():
     limit = self.limits[name]
     low = limit[0]; high = limit[1]
     if isinstance(low, str):
-      low = self.values[low]
+      low = eval(low, self.values)
     if isinstance(high, str):
-      high = self.values[high]
+      high = eval(high, self.values)
     return low, high
   
   def up(self, name):
