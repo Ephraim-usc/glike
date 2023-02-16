@@ -22,6 +22,7 @@ class Search():
       names_fixed = []
     self.names_fixed = names_fixed
     self.lrs = {name:0.1 for name in self.names}
+    self.precision = precision
   
   def get(self):
     return list(self.values.values())
