@@ -71,7 +71,7 @@ class Search():
   def slower(self, name):
     self.lrs[name] = max(self.precision, self.lrs[name] * 0.5)
   
-  def all_slow(self):
+  def cold(self):
     for name in self.names:
       if (name not in self.names_fixed) and (self.lrs[name] > self.precision):
         return False
@@ -105,7 +105,7 @@ def estimate(trees, model, search, samples = None, prune = 0):
     x = search.get()
     print(str(x) + " " + str(logp_max), flush = True)
     
-    if x_prev == x and search.all_slow():
+    if x_prev == x and search.cold():
       break
     x_prev = x.copy()
   
