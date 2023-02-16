@@ -12,7 +12,7 @@ def ceil(number, digits):
 
 
 class Search():
-  def __init__(self, names, values, limits = None, names_fixed = None):
+  def __init__(self, names, values, limits = None, names_fixed = None, precision = 0.05):
     self.names = names
     self.values = dict(zip(names, values))
     if limits is None:
@@ -68,11 +68,11 @@ class Search():
     self.lrs[name] = min(0.5, self.lrs[name] * 1.5)
   
   def slower(self, name):
-    self.lrs[name] = max(0.1, self.lrs[name] * 0.5)
+    self.lrs[name] = max(self.precision, self.lrs[name] * 0.5)
   
   def all_slow(self):
     for name in self.names:
-      if self.lrs[name] > 0.1:
+      if (name not in self.names_fixed) and (self.lrs[name] > self.precision):
         return False
     return True
 
