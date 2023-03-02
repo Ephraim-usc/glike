@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import pandas as pd
 import gzip
 from tqdm import tqdm
 
@@ -63,4 +64,31 @@ def write_tsinfer_input(arg, name):
   sample_data.finalise()
   return sample_data
 
+
+def plot_tree(tree):
+  x = {}
+  x[tree.root] = 0
+  
+  nodes = [tree.root]
+  while nodes:
+    node = nodes.pop()
+    shift = x[node] - len(list(tree.samples(node)))/2
+    prev = 0
+    for child in tree.children(node):
+      tmp = len(list(tree.samples(child)))/2
+      x[child] = shift + prev + tmp
+      shift = x[child]
+      prev = tmp
+      nodes.append(child)
+  
+  lines = []
+  for node in tree.nodes():
+    if tree.parent(node) != -1:
+      lines.append((x[node], tree.time(node), x[node], tree.time(tree.parent(node))))
+    if tree.children(node):
+      xs = [x[child] for child in tree.children(node)]
+      lines.append((min(xs), tree.time(node), max(xs), tree.time(node)))
+  
+  lines = pd.DataFrame(data, columns = ("x", "y", "xend", "yend"))
+  return lines
   
