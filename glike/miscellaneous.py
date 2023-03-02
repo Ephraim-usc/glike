@@ -89,6 +89,6 @@ def plot_tree(tree):
       xs = [x[child] for child in tree.children(node)]
       lines.append((min(xs), tree.time(node), max(xs), tree.time(node)))
   
-  lines = pd.DataFrame(data, columns = ("x", "y", "xend", "yend"))
+  lines = pd.DataFrame(lines, columns = ("x", "y", "xend", "yend"))
   return lines
   
