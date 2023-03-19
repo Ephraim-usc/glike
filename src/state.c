@@ -32,7 +32,7 @@ static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
   Py_RETURN_NONE;
 }
 
-static PyObject *product_deterministic(PyObject *self, PyObject *args, PyObject *kwds)
+static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
 {
   int N,K;
   double *logps;
@@ -66,6 +66,7 @@ static PyObject *product_deterministic(PyObject *self, PyObject *args, PyObject 
 
 static PyMethodDef StateMethods[] = {
     {"view", (PyCFunction) view, METH_VARARGS | METH_KEYWORDS, "View the logP matrix."},
+    {"product_det", (PyCFunction) product_det, METH_VARARGS | METH_KEYWORDS, "Deterministic product."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
