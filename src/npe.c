@@ -7,6 +7,9 @@
 #include <math.h>
 #include <stdint.h>
 
+Py_Initialize();
+import_array();
+
 
 static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -80,9 +83,6 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
       memcpy(p, values_, chunk * sizeof(int));
   }
   
-  
-  Py_Initialize();
-  import_array();
   
   int nd = 2;
   npy_intp dims[] = {N, num};
