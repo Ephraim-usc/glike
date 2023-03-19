@@ -92,7 +92,7 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   
   int nd = 2;
   npy_intp dims[] = {3,2};
-  PyObject *alpha = PyArray_SimpleNew(nd, dims, NPY_DOUBLE);
+  PyObject *out = PyArray_SimpleNew(nd, dims, NPY_DOUBLE);
   
   return out;
 }
