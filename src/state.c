@@ -7,6 +7,7 @@
 #include <math.h>
 #include <stdint.h>
 
+
 static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
 {
   int N,K;
@@ -59,11 +60,23 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   }
   printf("num = %d\n", num);
   
+  int *p, *q;
   int *values = (int *)malloc(num * N * sizeof(int));
-  int dup = 
+  int size = num;
   for (n = 0; n < N; n++)
   {
+    values_ = values + num * n;
+    p = values_;
     
+    for (k = 0; k < K; k++)
+      if(logps[K*n+k] > -INFINITY)
+        for (q = p + size/nums[n]; p < q; p++)
+          *p = k;
+    
+    for (q = values_ + num; p < q; p += size)
+      memcpy(p, values_, size * sizeof(int))
+    
+    size /= nums[n];
   }
   
   
