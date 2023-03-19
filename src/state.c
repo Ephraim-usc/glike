@@ -18,15 +18,16 @@ static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
     Py_RETURN_NONE;
   
   N = PyArray_DIM(logP, 0);
-  K = PyArray_DIM(logP, 0);
+  K = PyArray_DIM(logP, 1);
   logps = (double *)PyArray_DATA((PyArrayObject *)logP);
   
-  printf("N = %d, K = %c\n", N, K);
+  printf("N = %d, K = %d\n", N, K);
   
   int i, j;
   for (i = 0; i < N; i++)
     for (j = 0; j < K; j++)
-      printf("%f", logps[N*i+j]);
+      printf("%f ", logps[N*i+j]);
+  printf("\n");
   
   Py_RETURN_NONE;
 }
