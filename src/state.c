@@ -83,9 +83,11 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   
   int i, j;
   for (i = 0; i < N; i++)
+  {
     for (j = 0; j < num; j++)
       printf("%d ", values[i*num + j]);
     printf("\n");
+  }
   
   Py_RETURN_NONE;
 }
