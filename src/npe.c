@@ -60,7 +60,6 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   }
   
   // computing values
-  int *p, *p_end, *q;
   int *values = (int *)malloc(num * N * sizeof(int)); int *values_;
   int *logps = (double *)malloc(num * N * sizeof(double)); int *logps_;
   int size = num; int chunk;
@@ -72,13 +71,13 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
     size /= nums[n];
     
     // memset
-    int offset = 0;
+    int offset = 0; int end;
     double datum;
     for (k = 0; k < K; k++)
     {
       datum = data[K*n+k];
       if(data[K*n+k] == -INFINITY) continue;
-      for (; offset < size; offset++)
+      for (end = offset + size; offset < end; offset++)
       {
           values_[offset] = k;
           logps_[offset] = datum;
@@ -86,8 +85,8 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
     }
     
     // memcpy
-    chunk = size * nums[n];
-    for (offset = chunk; offset < num; offset += chunk)
+    chunk = offset;
+    for (; offset < num; offset += chunk)
     {
       memcpy(values_ + offset, values_, chunk * sizeof(int));
       memcpy(logps_ + offset, logps_, chunk * sizeof(double));
