@@ -48,8 +48,7 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   K = PyArray_DIM(logP, 1);
   logps = (double *)PyArray_DATA((PyArrayObject *)logP);
   
-  printf("N = %d, K = %d\n", N, K);
-  
+  //computing nums and num
   int num = 1, num_ = 0;
   int *nums = calloc(N, sizeof(int));
   for (n = 0; n < N; n++)
@@ -58,27 +57,35 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
       if(logps[K*n+k] > -INFINITY) nums[n]++;
     num *= nums[n];
   }
-  printf("num = %d\n", num);
   
+  // computing values
   int *p, *q;
   int *values = (int *)malloc(num * N * sizeof(int));
   int size = num;
+  int chunk;
   for (n = 0; n < N; n++)
   {
     values_ = values + num * n;
     p = values_;
+    size /= nums[n];
     
+    // memset
     for (k = 0; k < K; k++)
       if(logps[K*n+k] > -INFINITY)
-        for (q = p + size/nums[n]; p < q; p++)
+        for (q = p + size; p < q; p++)
           *p = k;
     
-    for (q = values_ + num; p < q; p += size)
-      memcpy(p, values_, size * sizeof(int))
-    
-    size /= nums[n];
+    // memcpy
+    chunk = size * nums[n];
+    for (q = values_ + num; p < q; p += chunk)
+      memcpy(p, values_, size * sizeof(int));
   }
   
+  
+  int i;
+  for (i = 0; i < num * N; i++)
+      printf("%d ", values[i]);
+  printf("\n");
   
   Py_RETURN_NONE;
 }
