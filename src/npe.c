@@ -94,7 +94,7 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   
   npy_intp dims[] = {N, num};
   PyObject *values_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
-  PyObject *logps_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, logps);
+  PyObject *logps_array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, logps);
   
   values_array = PyArray_Transpose(values_array, NULL);
   logps_array = PyArray_Transpose(logps_array, NULL);
