@@ -77,7 +77,7 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
     // memcpy
     chunk = size * nums[n];
     for (q = values_ + num; p < q; p += chunk)
-      memcpy(p, values_, size * sizeof(int));
+      memcpy(p, values_, chunk * sizeof(int));
   }
   
   
