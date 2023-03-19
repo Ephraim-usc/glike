@@ -38,7 +38,7 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
 {
   int N,K;
   int n, k;
-  double *logps;
+  double *data;
   PyObject *logP;
   
   static char *kwlist[] = {"logP", NULL};
@@ -47,7 +47,7 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   
   N = PyArray_DIM(logP, 0);
   K = PyArray_DIM(logP, 1);
-  logps = (double *)PyArray_DATA((PyArrayObject *)logP);
+  data = (double *)PyArray_DATA((PyArrayObject *)logP);
   
   //computing nums and num
   int num = 1;
@@ -55,36 +55,53 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   for (n = 0; n < N; n++)
   {
     for (k = 0; k < K; k++)
-      if(logps[K*n+k] > -INFINITY) nums[n]++;
+      if(data[K*n+k] > -INFINITY) nums[n]++;
     num *= nums[n];
   }
   
   // computing values
-  int *p, *q;
+  int *p, *p_end, *q;
   int *values = (int *)malloc(num * N * sizeof(int)); int *values_;
+  int *logps = (double *)malloc(num * N * sizeof(double)); int *logps_;
   int size = num; int chunk;
   for (n = 0; n < N; n++)
   {
     values_ = values + num * n;
-    p = values_;
+    logps_ = logps + num * n;
+    p = values_; q = logps_;
     size /= nums[n];
     
     // memset
+    int offset = 0;
+    double datum;
     for (k = 0; k < K; k++)
-      if(logps[K*n+k] > -INFINITY)
-        for (q = p + size; p < q; p++)
-          *p = k;
+    {
+      datum = data[K*n+k];
+      if(data[K*n+k] == -INFINITY) continue;
+      for (; offset < size; offset++)
+      {
+          values_[offset] = k;
+          logps_[offset] = datum;
+      }
+    }
     
     // memcpy
     chunk = size * nums[n];
-    for (q = values_ + num; p < q; p += chunk)
-      memcpy(p, values_, chunk * sizeof(int));
+    for (offset = chunk; offset < num; offset += chunk)
+    {
+      memcpy(values_ + offset, values_, chunk * sizeof(int));
+      memcpy(logps_ + offset, logps_, chunk * sizeof(double));
+    }
   }
   
   npy_intp dims[] = {N, num};
-  PyObject *out = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
-  out = PyArray_Transpose(out, NULL);
+  PyObject *values_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
+  PyObject *logps_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, logps);
   
+  values_array = PyArray_Transpose(values_array, NULL);
+  logps_array = PyArray_Transpose(logps_array, NULL);
+  
+  PyObject *out = PyTuple_Pack(2, values_array, logps_array);
   return out;
 }
 
