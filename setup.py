@@ -13,15 +13,15 @@ def readme():
 
 
 setup(
-    name="glike",
+    name="sglike",
     version="0.1",
     author="Caoqi Fan",
     author_email="caoqifan@usc.edu",
-    description="Genealogical likelihood",
+    description="Stochastic Genealogical likelihood",
     long_description=readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/Ephraim-usc/glike.git",
-    packages=["glike"],
+    url="https://github.com/Ephraim-usc/sglike.git",
+    packages=["sglike"],
     python_requires=">=3",
     install_requires=[
         "numpy>=1.14.5",
