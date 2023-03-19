@@ -94,7 +94,7 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   
   int nd = 2;
   npy_intp dims[] = {N, num};
-  PyObject *out = PyArray_SimpleNew(nd, dims, NPY_INT);
+  PyObject *out = PyArray_SimpleNewFromData(nd, dims, NPY_INT, values);
   
   return out;
 }
