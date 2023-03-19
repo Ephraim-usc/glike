@@ -89,7 +89,11 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
     printf("\n");
   }
   
-  Py_RETURN_NONE;
+  
+  NPY_INTP dims[2] = {N, num};
+  PyObject *out = PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, values);
+  
+  return out;
 }
 
 
