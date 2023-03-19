@@ -81,20 +81,13 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   }
   
   
-  int i, j;
-  for (i = 0; i < N; i++)
-  {
-    for (j = 0; j < num; j++)
-      printf("%d ", values[i*num + j]);
-    printf("\n");
-  }
-  
   Py_Initialize();
   import_array();
   
   int nd = 2;
   npy_intp dims[] = {N, num};
   PyObject *out = PyArray_SimpleNewFromData(nd, dims, NPY_INT, values);
+  out = PyArray_Transpose(out, NULL);
   
   return out;
 }
