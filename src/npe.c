@@ -67,7 +67,6 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   {
     values_ = values + num * n;
     logps_ = logps + num * n;
-    p = values_; q = logps_;
     size /= nums[n];
     
     // memset
