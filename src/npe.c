@@ -95,24 +95,24 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
 
 
 
-static PyMethodDef StateMethods[] = {
+static PyMethodDef npeMethods[] = {
     {"view", (PyCFunction) view, METH_VARARGS | METH_KEYWORDS, "View the logP matrix."},
     {"product_det", (PyCFunction) product_det, METH_VARARGS | METH_KEYWORDS, "Deterministic product."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
-static struct PyModuleDef statemodule = {
+static struct PyModuleDef npemodule = {
     PyModuleDef_HEAD_INIT,
-    "state",
-    "state Module",
+    "npe",
+    "npe Module",
     -1,
-    StateMethods
+    npeMethods
 };
 
 PyMODINIT_FUNC
-PyInit_state(void)
+PyInit_npe(void)
 {
-    return PyModule_Create(&statemodule);
+    return PyModule_Create(&npemodule);
 }
 
 
