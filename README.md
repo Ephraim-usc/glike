@@ -12,9 +12,9 @@ Installation
 
 download the package and install from local:
 
-    git clone https://github.com/Ephraim-usc/glike.git
+    git clone https://github.com/Ephraim-usc/sglike.git
     
-    python3 -m pip install ./glike
+    python3 -m pip install ./sglike
 
 
 Full likelihood of genealogical trees
