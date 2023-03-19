@@ -29,7 +29,7 @@ setup(
         "tqdm",
     ],
     ext_modules=[
-        Extension("state", ["src/state.c"], include_dirs=[np.get_include()]),
+        Extension("npe", ["src/npe.c"], include_dirs=[np.get_include()]),
     ],
     classifiers=[
         "Programming Language :: Python :: 3.7",
