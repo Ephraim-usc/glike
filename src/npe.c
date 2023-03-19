@@ -96,23 +96,24 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
 
 
 static PyMethodDef npeMethods[] = {
-    {"view", (PyCFunction) view, METH_VARARGS | METH_KEYWORDS, "View the logP matrix."},
-    {"product_det", (PyCFunction) product_det, METH_VARARGS | METH_KEYWORDS, "Deterministic product."},
-    {NULL, NULL, 0, NULL}        /* Sentinel */
+  {"view", (PyCFunction) view, METH_VARARGS | METH_KEYWORDS, "View the logP matrix."},
+  {"product_det", (PyCFunction) product_det, METH_VARARGS | METH_KEYWORDS, "Deterministic product."},
+  {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
 static struct PyModuleDef npemodule = {
-    PyModuleDef_HEAD_INIT,
-    "npe",
-    "npe Module",
-    -1,
-    npeMethods
+  PyModuleDef_HEAD_INIT,
+  "npe",
+  "npe Module",
+  -1,
+  npeMethods
 };
 
 PyMODINIT_FUNC
 PyInit_npe(void)
 {
-    return PyModule_Create(&npemodule);
+  import_array();
+  return PyModule_Create(&npemodule);
 }
 
 
