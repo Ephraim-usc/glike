@@ -35,6 +35,7 @@ static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
 static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
 {
   int N,K;
+  int n, k;
   double *logps;
   PyObject *logP;
   
@@ -48,11 +49,23 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   
   printf("N = %d, K = %d\n", N, K);
   
-  int i, j;
-  for (i = 0; i < N; i++)
-    for (j = 0; j < K; j++)
-      printf("%d ", logps[K*i+j] > -INFINITY);
-  printf("\n");
+  int num = 1, num_ = 0;
+  int *nums = calloc(N, sizeof(int));
+  for (n = 0; n < N; n++)
+  {
+    for (k = 0; k < K; k++)
+      if(logps[K*n+k] > -INFINITY) nums[n]++;
+    num *= nums[n];
+  }
+  printf("num = %d\n", num);
+  
+  int *values = (int *)malloc(num * N * sizeof(int));
+  int dup = 
+  for (n = 0; n < N; n++)
+  {
+    
+  }
+  
   
   Py_RETURN_NONE;
 }
