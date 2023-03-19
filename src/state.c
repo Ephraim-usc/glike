@@ -15,7 +15,7 @@ static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
   
   static char *kwlist[] = {"logP", NULL};
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &logP))
-    return -1;
+    Py_RETURN_NONE;
   
   N = PyArray_DIM(logP, 0);
   K = PyArray_DIM(logP, 0);
@@ -24,22 +24,22 @@ static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
   printf("N = %d, K = %c\n", N, K);
   
   int i, j;
-  for (i = 1; i < N; ++i)
-    for (i = 1; i < K; ++i)
+  for (i = 0; i < N; i++)
+    for (j = 0; j < K; j++)
       printf("%f", logps[N*i+j]);
   
   Py_RETURN_NONE;
 }
 
 static PyMethodDef StateMethods[] = {
-    {"view",  view, METH_VARARGS, "View the logP matrix."},
+    {"view", (PyCFunction) view, METH_VARARGS | METH_KEYWORDS, "View the logP matrix."},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
 static struct PyModuleDef statemodule = {
     PyModuleDef_HEAD_INIT,
     "state",
-    spam_doc,
+    "state Module",
     -1,
     StateMethods
 };
