@@ -7,8 +7,6 @@
 #include <math.h>
 #include <stdint.h>
 
-Py_Initialize();
-import_array();
 
 
 static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
@@ -52,7 +50,7 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   logps = (double *)PyArray_DATA((PyArrayObject *)logP);
   
   //computing nums and num
-  int num = 1, num_ = 0;
+  int num = 1;
   int *nums = calloc(N, sizeof(int));
   for (n = 0; n < N; n++)
   {
@@ -83,10 +81,8 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
       memcpy(p, values_, chunk * sizeof(int));
   }
   
-  
-  int nd = 2;
   npy_intp dims[] = {N, num};
-  PyObject *out = PyArray_SimpleNewFromData(nd, dims, NPY_INT, values);
+  PyObject *out = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
   out = PyArray_Transpose(out, NULL);
   
   return out;
