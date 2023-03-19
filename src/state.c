@@ -89,6 +89,8 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
     printf("\n");
   }
   
+  Py_Initialize();
+  import_array();
   
   int nd = 2;
   npy_intp dims[] = {3,2};
