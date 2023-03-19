@@ -61,7 +61,7 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   
   // computing values
   int *values = (int *)malloc(num * N * sizeof(int)); int *values_;
-  int *logps = (double *)malloc(num * N * sizeof(double)); int *logps_;
+  double *logps = (double *)malloc(num * N * sizeof(double)); double *logps_;
   int size = num; int chunk;
   for (n = 0; n < N; n++)
   {
