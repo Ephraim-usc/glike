@@ -4,9 +4,35 @@ import tskit
 import itertools
 import scipy
 import scipy.special
+import random
+from tqdm import tqdm
+from time import time as now
+
+import npe # numpy C extension
+
+
+def random_product(pops, num = 100):
+  for _ in range(num):
+    yield tuple(random.choice(tuple(pops_)) for pops_ in pops)
+
+def all_equal(iterator):
+    iterator = iter(iterator)
+    try:
+        first = next(iterator)
+    except StopIteration:
+        return True
+    return all(first == x for x in iterator)
 
 def is_identity(x):
   return (x.shape[0] == x.shape[1]) and (x == np.eye(x.shape[0])).all()
+
+def logsumexp(x):
+  if len(x) == 0:
+    return -math.inf
+  elif len(x) == 1:
+    return x[0]
+  else:
+    return scipy.special.logsumexp(x)
 
 # probability of coalescence at time a
 def logp_n(n, a):
@@ -30,12 +56,22 @@ def logp_intn(n, a, b):
   else:
     raise Exception("not supported n type: not a float, a tuple or a callable")
 
+def logp_migrate(logP, ins, outs):
+  buffer = 0
+  for in_, out in zip(ins, outs):
+    buffer += logP[in_, out]
+    if buffer == -math.inf:
+      break
+  return buffer
+
 
 class Phase:
   # t: beginning time of Phase
   # ns: list of coalescent rates, each could be a number, a (initial_rate, growth_rate) tuple, or any function f(t)
   # P: transition matrix at beginning of Phase
   def __init__(self, t, ns, P = None, populations = None):
+    self.stochastic = False
+    
     self.t = t
     self.t_end = math.inf
     self.parent = None
@@ -53,7 +89,6 @@ class Phase:
     with np.errstate(divide='ignore'):
       self.ins_outs_mapping()
       logP = np.log(self.P)
-      logP[np.isneginf(logP)] = 0 # this is necessary because otherwise "-inf * 0 = nan" will cause trouble
       self.logP = logP
     
     if populations is not None:
@@ -73,13 +108,13 @@ class Phase:
   
   # this function computes the logp of a genealogical tree during a non-migration period, given populations of lineages
   # N: number of lineages at t_end
-  def logq(self, pop, N, births):
+  def logp(self, pop, N, coals):
     n = self.ns[pop]
-    births.sort(reverse=True)
+    coals.sort(reverse=True)
     
     buffer = 0
     time_ = self.t_end
-    for time, delta in births:
+    for time, delta in coals:
       buffer += 0.5*N*(N-1) * logp_intn(n, time, time_) if time_ > time and N >= 2 else 0 # think of a better way to deal with present samples!!!
       buffer += delta * logp_n(n, time) if delta >= 1 else 0
       N += delta; time_ = time
@@ -183,15 +218,13 @@ class Demo:
 
 class State:
   def __init__(self):
-    self.logq = math.nan # evolution (coalescence and non-coalescence) log probability of this State
-    self.logp = math.nan # absolute probability P(state|origin)
-    self.logp_ = math.nan # absolute probability P(root|state), currently not used
+    self.logp = math.nan # evolution (coalescence and non-coalescence) log probability of this State
+    self.logu = math.nan # absolute probability P(state|origin)
+    self.logv = math.nan # absolute probability P(roots|state)
     self.children = []
+    self.parents = []
 
 class Bundle:
-  # phase: the Phase this Bundle is in, the origin Bundle should have None phase
-  # lins: list of lineages
-  # pops: list of deterministic populations for each lineage
   def __init__(self, phase):
     self.phase = phase
     self.t = phase.t
@@ -200,11 +233,13 @@ class Bundle:
     self.N = 0
     self.dict = dict() # for fast finding index of lineage
     self.lins = [] # list of lineages
-    self.pops = [] # list of sets of possible populations for each subtree
     self.dests = [] # list of sets of descendents for each subtree
-    self.births = [] # list of lists of (time, num_children - 1) tuples of nodes for each subtree
-    
     self.ghosts = [] # indices of ghost lineages that are going to be deleted
+    
+    self.coals = [] # list of lists of (time, num_children - 1) tuples of nodes for each subtree
+    self.mask = np.zeros([0, self.phase.K], dtype = np.int8) # N x K binary mask matrix of possible populations
+    self.logmask = np.log(self.mask)
+    
     self.states = {} # dict of (value, state) tuples
     self.parent = None
     self.child = None
@@ -214,11 +249,13 @@ class Bundle:
       ghosts = set(self.ghosts); self.ghosts = []
       self.lins = [lin for i, lin in enumerate(self.lins) if i not in ghosts]
       self.dests = [dests for i, dests in enumerate(self.dests) if i not in ghosts]
-      self.pops = [pops for i, pops in enumerate(self.pops) if i not in ghosts]
-      self.births = [births for i, births in enumerate(self.births) if i not in ghosts]
+      self.coals = [coal for i, coal in enumerate(self.coals) if i not in ghosts]
+      self.mask = np.array([mask_ for i,mask_ in enumerate(self.mask) if i not in ghosts])
     
     self.N = len(self.lins)
     self.dict = {lin:i for i, lin in enumerate(self.lins)}
+    with np.errstate(divide='ignore'):
+      self.logmask = np.log(self.mask)
   
   # backward in time through mass migrations
   # creating new Bundle, computing possible populations for each lineage
@@ -226,35 +263,41 @@ class Bundle:
     bundle = Bundle(self.phase.parent)
     bundle.lins = self.lins.copy(); bundle.refresh()
     bundle.dests = [{lin} for lin in bundle.lins]
-    bundle.births = [[] for _ in bundle.lins]
-    bundle.pops = [set().union(*[bundle.phase.ins2outs[in_] for in_ in pops]) for pops in self.pops] # set().union() can handle empty pops
+    bundle.coals = [[] for _ in bundle.lins]
+    bundle.mask = (np.dot(self.mask, self.phase.parent.P) > 0).astype(np.int8)
     
     bundle.child = self
     self.parent = bundle
   
   # backward in time through continuous demography
   # summarizing coalescent results
-  def birth(self, time, parent, children, pop):
+  def coal(self, time, parent, children, pop):
     self.dict[parent] = len(self.lins)
     self.lins.append(parent)
     
-    idx = [self.dict[child] for child in children]
-    self.ghosts.extend(idx)
-    self.dests.append(set().union(*[self.dests[i] for i in idx]))
-    self.births.append([birth for i in idx for birth in self.births[i]] + [(time, len(children) - 1)])
+    if children:
+      idx = [self.dict[child] for child in children]
+      self.ghosts.extend(idx)
+      self.dests.append(set().union(*[self.dests[i] for i in idx]))
+      self.coals.append([coal for i in idx for coal in self.coals[i]] + [(time, len(children) - 1)])
+      mask_ = self.mask[idx,:].prod(axis = 0, dtype = np.int8)
+    else:
+      self.dests.append(set())
+      self.coals.append([(time, - 1)])
+      mask_ = np.ones(self.phase.K, dtype = np.int8)
     
-    if pop: # designated by user
+    if pop != None: # designated by user
       if type(pop) is str:
         pop = self.phase.populations.index(pop)
-      self.pops.append({pop})
-    elif children: # intersection of children pops
-      self.pops.append(set.intersection(*[self.pops[i] for i in idx]))
-    else: # end node without designation, could be in any population
-      self.pops.append(set(range(len(self.phase.ns))))
+      mask_[np.arange(len(mask_)) != pop] = 0 # set all other elements to zero, except the pop-th
+    
+    self.mask = np.vstack([self.mask, mask_]) # this is slow!!!!!
   
   # make it the root bundle
   def root(self):
-    for value in itertools.product(*self.pops):
+    self.states = dict()
+    pops = [np.nonzero(x)[0] for x in self.mask]
+    for value in itertools.product(*pops):
       state = State()
       self.states[value] = state
   
@@ -264,46 +307,109 @@ class Bundle:
     K = self.phase.K
     for value, state in self.states.items():
       Ns = [0 for _ in range(K)]
-      births = [[] for _ in range(K)]
+      coals = [[] for _ in range(K)]
       for i in range(self.N):
         Ns[value[i]] += 1
-        births[value[i]].extend(self.births[i])
-      state.logq = 0
+        coals[value[i]].extend(self.coals[i])
+      state.logp = 0
       for pop in range(K):
-        state.logq += self.phase.logq(pop, Ns[pop], births[pop])
+        state.logp += self.phase.logp(pop, Ns[pop], coals[pop])
   
-  # forward in time through mass migrations
-  # creating children states and computing migration probabilities
-  def migrate(self):
-    outs2ins = self.phase.outs2ins
-    logP = self.phase.logP
+  def emigrate(self):
     child = self.child
+    
+    self.num_links = 0.0
     for value, state in self.states.items():
       outs = [None for _ in child.lins]
       for i,pop in enumerate(value):
         for dest in self.dests[i]:
-          outs[child.dict[dest]] = pop
+          idx = child.dict[dest]
+          outs[idx] = pop
       
-      pops_child = [set.intersection(child.pops[i], outs2ins[outs[i]]) for i in range(child.N)]
-      for ins in itertools.product(*pops_child):
-        migrations = np.zeros(self.phase.P.shape)
-        for in_, out in zip(ins, outs):
-          migrations[in_, out] += 1
-        logq = (logP * migrations).sum()
-        
-        state_child = child.states.setdefault(ins, State())
-        state.children.append((logq, state_child))
+      state.logP = self.phase.logP.T[outs, :] + child.logmask
+      state.flags = (state.logP > -math.inf)
+      state.num_links = state.flags.sum(axis = 1).prod(dtype = float)
+      self.num_links += state.num_links
+    
+    #print(f"[{self.t}~{self.t_end}gen {self.phase.K} populations] [{len(self.child.lins)}-{len(self.lins)} lineages] [{len(self.states)} states] [{np.format_float_scientific(self.num_links, precision=6)} links]", flush = True)
   
-  def evaluate(self):
-    if not self.child:
+  def immigrate(self, MAX_LINKS = 1e20):
+    parent = self.parent
+    if parent.num_links <= MAX_LINKS:
+      self.immigrate_deterministic()
+    else:
+      #print("stochastic immigration.", flush = True)
+      self.immigrate_stochastic(MAX_LINKS)
+  
+  def immigrate_deterministic(self):
+    N = self.N
+    parent = self.parent
+    for _, state_parent in parent.states.items():
+      values, logps = npe.product_det(state_parent.logP)
+      logps = logps.sum(axis = 1)
+      #values = np.array(list(itertools.product(*[np.nonzero(x)[0] for x in state_parent.flags]))) 
+      #values = np.array(np.meshgrid(*[np.nonzero(x)[0] for x in state_parent.flags])).T.reshape(-1, N) # faster, but has ndarray dimension > 32 bug
+      #logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
+      
+      for value, logp in zip(values, logps):
+        value = tuple(value)
+        if value in self.states:
+          state = self.states[value]
+        else:
+          state = State()
+          self.states[value] = state
+        state_parent.children.append((logp, state))
+        state.parents.append((logp, state_parent))
+  
+  def immigrate_stochastic(self, MAX_LINKS):
+    global A, B, C, D
+    N = self.N
+    K = self.phase.K
+    parent = self.parent
+    
+    parent.w = 0
+    for _, state_parent in parent.states.items():
+      state_parent.W = np.exp(state_parent.logP) # can try different definitions
+      state_parent.w = state_parent.W.sum(axis = 1).prod()
+      parent.w += state_parent.w
+    
+    for _, state_parent in tqdm(parent.states.items(), total = len(parent.states), ncols = 50):
+      num = np.random.binomial(MAX_LINKS, state_parent.w/parent.w)
+      W_norm = state_parent.W/state_parent.W.sum(axis=1,keepdims=True)
+      rng = np.random.default_rng()
+      values = np.apply_along_axis(lambda x: rng.choice(K, p = x, size = num), 1, W_norm).T # 90% running time
+      values, counts = np.unique(values, return_counts=True, axis = 0) # 7% running time
+      logws = np.log(state_parent.W[np.arange(N)[:,None], values.T]).sum(axis = 0)
+      logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
+      
+      for value, count, logw, logp in zip(values, counts, logws, logps):
+        value = tuple(value)
+        if value in self.states:
+          state = self.states[value]
+        else:
+          state = State()
+          self.states[value] = state
+        logp_adj = logp + math.log(count) - math.log(MAX_LINKS) - (logw - math.log(parent.w)) # last term is the log prob. of sampling this state
+        state_parent.children.append((logp_adj, state))
+        state.parents.append((logp_adj, state_parent))
+  
+  def evaluate_logv(self):
+    if self.parent:
       for state in self.states.values():
-        state.logp = state.logq
+        state.logv = logsumexp([logp + parent.logv for logp, parent in state.parents]) + state.logp
     else:
       for state in self.states.values():
-        state.logp = scipy.special.logsumexp([logq + child.logp for logq, child in state.children]) + state.logq
-    
-    if not self.parent:
-      self.logp = scipy.special.logsumexp([state.logp for state in self.states.values()]) if self.states else -math.inf
+        state.logv = state.logp
+    self.logv = logsumexp([state.logv for state in self.states.values()])
+  
+  def evaluate_logu(self):
+    if self.child:
+      for state in self.states.values():
+        state.logu = logsumexp([logp + child.logu for logp, child in state.children]) + state.logp
+    else:
+      for state in self.states.values():
+        state.logu = state.logp
+    self.logu = logsumexp([state.logu for state in self.states.values()])
 
 
 def glike(tree, demo, samples = None):
@@ -319,32 +425,32 @@ def glike(tree, demo, samples = None):
       bundle.refresh()
       bundle.transit()
       bundle = bundle.parent
-    bundle.birth(t, node, tree.children(node), samples.get(node, None))
+    bundle.coal(t, node, tree.children(node), samples.get(node, None))
   bundle.refresh()
-  
   root = bundle
-  root.root()
-  if len(root.states) == 0:
-    return -math.inf
   
   # forward in time
   bundle = root
+  bundle.root()
+  bundle.evolve()
+  bundle.evaluate_logv()
   while bundle.child:
-    bundle.migrate()
+    bundle.emigrate()
     bundle = bundle.child
-    #print("bundle from {} to {} has {} states".format(bundle.t, bundle.t_end, len(bundle.states)), flush = True)
+    bundle.immigrate()
+    bundle.evolve()
+    bundle.evaluate_logv()
   
   # backward in time
   bundle = origin
   while bundle:
-    bundle.evolve()
-    bundle.evaluate()
+    bundle.evaluate_logu()
     bundle = bundle.parent
   
-  return root.logp
+  return root
 
 def glike_trees(trees, demo, samples = None, prune = 0): # trees: generator or list of trees
-  logps = [glike(tree, demo, samples = samples) for tree in trees]
+  logps = [glike(tree, demo, samples = samples).logu for tree in trees]
   logps.sort()
   logp = sum(logps[math.ceil(prune * len(logps)):])
   return logp
