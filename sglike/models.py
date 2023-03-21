@@ -196,3 +196,33 @@ def ancient_europe_demography(t1, t2, t3, t4, t5, t6, r1, r2, r3, N_ana, N_neo, 
   demography.add_population_split(time=t5, derived=["ana", "chg"], ancestral="wa")
   demography.add_population_split(time=t6, derived=["ne", "wa"], ancestral="ooa")
   return demography
+
+
+########## Native Hawaiian ###########
+def nh_demo(t1, t2, t3, t4, t5, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_aa, N_ooa, N_anc, gr):
+  demo = Demo()
+  demo.add_phase(Phase(0, [(1/N_admix, gr)]))
+  P_admixture = np.array([
+      [r1, r2, r3, 1-r1-r2-r3]
+  ])
+  demo.add_phase(Phase(t1, [1/N_afr, 1/N_eur, 1/N_asia, 1/N_pol], P = P_admixture))
+  P_pol_split = np.array([
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+      [0, 0, 1]
+  ])
+  demo.add_phase(Phase(t2, [1/N_afr, 1/N_eur, 1/N_aa], P = P_pol_split))
+  P_asia_split = np.array([
+      [1, 0],
+      [0, 1],
+      [0, 1]
+  ])
+  demo.add_phase(Phase(t3, [1/N_afr, 1/N_ooa], P = P_asia_split))
+  P_ooa_split = np.array([
+      [1],
+      [1]
+  ])
+  demo.add_phase(Phase(t4, [1/N_afr], P = P_ooa_split))
+  demo.add_phase(Phase(t5, [1/N_anc]))
+  return demo
