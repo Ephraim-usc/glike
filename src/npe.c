@@ -161,7 +161,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
 static PyMethodDef npeMethods[] = {
   {"view", (PyCFunction) view, METH_VARARGS | METH_KEYWORDS, "View the logP matrix."},
   {"product_det", (PyCFunction) product_det, METH_VARARGS | METH_KEYWORDS, "Deterministic product."},
-  {"product_rand", (PyCFunction) product_det, METH_VARARGS | METH_KEYWORDS, "Random product."},
+  {"product_rand", (PyCFunction) product_rand, METH_VARARGS | METH_KEYWORDS, "Random product."},
   {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
