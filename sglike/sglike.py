@@ -361,16 +361,15 @@ class Bundle:
     N = self.N
     parent = self.parent
     
-    parent.w = 0
     for _, state_parent in parent.states.items():
       W = np.exp(state_parent.logP) # can try different definitions
       w = W.sum(axis=1, keepdims=True)
       state_parent.W = W/w
-      state_parent.w = w.prod()
-      parent.w += state_parent.w
+      state_parent.logw = np.log(w).sum()
+    parent.logw = logsumexp([state_parent.logw for state_parent in parent.states.values()])
     
     for _, state_parent in parent.states.items():
-      num = np.random.binomial(MAX_LINKS, state_parent.w/parent.w)
+      num = np.random.binomial(MAX_LINKS, math.exp(state_parent.logw - parent.logw))
       if num == 0:
         continue
       
@@ -386,7 +385,7 @@ class Bundle:
         else:
           state = State()
           self.states[value] = state
-        logp_adj = logp + math.log(count) - math.log(MAX_LINKS) - (math.log(state_parent.w)-math.log(parent.w) + logw) # last term is the log prob. of sampling this state
+        logp_adj = logp + math.log(count) - math.log(MAX_LINKS) - (state_parent.logw - parent.logw + logw) # last term is the log prob. of sampling this state
         state_parent.children.append((logp_adj, state))
         state.parents.append((logp_adj, state_parent))
   
