@@ -327,18 +327,17 @@ class Bundle:
           outs[idx] = pop
       
       state.logP = self.phase.logP.T[outs, :] + child.logmask
-      state.flags = (state.logP > -math.inf)
-      state.num_links = state.flags.sum(axis = 1).prod(dtype = float)
+      state.num_links = (state.logP > -math.inf).sum(axis = 1).prod(dtype = float)
       self.num_links += state.num_links
     
-    #print(f"[{self.t}~{self.t_end}gen {self.phase.K} populations] [{len(self.child.lins)}-{len(self.lins)} lineages] [{len(self.states)} states] [{np.format_float_scientific(self.num_links, precision=6)} links]", flush = True)
+    print(f"[{self.t}~{self.t_end}gen {self.phase.K} populations] [{len(self.child.lins)}-{len(self.lins)} lineages] [{len(self.states)} states] [{np.format_float_scientific(self.num_links, precision=6)} links]", flush = True)
   
-  def immigrate(self, MAX_LINKS = 1e20):
+  def immigrate(self, MAX_LINKS = 1e5):
     parent = self.parent
     if parent.num_links <= MAX_LINKS:
       self.immigrate_deterministic()
     else:
-      #print("stochastic immigration.", flush = True)
+      print("stochastic immigration.", flush = True)
       self.immigrate_stochastic(MAX_LINKS)
   
   def immigrate_deterministic(self):
@@ -347,9 +346,6 @@ class Bundle:
     for _, state_parent in parent.states.items():
       values, logps = npe.product_det(state_parent.logP)
       logps = logps.sum(axis = 1)
-      #values = np.array(list(itertools.product(*[np.nonzero(x)[0] for x in state_parent.flags]))) 
-      #values = np.array(np.meshgrid(*[np.nonzero(x)[0] for x in state_parent.flags])).T.reshape(-1, N) # faster, but has ndarray dimension > 32 bug
-      #logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
       for value, logp in zip(values, logps):
         value = tuple(value)
@@ -363,24 +359,21 @@ class Bundle:
   
   def immigrate_stochastic(self, MAX_LINKS):
     N = self.N
-    K = self.phase.K
     parent = self.parent
     
     parent.w = 0
     for _, state_parent in parent.states.items():
-      state_parent.W = np.exp(state_parent.logP) # can try different definitions
-      state_parent.w = state_parent.W.sum(axis = 1).prod()
+      W = np.exp(state_parent.logP) # can try different definitions
+      w = W.sum(axis=1, keepdims=True)
+      state_parent.W = W/w
+      state_parent.w = w.prod()
       parent.w += state_parent.w
     
     for _, state_parent in tqdm(parent.states.items(), total = len(parent.states), ncols = 50):
       num = np.random.binomial(MAX_LINKS, state_parent.w/parent.w)
-      W_norm = state_parent.W/state_parent.W.sum(axis=1,keepdims=True)
-      rng = np.random.default_rng()
-      values, ws = npe.product_rand(W_norm)
+      values, ws = npe.product_rand(state_parent.W, num)
       logws = np.log(ws).sum(axis = 1)
-      #values = np.apply_along_axis(lambda x: rng.choice(K, p = x, size = num), 1, W_norm).T
-      #values, counts = np.unique(values, return_counts=True, axis = 0) # 7% running time
-      #logws = np.log(state_parent.W[np.arange(N)[:,None], values.T]).sum(axis = 0)
+      values, counts = np.unique(values, return_counts=True, axis = 0) # slow !!!
       logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
       for value, count, logw, logp in zip(values, counts, logws, logps):
@@ -390,7 +383,7 @@ class Bundle:
         else:
           state = State()
           self.states[value] = state
-        logp_adj = logp + math.log(count) - math.log(MAX_LINKS) - (logw - math.log(parent.w)) # last term is the log prob. of sampling this state
+        logp_adj = logp + math.log(count) - math.log(MAX_LINKS) - (math.log(state_parent.w)-math.log(parent.w) + logw) # last term is the log prob. of sampling this state
         state_parent.children.append((logp_adj, state))
         state.parents.append((logp_adj, state_parent))
   
