@@ -105,13 +105,13 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
 
 static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
 {
-  int N, K, m;
-  int n, k;
+  int N, K, M;
+  int n, k, m;
   double *data, *data_;
   PyObject *P;
   
   static char *kwlist[] = {"P", "num", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oi", kwlist, &P, &m))
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oi", kwlist, &P, &M))
     Py_RETURN_NONE;
   
   N = PyArray_DIM(P, 0);
@@ -119,21 +119,21 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   data = (double *)PyArray_DATA((PyArrayObject *)P);
   
   double *cdf = (double *)malloc(N * K * sizeof(double)); double *cdf_;
-  int *values = (int *)malloc(N * K * sizeof(int)); int *values_;
+  int *idx = (int *)malloc(N * K * sizeof(int)); int *idx_;
   
   int i, j;
   for (n = 0; n < N; n++)
   {
     data_ = data + n * K;
     cdf_ = cdf + n * K;
-    values_ = values + n * K;
+    idx_ = idx + n * K;
     
     i = 0;
     for (k = 0; k < K; k++)
     {
       if (data_[k] < 1e-8) continue;
       cdf_[i] = data_[k];
-      values_[i] = k;
+      idx_[i] = k;
       i ++;
     }
     for (j = 1; j < i; j++)
@@ -147,15 +147,45 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
     }
   }
   
+  /*
   for (i = 0; i < N*K; i++)
     printf("%f ", cdf[i]);
   printf("\n");
   for (i = 0; i < N*K; i++)
-    printf("%d ", values[i]);
+    printf("%d ", idx[i]);
   printf("\n");
+  */
   
+  int *values = (int *)malloc(N * M * sizeof(int)); int *values_;
+  double *ps = (double *)malloc(N * M * sizeof(double)); double *ps_;
   
-  Py_RETURN_NONE;
+  double tmp;
+  for (n = 0; n < N; n++)
+  {
+    data_ = data + n * K;
+    cdf_ = cdf + n * K;
+    idx_ = idx + n * K;
+    values_ = values + n * M;
+    ps_ = ps + n * M;
+    
+    for (m = 0; m < M; m++)
+    {
+      tmp = rand();
+      i = 0; while(cdf_[i] < tmp) i++;
+      values_[m] = idx_[i];
+      ps_[m] = data_[i];
+    }
+  }
+  
+  npy_intp dims[] = {N, M};
+  PyObject *values_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
+  PyObject *ps_array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, ps);
+  
+  values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
+  ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
+  
+  PyObject *out = PyTuple_Pack(2, values_array, ps_array);
+  return out;
 }
 
 
