@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 #include <stdint.h>
 
 
@@ -170,7 +171,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
     
     for (m = 0; m < M; m++)
     {
-      tmp = 0.5;
+      tmp = drand48();
       i = 0; while(cdf_[i] < tmp) i++;
       values_[m] = idx_[i];
       ps_[m] = data_[i];
