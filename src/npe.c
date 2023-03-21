@@ -170,7 +170,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
     
     for (m = 0; m < M; m++)
     {
-      tmp = rand();
+      tmp = 0.5;
       i = 0; while(cdf_[i] < tmp) i++;
       values_[m] = idx_[i];
       ps_[m] = data_[i];
