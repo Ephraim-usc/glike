@@ -36,7 +36,7 @@ static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
 
 static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
 {
-  int N,K;
+  int N, K;
   int n, k;
   double *data;
   PyObject *logP;
@@ -103,9 +103,54 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   return out;
 }
 
-
-
-
+static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
+{
+  int N, K, m;
+  int n, k;
+  double *data; *data_;
+  PyObject *P;
+  
+  static char *kwlist[] = {"P", "", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oi", kwlist, &P, &m))
+    Py_RETURN_NONE;
+  
+  N = PyArray_DIM(P, 0);
+  K = PyArray_DIM(P, 1);
+  data = (double *)PyArray_DATA((PyArrayObject *)P);
+  
+  double *cdf = (double *)malloc(N * K * sizeof(double)); double *cdf_;
+  int *values = (int *)malloc(N * K * sizeof(int)); int *values_;
+  
+  int i, j;
+  for (n = 0; n < N; n++)
+  {
+    data_ = data + n * K;
+    cdf_ = cdf + n * K;
+    values_ = values + n * K;
+    cdf_[0] = 0.0;
+    i = 0;
+    for (k = 0; k < K; k++)
+    {
+      if (data_[k] <= 0.0) continue;
+      cdf_[i] = data_[k];
+      values_[i] = k;
+      i ++;
+    }
+    for (j = 1; j < i; j++)
+    {
+      cdf_[j] += cdf_[j-1];
+    }
+  }
+  
+  for (i = 0; i < N*K; i++)
+    printf("%f ", cdf[i]);
+  printf("\n");
+  for (i = 0; i < N*K; i++)
+    printf("%f ", values[i]);
+  printf("\n");
+  
+  Py_RETURN_NONE;
+}
 
 
 
