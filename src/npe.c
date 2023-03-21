@@ -153,7 +153,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
     }
   }
   
-  
+  /*
   for (i = 0; i < N*K; i++)
     printf("%f ", pdf[i]);
   printf("\n");
@@ -162,8 +162,8 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   printf("\n");
   for (i = 0; i < N*K; i++)
     printf("%d ", idx[i]);
-  printf("\n");
-  
+  printf("\n"); 
+  */
   
   int *values = (int *)malloc(N * M * sizeof(int)); int *values_;
   double *ps = (double *)malloc(N * M * sizeof(double)); double *ps_;
