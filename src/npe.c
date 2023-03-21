@@ -158,7 +158,6 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   */
   
   int *values = (int *)malloc(N * M * sizeof(int)); int *values_;
-  double *ps = (double *)malloc(N * M * sizeof(double)); double *ps_;
   
   double tmp;
   for (n = 0; n < N; n++)
@@ -174,19 +173,14 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
       tmp = drand48();
       i = 0; while(cdf_[i] < tmp) i++;
       values_[m] = idx_[i];
-      ps_[m] = data_[i];
     }
   }
   
   npy_intp dims[] = {N, M};
   PyObject *values_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
-  PyObject *ps_array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, ps);
-  
   values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
-  ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
   
-  PyObject *out = PyTuple_Pack(2, values_array, ps_array);
-  return out;
+  return values_array;
 }
 
 
