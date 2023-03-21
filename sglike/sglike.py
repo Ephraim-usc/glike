@@ -362,7 +362,6 @@ class Bundle:
         state.parents.append((logp, state_parent))
   
   def immigrate_stochastic(self, MAX_LINKS):
-    global A, B, C, D
     N = self.N
     K = self.phase.K
     parent = self.parent
@@ -377,9 +376,11 @@ class Bundle:
       num = np.random.binomial(MAX_LINKS, state_parent.w/parent.w)
       W_norm = state_parent.W/state_parent.W.sum(axis=1,keepdims=True)
       rng = np.random.default_rng()
-      values = np.apply_along_axis(lambda x: rng.choice(K, p = x, size = num), 1, W_norm).T # 90% running time
-      values, counts = np.unique(values, return_counts=True, axis = 0) # 7% running time
-      logws = np.log(state_parent.W[np.arange(N)[:,None], values.T]).sum(axis = 0)
+      values, ws = npe.product_rand(W_norm)
+      logws = np.log(ws).sum(axis = 1)
+      #values = np.apply_along_axis(lambda x: rng.choice(K, p = x, size = num), 1, W_norm).T
+      #values, counts = np.unique(values, return_counts=True, axis = 0) # 7% running time
+      #logws = np.log(state_parent.W[np.arange(N)[:,None], values.T]).sum(axis = 0)
       logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
       for value, count, logw, logp in zip(values, counts, logws, logps):
