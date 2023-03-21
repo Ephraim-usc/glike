@@ -96,8 +96,8 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   PyObject *values_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
   PyObject *logps_array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, logps);
   
-  values_array = PyArray_Transpose(values_array, NULL);
-  logps_array = PyArray_Transpose(logps_array, NULL);
+  values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
+  logps_array = PyArray_Transpose((PyArrayObject *)logps_array, NULL);
   
   PyObject *out = PyTuple_Pack(2, values_array, logps_array);
   return out;
@@ -107,7 +107,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
 {
   int N, K, m;
   int n, k;
-  double *data; *data_;
+  double *data, *data_;
   PyObject *P;
   
   static char *kwlist[] = {"P", "", NULL};
@@ -146,7 +146,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
     printf("%f ", cdf[i]);
   printf("\n");
   for (i = 0; i < N*K; i++)
-    printf("%f ", values[i]);
+    printf("%d ", values[i]);
   printf("\n");
   
   Py_RETURN_NONE;
