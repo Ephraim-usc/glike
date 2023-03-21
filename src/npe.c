@@ -141,7 +141,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
     {
       cdf_[j] += cdf_[j-1];
     }
-    if (abs(cdf_[j-1] - 1.0) > 1e-8)
+    if (fabs(cdf_[j-1] - 1.0) > 1e-8)
     {
       printf("Error: probabilities don't sum up to 1!\n");
       Py_RETURN_NONE;
@@ -166,7 +166,6 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
     cdf_ = cdf + n * K;
     idx_ = idx + n * K;
     values_ = values + n * M;
-    ps_ = ps + n * M;
     
     for (m = 0; m < M; m++)
     {
