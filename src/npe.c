@@ -127,7 +127,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   for (n = 0; n < N; n++)
   {
     data_ = data + n * K;
-    pdf_ = cdf + n * K;
+    pdf_ = pdf + n * K;
     cdf_ = cdf + n * K;
     idx_ = idx + n * K;
     
