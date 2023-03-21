@@ -140,10 +140,10 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
     {
       cdf_[j] += cdf_[j-1];
     }
-    if (abs(cdf_[j-1] - 1.0) < 1e-8)
+    if (abs(cdf_[j-1] - 1.0) > 1e-8)
     {
       printf("Error: probabilities don't sum up to 1!\n");
-      //Py_RETURN_NONE;
+      Py_RETURN_NONE;
     }
   }
   
