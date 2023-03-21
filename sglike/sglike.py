@@ -330,14 +330,14 @@ class Bundle:
       state.num_links = (state.logP > -math.inf).sum(axis = 1).prod(dtype = float)
       self.num_links += state.num_links
     
-    print(f"[{self.t}~{self.t_end}gen {self.phase.K} populations] [{len(self.child.lins)}-{len(self.lins)} lineages] [{len(self.states)} states] [{np.format_float_scientific(self.num_links, precision=6)} links]", flush = True)
+    #print(f"[{self.t}~{self.t_end}gen {self.phase.K} populations] [{len(self.child.lins)}-{len(self.lins)} lineages] [{len(self.states)} states] [{np.format_float_scientific(self.num_links, precision=6)} links]", flush = True)
   
   def immigrate(self, MAX_LINKS = 1e5):
     parent = self.parent
     if parent.num_links <= MAX_LINKS:
       self.immigrate_deterministic()
     else:
-      print("stochastic immigration.", flush = True)
+      #print("stochastic immigration.", flush = True)
       self.immigrate_stochastic(MAX_LINKS)
   
   def immigrate_deterministic(self):
