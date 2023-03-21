@@ -444,11 +444,49 @@ def glike(tree, demo, samples = None):
     bundle.evaluate_logu()
     bundle = bundle.parent
   
-  return root
+  return root.logu
 
 def glike_trees(trees, demo, samples = None, prune = 0): # trees: generator or list of trees
-  logps = [glike(tree, demo, samples = samples).logu for tree in trees]
+  logps = [glike(tree, demo, samples = samples) for tree in trees]
   logps.sort()
   logp = sum(logps[math.ceil(prune * len(logps)):])
   return logp
 
+
+def glike_verbose(tree, demo, samples = None):
+  if not samples:
+    samples = {}
+  times_nodes = iter(sorted([(round(tree.time(node),5), node) for node in tree.nodes()]))
+  origin = Bundle(demo.phases[0])
+  
+  # backward in time
+  bundle = origin
+  for t, node in times_nodes:
+    while t >= bundle.phase.t_end:
+      bundle.refresh()
+      bundle.transit()
+      bundle = bundle.parent
+    bundle.coal(t, node, tree.children(node), samples.get(node, None))
+  bundle.refresh()
+  root = bundle
+  
+  # forward in time
+  bundle = root
+  bundle.root()
+  bundle.evolve()
+  bundle.evaluate_logv()
+  while bundle.child:
+    bundle.emigrate()
+    print(f"{bundle.t}~{bundle.t_end}gen, {bundle.phase.K} populations, {len(bundle.child.lins)}-{len(bundle.lins)} lineages, {len(bundle.states)} states, {np.format_float_scientific(bundle.num_links, precision=6)} links.", flush = True)
+    bundle = bundle.child
+    bundle.immigrate()
+    bundle.evolve()
+    bundle.evaluate_logv()
+  
+  # backward in time
+  bundle = origin
+  while bundle:
+    bundle.evaluate_logu()
+    bundle = bundle.parent
+  
+  return root.logu
