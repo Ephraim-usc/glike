@@ -122,6 +122,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   int *values = (int *)malloc(N * K * sizeof(int)); int *values_;
   
   int i, j;
+  /*
   for (n = 0; n < N; n++)
   {
     data_ = data + n * K;
@@ -141,6 +142,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
       cdf_[j] += cdf_[j-1];
     }
   }
+  */
   
   for (i = 0; i < N*K; i++)
     printf("%f ", cdf[i]);
