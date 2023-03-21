@@ -119,6 +119,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   K = PyArray_DIM(P, 1);
   data = (double *)PyArray_DATA((PyArrayObject *)P);
   
+  double *pdf = (double *)malloc(N * K * sizeof(double)); double *pdf_;
   double *cdf = (double *)malloc(N * K * sizeof(double)); double *cdf_;
   int *idx = (int *)malloc(N * K * sizeof(int)); int *idx_;
   
@@ -126,6 +127,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   for (n = 0; n < N; n++)
   {
     data_ = data + n * K;
+    pdf_ = cdf + n * K;
     cdf_ = cdf + n * K;
     idx_ = idx + n * K;
     
@@ -133,14 +135,17 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
     for (k = 0; k < K; k++)
     {
       if (data_[k] < 1e-8) continue;
-      cdf_[i] = data_[k];
+      pdf_[i] = data_[k];
       idx_[i] = k;
       i ++;
     }
+    
+    cdf_[0] = pdf_[0];
     for (j = 1; j < i; j++)
     {
-      cdf_[j] += cdf_[j-1];
+      cdf_[j] = cdf_[j-1] + pdf_[j];
     }
+    
     if (fabs(cdf_[j-1] - 1.0) > 1e-8)
     {
       printf("Error: probabilities don't sum up to 1!\n");
@@ -158,28 +163,36 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   */
   
   int *values = (int *)malloc(N * M * sizeof(int)); int *values_;
+  double *ps = (double *)malloc(N * M * sizeof(double)); double *ps_;
   
   double tmp;
   for (n = 0; n < N; n++)
   {
     data_ = data + n * K;
+    pdf_ = pdf + n * K;
     cdf_ = cdf + n * K;
     idx_ = idx + n * K;
     values_ = values + n * M;
+    ps_ = ps + n * M;
     
     for (m = 0; m < M; m++)
     {
       tmp = drand48();
       i = 0; while(cdf_[i] < tmp) i++;
       values_[m] = idx_[i];
+      ps_[m] = pdf_[i];
     }
   }
   
   npy_intp dims[] = {N, M};
   PyObject *values_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
-  values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
+  PyObject *ps_array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, ps);
   
-  return values_array;
+  values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
+  ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
+  
+  PyObject *out = PyTuple_Pack(2, values_array, ps_array);
+  return out;
 }
 
 
