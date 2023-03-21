@@ -143,13 +143,14 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
     }
   }
   */
-  
+  /*
   for (i = 0; i < N*K; i++)
     printf("%f ", cdf[i]);
   printf("\n");
   for (i = 0; i < N*K; i++)
     printf("%d ", values[i]);
   printf("\n");
+  */
   
   Py_RETURN_NONE;
 }
