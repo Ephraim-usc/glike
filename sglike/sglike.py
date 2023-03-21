@@ -369,8 +369,11 @@ class Bundle:
       state_parent.w = w.prod()
       parent.w += state_parent.w
     
-    for _, state_parent in tqdm(parent.states.items(), total = len(parent.states), ncols = 50):
+    for _, state_parent in parent.states.items():
       num = np.random.binomial(MAX_LINKS, state_parent.w/parent.w)
+      if num == 0:
+        continue
+      
       values, ws = npe.product_rand(state_parent.W, num)
       logws = np.log(ws).sum(axis = 1)
       values, counts = np.unique(values, return_counts=True, axis = 0) # slow !!!
