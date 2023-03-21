@@ -110,7 +110,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   double *data, *data_;
   PyObject *P;
   
-  static char *kwlist[] = {"P", "", NULL};
+  static char *kwlist[] = {"P", "num", NULL};
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oi", kwlist, &P, &m))
     Py_RETURN_NONE;
   
