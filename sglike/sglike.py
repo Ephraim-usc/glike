@@ -489,4 +489,4 @@ def glike_verbose(tree, demo, samples = None):
     bundle.evaluate_logu()
     bundle = bundle.parent
   
-  return root.logu
+  return root
