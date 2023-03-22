@@ -481,6 +481,7 @@ def glike_verbose(tree, demo, samples = None):
     bundle.immigrate()
     bundle.evolve()
     bundle.evaluate_logv()
+  print(f"{bundle.t}~{bundle.t_end}gen, {bundle.phase.K} populations, {len(bundle.lins)} lineages, {len(bundle.states)} states.", flush = True)
   
   # backward in time
   bundle = origin
