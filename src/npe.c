@@ -187,6 +187,10 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
     }
   }
   
+  free(pdf);
+  free(cdf);
+  free(idx);
+  
   npy_intp dims[] = {N, M};
   PyObject *values_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
   PyObject *ps_array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, ps);
