@@ -238,12 +238,12 @@ def nh_demography(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_p
   
   demography.add_admixture(time=t1, derived="admix", ancestral=["afr", "eur", "asia", "pol"], proportions = [r1, r2, r3, 1-r1-r2-r3])
   
-  demography.add_population_split(time=t2, derived=["asia", "pol"], ancestral="asia")
+  demography.add_population_split(time=t2, derived=["pol"], ancestral="asia")
   demography.add_population_parameters_change(time=t2, initial_size = N_aa, growth_rate=0, population="asia")
   
-  demography.add_population_split(time=t3, derived=["eur", "asia"], ancestral="eur")
+  demography.add_population_split(time=t3, derived=["asia"], ancestral="eur")
   demography.add_population_parameters_change(time=t3, initial_size = N_ooa, growth_rate=0, population="eur")
   
-  demography.add_population_split(time=t4, derived=["afr", "eur"], ancestral="afr")
+  demography.add_population_split(time=t4, derived=["eur"], ancestral="afr")
   demography.add_population_parameters_change(time=t4, initial_size = N_anc, growth_rate=0, population="afr")
   return demography
