@@ -101,9 +101,6 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   logps_array = PyArray_Transpose((PyArrayObject *)logps_array, NULL);
   
   PyObject *out = PyTuple_Pack(2, values_array, logps_array);
-  
-  free(values);
-  free(logps);
   return out;
 }
 
@@ -202,8 +199,6 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   free(pdf);
   free(cdf);
   free(idx);
-  free(values);
-  free(ps);
   return out;
 }
 
