@@ -333,11 +333,10 @@ class Bundle:
     #print(f"[{self.t}~{self.t_end}gen {self.phase.K} populations] [{len(self.child.lins)}-{len(self.lins)} lineages] [{len(self.states)} states] [{np.format_float_scientific(self.num_links, precision=6)} links]", flush = True)
   
   def immigrate(self, MAX_LINKS = 1e5):
-    if hasattr(self.phase, 'stochastic'):
-      if self.phase.stochastic == False:
-        self.immigrate_deterministic()
-      else:
-        self.immigrate_stochastic(MAX_LINKS)
+    if hasattr(self.phase, 'mode') and self.phase.mode == "deterministic":
+      self.immigrate_deterministic()
+    elif hasattr(self.phase, 'mode') and self.phase.mode == "stochastic":
+      self.immigrate_stochastic(MAX_LINKS)
     else:
       parent = self.parent
       if parent.num_links <= MAX_LINKS:
