@@ -224,6 +224,7 @@ def nh_demo(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_
       [1]
   ])
   demo.add_phase(Phase(t4, [1/N_anc], P = P_ooa_split))
+  demo.phases[0].mode = "deterministic"
   return demo
 
 
