@@ -199,8 +199,8 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   free(idx);
   
   npy_intp dims[] = {M, N};
-  npy_intp strides_values[] = {sizeof(int), N * sizeof(int)};
-  npy_intp strides_ps[] = {sizeof(double), N * sizeof(double)};
+  npy_intp strides_values[] = {sizeof(int), M * sizeof(int)};
+  npy_intp strides_ps[] = {sizeof(double), M * sizeof(double)};
   
   PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, NPY_ARRAY_WRITEABLE, NULL);
   PyObject *ps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_ps, ps, NPY_ARRAY_WRITEABLE, NULL);
