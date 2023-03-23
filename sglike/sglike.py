@@ -387,7 +387,8 @@ class Bundle:
       #values, counts = np.unique(values, return_counts=True, axis = 0) # bug, logws is not uniqued!!!
       logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
-      for value, count, logw, logp in zip(values, counts, logws, logps):
+      for value, logw, logp in zip(values, logws, logps):
+        count = 1
         value = tuple(value)
         if value in self.states:
           state = self.states[value]
