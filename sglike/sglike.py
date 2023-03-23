@@ -349,10 +349,12 @@ class Bundle:
     parent = self.parent
     for _, state_parent in parent.states.items():
       values_, logps_ = npe.product_det(state_parent.logP)
-      values = values_
-      logps = logps_.sum(axis = 1)
+      values = values_.copy()
+      logps = logps_.copy()
       
-      for value, logp in zip(values_, logps):
+      logps = logps.sum(axis = 1)
+      
+      for value, logp in zip(values, logps):
         value = tuple(value)
         if value in self.states:
           state = self.states[value]
@@ -382,8 +384,11 @@ class Bundle:
         continue
       
       values_, ws_ = npe.product_sto(state_parent.W, num)
-      values, index, counts = np.unique(values_, return_index=True, return_counts=True, axis = 0) # slow.
-      logws = np.log(ws_).sum(axis = 1)[index]
+      values = values_.copy()
+      ws = ws_.copy()
+      
+      values, index, counts = np.unique(values, return_index=True, return_counts=True, axis = 0) # slow.
+      logws = np.log(ws).sum(axis = 1)[index]
       logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
       for value, count, logw, logp in zip(values, counts, logws, logps):
