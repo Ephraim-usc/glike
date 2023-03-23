@@ -208,11 +208,11 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
   PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, free_wrap));
   
-  //values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
-  //ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
+  values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
+  ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
   
   PyObject *out = PyTuple_Pack(2, values_array, ps_array);
-  Py_DECREF(values_array);
+  Py_DECREF(values_array); // this is required since PyTuple_Pack increments ref count of each element.
   Py_DECREF(ps_array);
   return out;
 }
