@@ -201,8 +201,11 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   //values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
   //ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
   
-  PyArray_ENABLEFLAGS((PyArrayObject*)values_array, NPY_ARRAY_OWNDATA);
-  PyArray_ENABLEFLAGS((PyArrayObject*)ps_array, NPY_ARRAY_OWNDATA);
+  //PyArray_ENABLEFLAGS((PyArrayObject*)values_array, NPY_ARRAY_OWNDATA);
+  //PyArray_ENABLEFLAGS((PyArrayObject*)ps_array, NPY_ARRAY_OWNDATA);
+  
+  free(values);
+  free(ps);
   
   PyObject *out = PyTuple_Pack(2, values_array, ps_array);
   return out;
