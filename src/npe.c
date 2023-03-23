@@ -100,6 +100,9 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
   logps_array = PyArray_Transpose((PyArrayObject *)logps_array, NULL);
   
+  PyArray_ENABLEFLAGS((PyArrayObject*)values_array, NPY_ARRAY_OWNDATA);
+  PyArray_ENABLEFLAGS((PyArrayObject*)logps_array, NPY_ARRAY_OWNDATA);
+  
   PyObject *out = PyTuple_Pack(2, values_array, logps_array);
   return out;
 }
@@ -187,6 +190,10 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
     }
   }
   
+  free(pdf);
+  free(cdf);
+  free(idx);
+  
   npy_intp dims[] = {N, M};
   PyObject *values_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
   PyObject *ps_array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, ps);
@@ -194,11 +201,10 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
   ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
   
-  PyObject *out = PyTuple_Pack(2, values_array, ps_array);
+  PyArray_ENABLEFLAGS((PyArrayObject*)values_array, NPY_ARRAY_OWNDATA);
+  PyArray_ENABLEFLAGS((PyArrayObject*)ps_array, NPY_ARRAY_OWNDATA);
   
-  free(pdf);
-  free(cdf);
-  free(idx);
+  PyObject *out = PyTuple_Pack(2, values_array, ps_array);
   return out;
 }
 
