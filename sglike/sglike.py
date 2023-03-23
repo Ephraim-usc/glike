@@ -348,10 +348,10 @@ class Bundle:
     N = self.N
     parent = self.parent
     for _, state_parent in parent.states.items():
-      #values, logps = npe.product_det(state_parent.logP)
-      #logps = logps.sum(axis = 1)
-      values = np.array(list(itertools.product(*[np.nonzero(x)[0] for x in (state_parent.logP > -math.inf)]))) 
-      logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
+      values, logps = npe.product_det(state_parent.logP)
+      logps = logps.sum(axis = 1)
+      #values = np.array(list(itertools.product(*[np.nonzero(x)[0] for x in (state_parent.logP > -math.inf)]))) 
+      #logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
       for value, logp in zip(values, logps):
         value = tuple(value)
@@ -362,6 +362,9 @@ class Bundle:
           self.states[value] = state
         state_parent.children.append((logp, state))
         state.parents.append((logp, state_parent))
+      
+      npe.free(values)
+      npe.free(logps)
   
   def immigrate_stochastic(self, MAX_LINKS):
     N = self.N
@@ -385,12 +388,12 @@ class Bundle:
       #values = np.apply_along_axis(lambda x: rng.choice(self.phase.K, p = x, size = num), 1, state_parent.W).T
       #logws = np.log(state_parent.W[np.arange(N)[:,None], values.T]).sum(axis = 0)
       
-      values, index, counts = np.unique(values, return_index=True, return_counts=True, axis = 0) # slow!!!
+      values_uni, index, counts = np.unique(values, return_index=True, return_counts=True, axis = 0) # slow!!!
       logws = logws[index]
       
-      logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
+      logps = state_parent.logP[np.arange(N)[:,None], values_uni.T].sum(axis = 0)
       
-      for value, count, logw, logp in zip(values, counts, logws, logps):
+      for value, count, logw, logp in zip(values_uni, counts, logws, logps):
         value = tuple(value)
         if value in self.states:
           state = self.states[value]
@@ -400,6 +403,9 @@ class Bundle:
         logp_adj = logp + math.log(count) - math.log(MAX_LINKS) - (state_parent.logw - parent.logw + logw) # last term is the log prob. of sampling this state
         state_parent.children.append((logp_adj, state))
         state.parents.append((logp_adj, state_parent))
+      
+      npe.free(values)
+      npe.free(ws)
   
   def evaluate_logv(self):
     if self.parent:
