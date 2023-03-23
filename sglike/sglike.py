@@ -377,7 +377,7 @@ class Bundle:
       if num == 0:
         continue
       
-      values, ws = npe.product_rand(state_parent.W, num)
+      values, ws = npe.product_sto(state_parent.W, num)
       logws = np.log(ws).sum(axis = 1)
       values, counts = np.unique(values, return_counts=True, axis = 0) # slow !!!
       logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
