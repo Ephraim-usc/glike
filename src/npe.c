@@ -8,7 +8,7 @@
 #include <time.h>
 #include <stdint.h>
 
-void capsule_cleanup(PyObject *capsule) {
+void free_wrap(PyObject *capsule) {
     void *memory = PyCapsule_GetPointer(capsule, NULL);
     free(memory);
 }
@@ -199,17 +199,26 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   free(idx);
   
   npy_intp dims[] = {N, M};
-  PyObject *values_array = PyArray_SimpleNew(2, dims, NPY_INT);
-  PyObject *ps_array = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
-  
-  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, capsule_cleanup));
-  PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, capsule_cleanup));
+  npy_intp strides[] = {sizeof(int), M * sizeof(int)};
     
-  values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
-  ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
+  PyObject *values_array = PyArray_NewFromDescr(
+            &PyArray_Type,                  // Standard type
+            PyArray_DescrFromType(NPY_INT), // Numpy type id
+            2,                              // Number of dimensions
+            dims,                           // Dimension array
+            strides,                        // Strides array
+            values,                         // Pointer to data
+            NPY_ARRAY_WRITEABLE,            // Flags
+            NULL                            // obj (?)
+        );
   
-  PyObject *out = PyTuple_Pack(2, values_array, ps_array);
-  return out;
+  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
+  
+  //values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
+  //ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
+  
+  //PyObject *out = PyTuple_Pack(2, values_array, ps_array);
+  return values_array;
 }
 
 
