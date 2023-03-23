@@ -212,7 +212,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   //ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
   
   PyObject *out = PyTuple_Pack(2, values_array, ps_array);
-  Py_INCREF(out);
+  Py_DECREF(out);
   return out;
 }
 
