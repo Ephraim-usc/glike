@@ -366,6 +366,9 @@ class Bundle:
       
       del values_
       del logps_
+      del values
+      del logps
+      gc.collect()
   
   def immigrate_stochastic(self, MAX_LINKS):
     N = self.N
@@ -404,6 +407,12 @@ class Bundle:
       
       del values_
       del ws_
+      del values
+      del ws
+      del counts
+      del logws
+      del logps
+      gc.collect()
   
   def evaluate_logv(self):
     if self.parent:
