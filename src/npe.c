@@ -213,7 +213,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   
   PyObject *out = PyTuple_Pack(2, values_array, ps_array);
   Py_INCREF(out);
-  return ps_array;
+  return out;
 }
 
 
