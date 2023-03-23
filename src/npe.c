@@ -13,7 +13,7 @@ void free_wrap(PyObject *capsule) {
     free(memory);
 }
 
-void free_(PyObject *self, PyObject *args, PyObject *kwds)
+static PyObject *free_(PyObject *self, PyObject *args, PyObject *kwds)
 {
   PyObject *x;
   void *data;
@@ -22,7 +22,7 @@ void free_(PyObject *self, PyObject *args, PyObject *kwds)
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &x))
     Py_RETURN_NONE;
   
-  data = (void *)PyArray_DATA((PyArrayObject *)logP);
+  data = (void *)PyArray_DATA((PyArrayObject *)x);
   free(data);
   
   Py_RETURN_NONE;
