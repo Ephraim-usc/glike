@@ -97,17 +97,21 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
     }
   }
   
-  npy_intp dims[] = {N, num};
-  PyObject *values_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
-  PyObject *logps_array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, logps);
+  npy_intp dims[] = {num, N};
+  npy_intp strides_values[] = {sizeof(int), num * sizeof(int)};
+  npy_intp strides_logps[] = {sizeof(double), num * sizeof(double)};
   
-  values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
-  logps_array = PyArray_Transpose((PyArrayObject *)logps_array, NULL);
+  PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, NPY_ARRAY_WRITEABLE, NULL);
+  PyObject *logps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_logps, logps, NPY_ARRAY_WRITEABLE, NULL);
   
-  PyArray_ENABLEFLAGS((PyArrayObject*)values_array, NPY_ARRAY_OWNDATA);
-  PyArray_ENABLEFLAGS((PyArrayObject*)logps_array, NPY_ARRAY_OWNDATA);
+  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
+  PyArray_SetBaseObject((PyArrayObject *) logps_array, PyCapsule_New(logps, NULL, free_wrap));
   
   PyObject *out = PyTuple_Pack(2, values_array, logps_array);
+  
+  // this is required since PyTuple_Pack increments ref count of each element.
+  Py_DECREF(values_array); 
+  Py_DECREF(logps_array);
   return out;
 }
 
@@ -223,7 +227,7 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
 static PyMethodDef npeMethods[] = {
   {"view", (PyCFunction) view, METH_VARARGS | METH_KEYWORDS, "View the logP matrix."},
   {"product_det", (PyCFunction) product_det, METH_VARARGS | METH_KEYWORDS, "Deterministic product."},
-  {"product_rand", (PyCFunction) product_rand, METH_VARARGS | METH_KEYWORDS, "Random product."},
+  {"product_sto", (PyCFunction) product_sto, METH_VARARGS | METH_KEYWORDS, "Stochastic product."},
   {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
