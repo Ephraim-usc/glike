@@ -116,11 +116,11 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   npy_intp strides_values[] = {sizeof(int), num * sizeof(int)};
   npy_intp strides_logps[] = {sizeof(double), num * sizeof(double)};
   
-  PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, 0, NULL);
-  PyObject *logps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_logps, logps, 0, NULL);
+  PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, NPY_ARRAY_WRITEABLE, NULL);
+  PyObject *logps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_logps, logps, NPY_ARRAY_WRITEABLE, NULL);
   
-  //PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
-  //PyArray_SetBaseObject((PyArrayObject *) logps_array, PyCapsule_New(logps, NULL, free_wrap));
+  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
+  PyArray_SetBaseObject((PyArrayObject *) logps_array, PyCapsule_New(logps, NULL, free_wrap));
   
   PyObject *out = PyTuple_Pack(2, values_array, logps_array);
   
@@ -222,14 +222,11 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   npy_intp strides_values[] = {sizeof(int), M * sizeof(int)};
   npy_intp strides_ps[] = {sizeof(double), M * sizeof(double)};
   
-  //PyObject *values_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
-  //PyObject *ps_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, ps);
-  
   PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, 0, NULL);
   PyObject *ps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_ps, ps, 0, NULL);
   
-  //PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
-  //PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, free_wrap));
+  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
+  PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, free_wrap));
   
   PyObject *out = PyTuple_Pack(2, values_array, ps_array);
   
