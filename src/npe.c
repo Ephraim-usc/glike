@@ -199,14 +199,14 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   free(idx);
   
   npy_intp dims[] = {N, M};
-  PyObject *values_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
-  PyObject *ps_array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, ps);
-  
-  values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
-  ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
+  PyObject *values_array = PyArray_SimpleNew(2, dims, NPY_INT);
+  PyObject *ps_array = PyArray_SimpleNew(2, dims, NPY_DOUBLE);
   
   PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, capsule_cleanup));
   PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, capsule_cleanup));
+    
+  values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
+  ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
   
   PyObject *out = PyTuple_Pack(2, values_array, ps_array);
   return out;
