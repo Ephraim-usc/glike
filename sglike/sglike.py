@@ -348,8 +348,10 @@ class Bundle:
     N = self.N
     parent = self.parent
     for _, state_parent in parent.states.items():
-      values, logps = npe.product_det(state_parent.logP)
-      logps = logps.sum(axis = 1)
+      #values, logps = npe.product_det(state_parent.logP)
+      #logps = logps.sum(axis = 1)
+      values = np.array(list(itertools.product(*[np.nonzero(x)[0] for x in state_parent.flags]))) 
+      logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
       for value, logp in zip(values, logps):
         value = tuple(value)
@@ -377,9 +379,12 @@ class Bundle:
       if num == 0:
         continue
       
-      values, ws = npe.product_sto(state_parent.W, num)
-      logws = np.log(ws).sum(axis = 1)
-      values, counts = np.unique(values, return_counts=True, axis = 0) # slow !!!
+      #values, ws = npe.product_sto(state_parent.W, num)
+      #logws = np.log(ws).sum(axis = 1)
+      values = np.apply_along_axis(lambda x: rng.choice(K, p = x, size = num), 1, W_norm).T
+      logws = np.log(state_parent.W[np.arange(N)[:,None], values.T]).sum(axis = 0)
+      
+      #values, counts = np.unique(values, return_counts=True, axis = 0) # bug, logws is not uniqued!!!
       logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
       for value, count, logw, logp in zip(values, counts, logws, logps):
