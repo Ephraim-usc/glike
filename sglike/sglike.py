@@ -123,7 +123,7 @@ class Phase:
 
 class Demo:
   def __init__(self, demography = None):
-    self.phases = []
+    self.phases = list()
     if demography:
       self.from_demography(demography)
   
@@ -159,8 +159,8 @@ class Demo:
     import msprime
     import pandas as pd
     t = 0
-    ns = []
-    populations = []
+    ns = list()
+    populations = list()
     for population in demography.populations:
       populations.append(population.name)
       if population.growth_rate != 0:
@@ -221,8 +221,8 @@ class State:
     self.logp = math.nan # evolution (coalescence and non-coalescence) log probability of this State
     self.logu = math.nan # absolute probability P(state|origin)
     self.logv = math.nan # absolute probability P(roots|state)
-    self.children = []
-    self.parents = []
+    self.children = list()
+    self.parents = list()
 
 class Bundle:
   def __init__(self, phase):
@@ -232,21 +232,21 @@ class Bundle:
     
     self.N = 0
     self.dict = dict() # for fast finding index of lineage
-    self.lins = [] # list of lineages
-    self.dests = [] # list of sets of descendents for each subtree
-    self.ghosts = [] # indices of ghost lineages that are going to be deleted
+    self.lins = list() # list of lineages
+    self.dests = list() # list of sets of descendents for each subtree
+    self.ghosts = list() # indices of ghost lineages that are going to be deleted
     
-    self.coals = [] # list of lists of (time, num_children - 1) tuples of nodes for each subtree
+    self.coals = list() # list of lists of (time, num_children - 1) tuples of nodes for each subtree
     self.mask = np.zeros([0, self.phase.K], dtype = np.int8) # N x K binary mask matrix of possible populations
     self.logmask = np.log(self.mask)
     
-    self.states = {} # dict of (value, state) tuples
+    self.states = dict() # dict of (value, state) tuples
     self.parent = None
     self.child = None
   
   def refresh(self):
     if self.ghosts:
-      ghosts = set(self.ghosts); self.ghosts = []
+      ghosts = set(self.ghosts); self.ghosts = list()
       self.lins = [lin for i, lin in enumerate(self.lins) if i not in ghosts]
       self.dests = [dests for i, dests in enumerate(self.dests) if i not in ghosts]
       self.coals = [coal for i, coal in enumerate(self.coals) if i not in ghosts]
@@ -263,7 +263,7 @@ class Bundle:
     bundle = Bundle(self.phase.parent)
     bundle.lins = self.lins.copy(); bundle.refresh()
     bundle.dests = [{lin} for lin in bundle.lins]
-    bundle.coals = [[] for _ in bundle.lins]
+    bundle.coals = [list() for _ in bundle.lins]
     bundle.mask = (np.dot(self.mask, self.phase.parent.P) > 0).astype(np.int8)
     
     bundle.child = self
@@ -307,7 +307,7 @@ class Bundle:
     K = self.phase.K
     for value, state in self.states.items():
       Ns = [0 for _ in range(K)]
-      coals = [[] for _ in range(K)]
+      coals = [list() for _ in range(K)]
       for i in range(self.N):
         Ns[value[i]] += 1
         coals[value[i]].extend(self.coals[i])
@@ -349,12 +349,10 @@ class Bundle:
     parent = self.parent
     for _, state_parent in parent.states.items():
       values_, logps_ = npe.product_det(state_parent.logP)
-      values = values_.copy()
-      logps = logps_.copy()
+      values = values_
+      logps = logps_.sum(axis = 1)
       
-      logps = logps.sum(axis = 1)
-      
-      for value, logp in zip(values, logps):
+      for value, logp in zip(values_, logps):
         value = tuple(value)
         if value in self.states:
           state = self.states[value]
@@ -366,9 +364,6 @@ class Bundle:
       
       del values_
       del logps_
-      del values
-      del logps
-      gc.collect()
   
   def immigrate_stochastic(self, MAX_LINKS):
     N = self.N
@@ -387,11 +382,8 @@ class Bundle:
         continue
       
       values_, ws_ = npe.product_sto(state_parent.W, num)
-      values = values_.copy()
-      ws = ws_.copy()
-      
-      values, index, counts = np.unique(values, return_index=True, return_counts=True, axis = 0) # slow.
-      logws = np.log(ws).sum(axis = 1)[index]
+      values, index, counts = np.unique(values_, return_index=True, return_counts=True, axis = 0) # slow.
+      logws = np.log(ws_).sum(axis = 1)[index]
       logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
       for value, count, logw, logp in zip(values, counts, logws, logps):
@@ -407,12 +399,6 @@ class Bundle:
       
       del values_
       del ws_
-      del values
-      del ws
-      del counts
-      del logws
-      del logps
-      gc.collect()
   
   def evaluate_logv(self):
     if self.parent:
