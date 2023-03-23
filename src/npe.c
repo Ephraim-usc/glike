@@ -111,7 +111,8 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   return out;
 }
 
-static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
+// it's required that P is row-first allocated in memory
+static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
 {
   int N, K, M;
   int n, k, m;
