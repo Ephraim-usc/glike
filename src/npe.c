@@ -198,21 +198,20 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   free(cdf);
   free(idx);
   
-  npy_intp dims[] = {N, M};
-  npy_intp strides_values[] = {M * sizeof(int), sizeof(int)};
-  npy_intp strides_ps[] = {M * sizeof(double), sizeof(double)};
-    
+  npy_intp dims[] = {M, N};
+  npy_intp strides_values[] = {sizeof(int), N * sizeof(int)};
+  npy_intp strides_ps[] = {sizeof(double), N * sizeof(double)};
+  
   PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, NPY_ARRAY_WRITEABLE, NULL);
   PyObject *ps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_ps, ps, NPY_ARRAY_WRITEABLE, NULL);
   
   PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
   PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, free_wrap));
   
-  values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
-  ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
-  
   PyObject *out = PyTuple_Pack(2, values_array, ps_array);
-  Py_DECREF(values_array); // this is required since PyTuple_Pack increments ref count of each element.
+  
+  // this is required since PyTuple_Pack increments ref count of each element.
+  Py_DECREF(values_array); 
   Py_DECREF(ps_array);
   return out;
 }
