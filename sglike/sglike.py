@@ -381,6 +381,7 @@ class Bundle:
       
       #values, ws = npe.product_sto(state_parent.W, num)
       #logws = np.log(ws).sum(axis = 1)
+      rng = np.random.default_rng()
       values = np.apply_along_axis(lambda x: rng.choice(self.phase.K, p = x, size = num), 1, state_parent.W).T
       logws = np.log(state_parent.W[np.arange(N)[:,None], values.T]).sum(axis = 0)
       
