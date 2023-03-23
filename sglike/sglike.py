@@ -348,10 +348,10 @@ class Bundle:
     N = self.N
     parent = self.parent
     for _, state_parent in parent.states.items():
-      values, logps = npe.product_det(state_parent.logP)
-      logps = logps.sum(axis = 1)
-      #values = np.array(list(itertools.product(*[np.nonzero(x)[0] for x in (state_parent.logP > -math.inf)]))) 
-      #logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
+      #values, logps = npe.product_det(state_parent.logP)
+      #logps = logps.sum(axis = 1)
+      values = np.array(list(itertools.product(*[np.nonzero(x)[0] for x in (state_parent.logP > -math.inf)]))) 
+      logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
       for value, logp in zip(values, logps):
         value = tuple(value)
