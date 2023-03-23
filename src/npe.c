@@ -8,6 +8,10 @@
 #include <time.h>
 #include <stdint.h>
 
+void capsule_cleanup(PyObject *capsule) {
+    void *memory = PyCapsule_GetPointer(capsule, NULL);
+    free(memory);
+}
 
 
 static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
@@ -198,14 +202,11 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   PyObject *values_array = PyArray_SimpleNewFromData(2, dims, NPY_INT, values);
   PyObject *ps_array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, ps);
   
-  //values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
-  //ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
+  values_array = PyArray_Transpose((PyArrayObject *)values_array, NULL);
+  ps_array = PyArray_Transpose((PyArrayObject *)ps_array, NULL);
   
-  //PyArray_ENABLEFLAGS((PyArrayObject*)values_array, NPY_ARRAY_OWNDATA);
-  //PyArray_ENABLEFLAGS((PyArrayObject*)ps_array, NPY_ARRAY_OWNDATA);
-  
-  free(values);
-  free(ps);
+  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, capsule_cleanup));
+  PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, capsule_cleanup));
   
   PyObject *out = PyTuple_Pack(2, values_array, ps_array);
   return out;
