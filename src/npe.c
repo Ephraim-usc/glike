@@ -25,6 +25,8 @@ static PyObject *free_(PyObject *self, PyObject *args, PyObject *kwds)
   data = (void *)PyArray_DATA((PyArrayObject *)x);
   free(data);
   
+  Py_DECREF(x);
+  
   Py_RETURN_NONE;
 }
 
