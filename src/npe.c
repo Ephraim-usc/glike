@@ -199,7 +199,7 @@ static PyObject *product_rand(PyObject *self, PyObject *args, PyObject *kwds)
   free(idx);
   
   npy_intp dims[] = {N, M};
-  npy_intp strides[] = {sizeof(int), M * sizeof(int)};
+  npy_intp strides[] = {M * sizeof(int), sizeof(int)};
     
   PyObject *values_array = PyArray_NewFromDescr(
             &PyArray_Type,                  // Standard type
