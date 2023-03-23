@@ -351,10 +351,8 @@ class Bundle:
       values_, logps_ = npe.product_det(state_parent.logP)
       values = values_
       logps = logps_.sum(axis = 1)
-      #values = np.array(list(itertools.product(*[np.nonzero(x)[0] for x in (state_parent.logP > -math.inf)]))) 
-      #logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
-      for value, logp in zip(values, logps):
+      for value, logp in zip(values_, logps):
         value = tuple(value)
         if value in self.states:
           state = self.states[value]
@@ -364,8 +362,8 @@ class Bundle:
         state_parent.children.append((logp, state))
         state.parents.append((logp, state_parent))
       
-      npe.free(values_)
-      npe.free(logps_)
+      npe.free(values_); del values_;
+      npe.free(logps_); del logps_;
   
   def immigrate_stochastic(self, MAX_LINKS):
     N = self.N
@@ -384,14 +382,8 @@ class Bundle:
         continue
       
       values_, ws_ = npe.product_sto(state_parent.W, num)
-      logws = np.log(ws_).sum(axis = 1)
-      #rng = np.random.default_rng()
-      #values = np.apply_along_axis(lambda x: rng.choice(self.phase.K, p = x, size = num), 1, state_parent.W).T
-      #logws = np.log(state_parent.W[np.arange(N)[:,None], values.T]).sum(axis = 0)
-      
-      values, index, counts = np.unique(values_, return_index=True, return_counts=True, axis = 0) # slow!!!
-      logws = logws[index]
-      
+      values, index, counts = np.unique(values_, return_index=True, return_counts=True, axis = 0) # slow.
+      logws = np.log(ws_).sum(axis = 1)[index]
       logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
       for value, count, logw, logp in zip(values, counts, logws, logps):
@@ -405,8 +397,8 @@ class Bundle:
         state_parent.children.append((logp_adj, state))
         state.parents.append((logp_adj, state_parent))
       
-      npe.free(values_)
-      npe.free(ws_)
+      npe.free(values_); del values_;
+      npe.free(ws_); del ws_;
   
   def evaluate_logv(self):
     if self.parent:
