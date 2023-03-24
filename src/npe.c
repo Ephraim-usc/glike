@@ -54,6 +54,34 @@ static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
   Py_RETURN_NONE;
 }
 
+static PyObject *num(PyObject *self, PyObject *args, PyObject *kwds)
+{
+  int N, K;
+  int n, k;
+  double *data;
+  PyObject *logP;
+  
+  static char *kwlist[] = {"logP", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &logP))
+    Py_RETURN_NONE;
+  
+  N = PyArray_DIM(logP, 0);
+  K = PyArray_DIM(logP, 1);
+  data = (double *)PyArray_DATA((PyArrayObject *)logP);
+  
+  //computing nums and num
+  int num = 1;
+  int *nums = calloc(N, sizeof(int));
+  for (n = 0; n < N; n++)
+  {
+    for (k = 0; k < K; k++)
+      if(data[K*n+k] > -INFINITY) nums[n]++;
+    num *= nums[n];
+  }
+  
+  return Py_BuildValue("i", num);
+}
+    
 static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
 {
   int N, K;
