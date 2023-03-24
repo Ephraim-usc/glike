@@ -10,7 +10,6 @@
 
 void free_wrap(PyObject *capsule) {
     void *memory = PyCapsule_GetPointer(capsule, NULL);
-    printf("y");
     free(memory);
 }
 
@@ -120,8 +119,8 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, NPY_ARRAY_WRITEABLE, NULL);
   PyObject *logps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_logps, logps, NPY_ARRAY_WRITEABLE, NULL);
   
-  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap)); printf("x");
-  PyArray_SetBaseObject((PyArrayObject *) logps_array, PyCapsule_New(logps, NULL, free_wrap)); printf("x");
+  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
+  PyArray_SetBaseObject((PyArrayObject *) logps_array, PyCapsule_New(logps, NULL, free_wrap));
   
   PyObject *out = PyTuple_Pack(2, values_array, logps_array);
   
@@ -226,8 +225,8 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, NPY_ARRAY_WRITEABLE, NULL);
   PyObject *ps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_ps, ps, NPY_ARRAY_WRITEABLE, NULL);
   
-  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap)); printf("x");
-  PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, free_wrap)); printf("x");
+  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
+  PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, free_wrap));
   
   PyObject *out = PyTuple_Pack(2, values_array, ps_array);
   
