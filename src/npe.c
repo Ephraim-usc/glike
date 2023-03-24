@@ -125,8 +125,8 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   PyObject *out = PyTuple_Pack(2, values_array, logps_array);
   
   // this is required since PyTuple_Pack increments ref count of each element.
-  Py_INCREF(values_array);
-  Py_INCREF(logps_array);
+  Py_DECREF(values_array);
+  Py_DECREF(logps_array);
   return out;
 }
 
@@ -222,8 +222,8 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   npy_intp strides_values[] = {sizeof(int), M * sizeof(int)};
   npy_intp strides_ps[] = {sizeof(double), M * sizeof(double)};
   
-  PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, 0, NULL);
-  PyObject *ps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_ps, ps, 0, NULL);
+  PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, NPY_ARRAY_WRITEABLE, NULL);
+  PyObject *ps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_ps, ps, NPY_ARRAY_WRITEABLE, NULL);
   
   PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
   PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, free_wrap));
@@ -231,8 +231,8 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   PyObject *out = PyTuple_Pack(2, values_array, ps_array);
   
   // this is required since PyTuple_Pack increments ref count of each element.
-  Py_INCREF(values_array); 
-  Py_INCREF(ps_array);
+  Py_DECREF(values_array); 
+  Py_DECREF(ps_array);
   return out;
 }
 
