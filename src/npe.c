@@ -79,9 +79,20 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
     num *= nums[n];
   }
   
+  npy_intp dims[] = {num, N};
+  npy_intp strides_values[] = {sizeof(int), num * sizeof(int)};
+  npy_intp strides_logps[] = {sizeof(double), num * sizeof(double)};
+  
+  PyObject *values_array = PyArray_Zeros(2, dims, PyArray_DescrFromType(NPY_INT), 0);
+  PyObject *logps_array = PyArray_Zeros(2, dims, PyArray_DescrFromType(NPY_DOUBLE), 0);
+  
+  PyArray_STRIDES(values_array)[0] = sizeof(int); PyArray_STRIDES(values_array)[1] = num * sizeof(int); 
+  PyArray_STRIDES(logps_array)[0] = sizeof(double); PyArray_STRIDES(logps_array)[1] = num * sizeof(double); 
+  
+  int *values = (int *)PyArray_DATA((PyArrayObject *)values_array); int *values_;
+  double *logps = (double *)PyArray_DATA((PyArrayObject *)logps_array); double *values_;
+  
   // computing values
-  int *values = (int *)malloc(num * N * sizeof(int)); int *values_;
-  double *logps = (double *)malloc(num * N * sizeof(double)); double *logps_;
   int size = num; int chunk;
   for (n = 0; n < N; n++)
   {
@@ -111,16 +122,6 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
       memcpy(logps_ + offset, logps_, chunk * sizeof(double));
     }
   }
-  
-  npy_intp dims[] = {num, N};
-  npy_intp strides_values[] = {sizeof(int), num * sizeof(int)};
-  npy_intp strides_logps[] = {sizeof(double), num * sizeof(double)};
-  
-  PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, NPY_ARRAY_WRITEABLE, NULL);
-  PyObject *logps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_logps, logps, NPY_ARRAY_WRITEABLE, NULL);
-  
-  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
-  PyArray_SetBaseObject((PyArrayObject *) logps_array, PyCapsule_New(logps, NULL, free_wrap));
   
   PyObject *out = PyTuple_Pack(2, values_array, logps_array);
   
