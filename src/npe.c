@@ -10,7 +10,7 @@
 
 void free_wrap(PyObject *capsule) {
     void *memory = PyCapsule_GetPointer(capsule, NULL);
-    print("fy!");
+    printf("fy!\n");
     free(memory);
 }
 
