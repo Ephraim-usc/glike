@@ -136,10 +136,10 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   int N, K, M;
   int n, k, m;
   double *data, *data_;
-  PyObject *P;
+  PyObject *P, *values_array, *ps_array;
   
   static char *kwlist[] = {"P", "num", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oi", kwlist, &P, &M))
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiOO", kwlist, &P, &M, &values_array, &ps_array))
     Py_RETURN_NONE;
   
   N = PyArray_DIM(P, 0);
@@ -194,10 +194,8 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   */
   
   // making buffers
-  npy_intp dims[] = {M, N};
-  
-  PyObject *values_array = PyArray_Zeros(2, dims, PyArray_DescrFromType(NPY_INT), 0);
-  PyObject *ps_array = PyArray_Zeros(2, dims, PyArray_DescrFromType(NPY_DOUBLE), 0);
+  PyArray_DIMS(values_array)[0] = M; PyArray_DIMS(values_array)[1] = N; 
+  PyArray_DIMS(ps_array)[0] = M; PyArray_DIMS(ps_array)[1] = N; 
   
   PyArray_STRIDES(values_array)[0] = sizeof(int); PyArray_STRIDES(values_array)[1] = M * sizeof(int); 
   PyArray_STRIDES(ps_array)[0] = sizeof(double); PyArray_STRIDES(ps_array)[1] = M * sizeof(double); 
