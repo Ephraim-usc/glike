@@ -138,7 +138,7 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   double *data, *data_;
   PyObject *P, *values_array, *ps_array;
   
-  static char *kwlist[] = {"P", "num", NULL};
+  static char *kwlist[] = {"P", "num", "values", "ps", NULL};
   if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiOO", kwlist, &P, &M, &values_array, &ps_array))
     Py_RETURN_NONE;
   
