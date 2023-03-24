@@ -79,6 +79,7 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
     num *= nums[n];
   }
   
+  // make buffers
   npy_intp dims[] = {num, N};
   npy_intp strides_values[] = {sizeof(int), num * sizeof(int)};
   npy_intp strides_logps[] = {sizeof(double), num * sizeof(double)};
@@ -90,7 +91,7 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   PyArray_STRIDES(logps_array)[0] = sizeof(double); PyArray_STRIDES(logps_array)[1] = num * sizeof(double); 
   
   int *values = (int *)PyArray_DATA((PyArrayObject *)values_array); int *values_;
-  double *logps = (double *)PyArray_DATA((PyArrayObject *)logps_array); double *values_;
+  double *logps = (double *)PyArray_DATA((PyArrayObject *)logps_array); double *logps_;
   
   // computing values
   int size = num; int chunk;
@@ -147,6 +148,7 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   K = PyArray_DIM(P, 1);
   data = (double *)PyArray_DATA((PyArrayObject *)P);
   
+  // preparations
   double *pdf = (double *)malloc(N * K * sizeof(double)); double *pdf_;
   double *cdf = (double *)malloc(N * K * sizeof(double)); double *cdf_;
   int *idx = (int *)malloc(N * K * sizeof(int)); int *idx_;
@@ -193,9 +195,21 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   printf("\n"); 
   */
   
-  int *values = (int *)malloc(N * M * sizeof(int)); int *values_;
-  double *ps = (double *)malloc(N * M * sizeof(double)); double *ps_;
+  // making buffers
+  npy_intp dims[] = {num, N};
+  npy_intp strides_values[] = {sizeof(int), num * sizeof(int)};
+  npy_intp strides_ps[] = {sizeof(double), num * sizeof(double)};
   
+  PyObject *values_array = PyArray_Zeros(2, dims, PyArray_DescrFromType(NPY_INT), 0);
+  PyObject *ps_array = PyArray_Zeros(2, dims, PyArray_DescrFromType(NPY_DOUBLE), 0);
+  
+  PyArray_STRIDES(values_array)[0] = sizeof(int); PyArray_STRIDES(values_array)[1] = num * sizeof(int); 
+  PyArray_STRIDES(ps_array)[0] = sizeof(double); PyArray_STRIDES(ps_array)[1] = num * sizeof(double); 
+  
+  int *values = (int *)PyArray_DATA((PyArrayObject *)values_array); int *values_;
+  double *ps = (double *)PyArray_DATA((PyArrayObject *)ps_array); double *ps_;  
+  
+  // computing values
   double tmp;
   for (n = 0; n < N; n++)
   {
@@ -218,16 +232,6 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   free(pdf);
   free(cdf);
   free(idx);
-  
-  npy_intp dims[] = {M, N};
-  npy_intp strides_values[] = {sizeof(int), M * sizeof(int)};
-  npy_intp strides_ps[] = {sizeof(double), M * sizeof(double)};
-  
-  PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, NPY_ARRAY_WRITEABLE, NULL);
-  PyObject *ps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_ps, ps, NPY_ARRAY_WRITEABLE, NULL);
-  
-  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
-  PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, free_wrap));
   
   PyObject *out = PyTuple_Pack(2, values_array, ps_array);
   
