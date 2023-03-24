@@ -227,12 +227,7 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   free(cdf);
   free(idx);
   
-  PyObject *out = PyTuple_Pack(2, values_array, ps_array);
-  
-  // this is required since PyTuple_Pack increments ref count of each element.
-  Py_DECREF(values_array); 
-  Py_DECREF(ps_array);
-  return out;
+  Py_RETURN_NONE;
 }
 
 
