@@ -125,8 +125,8 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   PyObject *out = PyTuple_Pack(2, values_array, logps_array);
   
   // this is required since PyTuple_Pack increments ref count of each element.
-  Py_DECREF(values_array);
-  Py_DECREF(logps_array);
+  Py_INCREF(values_array);
+  Py_INCREF(logps_array);
   return out;
 }
 
@@ -231,8 +231,8 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   PyObject *out = PyTuple_Pack(2, values_array, ps_array);
   
   // this is required since PyTuple_Pack increments ref count of each element.
-  Py_DECREF(values_array); 
-  Py_DECREF(ps_array);
+  Py_INCREF(values_array); 
+  Py_INCREF(ps_array);
   return out;
 }
 
