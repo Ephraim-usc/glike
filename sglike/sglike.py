@@ -362,8 +362,8 @@ class Bundle:
         state_parent.children.append((logp, state))
         state.parents.append((logp, state_parent))
       
-      del values_
-      del logps_
+      #del values_
+      #del logps_
   
   def immigrate_stochastic(self, MAX_LINKS):
     N = self.N
@@ -397,8 +397,8 @@ class Bundle:
         state_parent.children.append((logp_adj, state))
         state.parents.append((logp_adj, state_parent))
       
-      del values_
-      del ws_
+      #del values_
+      #del ws_
   
   def evaluate_logv(self):
     if self.parent:
