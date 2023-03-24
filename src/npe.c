@@ -8,51 +8,6 @@
 #include <time.h>
 #include <stdint.h>
 
-void free_wrap(PyObject *capsule) {
-    void *memory = PyCapsule_GetPointer(capsule, NULL);
-    free(memory);
-}
-
-static PyObject *free_(PyObject *self, PyObject *args, PyObject *kwds)
-{
-  PyObject *x;
-  void *data;
-  
-  static char *kwlist[] = {"x", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &x))
-    Py_RETURN_NONE;
-  
-  data = (void *)PyArray_DATA((PyArrayObject *)x);
-  free(data);
-  
-  Py_RETURN_NONE;
-}
-
-
-static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
-{
-  int N,K;
-  double *logps;
-  PyObject *logP;
-  
-  static char *kwlist[] = {"logP", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &logP))
-    Py_RETURN_NONE;
-  
-  N = PyArray_DIM(logP, 0);
-  K = PyArray_DIM(logP, 1);
-  logps = (double *)PyArray_DATA((PyArrayObject *)logP);
-  
-  printf("N = %d, K = %d\n", N, K);
-  
-  int i, j;
-  for (i = 0; i < N; i++)
-    for (j = 0; j < K; j++)
-      printf("%f ", logps[K*i+j]);
-  printf("\n");
-  
-  Py_RETURN_NONE;
-}
 
 static PyObject *num(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -262,10 +217,9 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
 
 
 static PyMethodDef npeMethods[] = {
-  {"view", (PyCFunction) view, METH_VARARGS | METH_KEYWORDS, "View the logP matrix."},
   {"product_det", (PyCFunction) product_det, METH_VARARGS | METH_KEYWORDS, "Deterministic product."},
   {"product_sto", (PyCFunction) product_sto, METH_VARARGS | METH_KEYWORDS, "Stochastic product."},
-  {"free", (PyCFunction) free_, METH_VARARGS | METH_KEYWORDS, "Manually free an array."},
+  {"num", (PyCFunction) num, METH_VARARGS | METH_KEYWORDS, "Number of product results."},
   {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
