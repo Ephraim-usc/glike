@@ -81,8 +81,6 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   
   // make buffers
   npy_intp dims[] = {num, N};
-  npy_intp strides_values[] = {sizeof(int), num * sizeof(int)};
-  npy_intp strides_logps[] = {sizeof(double), num * sizeof(double)};
   
   PyObject *values_array = PyArray_Zeros(2, dims, PyArray_DescrFromType(NPY_INT), 0);
   PyObject *logps_array = PyArray_Zeros(2, dims, PyArray_DescrFromType(NPY_DOUBLE), 0);
@@ -196,15 +194,13 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   */
   
   // making buffers
-  npy_intp dims[] = {num, N};
-  npy_intp strides_values[] = {sizeof(int), num * sizeof(int)};
-  npy_intp strides_ps[] = {sizeof(double), num * sizeof(double)};
+  npy_intp dims[] = {M, N};
   
   PyObject *values_array = PyArray_Zeros(2, dims, PyArray_DescrFromType(NPY_INT), 0);
   PyObject *ps_array = PyArray_Zeros(2, dims, PyArray_DescrFromType(NPY_DOUBLE), 0);
   
-  PyArray_STRIDES(values_array)[0] = sizeof(int); PyArray_STRIDES(values_array)[1] = num * sizeof(int); 
-  PyArray_STRIDES(ps_array)[0] = sizeof(double); PyArray_STRIDES(ps_array)[1] = num * sizeof(double); 
+  PyArray_STRIDES(values_array)[0] = sizeof(int); PyArray_STRIDES(values_array)[1] = M * sizeof(int); 
+  PyArray_STRIDES(ps_array)[0] = sizeof(double); PyArray_STRIDES(ps_array)[1] = M * sizeof(double); 
   
   int *values = (int *)PyArray_DATA((PyArrayObject *)values_array); int *values_;
   double *ps = (double *)PyArray_DATA((PyArrayObject *)ps_array); double *ps_;  
