@@ -348,11 +348,10 @@ class Bundle:
     N = self.N
     parent = self.parent
     for _, state_parent in parent.states.items():
-      values_, logps_ = npe.product_det(state_parent.logP)
-      values = values_
-      logps = logps_.sum(axis = 1)
+      values, logps = npe.product_det(state_parent.logP)
+      logps = logps.sum(axis = 1)
       
-      for value, logp in zip(values_, logps):
+      for value, logp in zip(values, logps):
         value = tuple(value)
         if value in self.states:
           state = self.states[value]
@@ -361,9 +360,6 @@ class Bundle:
           self.states[value] = state
         state_parent.children.append((logp, state))
         state.parents.append((logp, state_parent))
-      
-      del values_
-      del logps_
   
   def immigrate_stochastic(self, MAX_LINKS):
     N = self.N
@@ -381,9 +377,9 @@ class Bundle:
       if num == 0:
         continue
       
-      values_, ws_ = npe.product_sto(state_parent.W, num)
-      values, index, counts = np.unique(values_, return_index=True, return_counts=True, axis = 0) # slow.
-      logws = np.log(ws_).sum(axis = 1)[index]
+      values, ws = npe.product_sto(state_parent.W, num)
+      values, index, counts = np.unique(values, return_index=True, return_counts=True, axis = 0) # slow.
+      logws = np.log(ws).sum(axis = 1)[index]
       logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
       
       for value, count, logw, logp in zip(values, counts, logws, logps):
@@ -396,9 +392,6 @@ class Bundle:
         logp_adj = logp + math.log(count) - math.log(MAX_LINKS) - (state_parent.logw - parent.logw + logw) # last term is the log prob. of sampling this state
         state_parent.children.append((logp_adj, state))
         state.parents.append((logp_adj, state_parent))
-      
-      del values_
-      del ws_
   
   def evaluate_logv(self):
     if self.parent:
