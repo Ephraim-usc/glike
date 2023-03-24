@@ -8,12 +8,31 @@
 #include <time.h>
 #include <stdint.h>
 
+void free_wrap(PyObject *capsule) {
+    void *memory = PyCapsule_GetPointer(capsule, NULL);
+    free(memory);
+}
 
-static PyObject *num(PyObject *self, PyObject *args, PyObject *kwds)
+static PyObject *free_(PyObject *self, PyObject *args, PyObject *kwds)
 {
-  int N, K;
-  int n, k;
-  double *data;
+  PyObject *x;
+  void *data;
+  
+  static char *kwlist[] = {"x", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &x))
+    Py_RETURN_NONE;
+  
+  data = (void *)PyArray_DATA((PyArrayObject *)x);
+  free(data);
+  
+  Py_RETURN_NONE;
+}
+
+
+static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
+{
+  int N,K;
+  double *logps;
   PyObject *logP;
   
   static char *kwlist[] = {"logP", NULL};
@@ -22,21 +41,19 @@ static PyObject *num(PyObject *self, PyObject *args, PyObject *kwds)
   
   N = PyArray_DIM(logP, 0);
   K = PyArray_DIM(logP, 1);
-  data = (double *)PyArray_DATA((PyArrayObject *)logP);
+  logps = (double *)PyArray_DATA((PyArrayObject *)logP);
   
-  //computing nums and num
-  int num = 1;
-  int *nums = calloc(N, sizeof(int));
-  for (n = 0; n < N; n++)
-  {
-    for (k = 0; k < K; k++)
-      if(data[K*n+k] > -INFINITY) nums[n]++;
-    num *= nums[n];
-  }
+  printf("N = %d, K = %d\n", N, K);
   
-  return Py_BuildValue("i", num);
+  int i, j;
+  for (i = 0; i < N; i++)
+    for (j = 0; j < K; j++)
+      printf("%f ", logps[K*i+j]);
+  printf("\n");
+  
+  Py_RETURN_NONE;
 }
-    
+
 static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
 {
   int N, K;
@@ -62,19 +79,9 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
     num *= nums[n];
   }
   
-  // make buffers
-  npy_intp dims[] = {num, N};
-  
-  PyObject *values_array = PyArray_Zeros(2, dims, PyArray_DescrFromType(NPY_INT), 0);
-  PyObject *logps_array = PyArray_Zeros(2, dims, PyArray_DescrFromType(NPY_DOUBLE), 0);
-  
-  PyArray_STRIDES(values_array)[0] = sizeof(int); PyArray_STRIDES(values_array)[1] = num * sizeof(int); 
-  PyArray_STRIDES(logps_array)[0] = sizeof(double); PyArray_STRIDES(logps_array)[1] = num * sizeof(double); 
-  
-  int *values = (int *)PyArray_DATA((PyArrayObject *)values_array); int *values_;
-  double *logps = (double *)PyArray_DATA((PyArrayObject *)logps_array); double *logps_;
-  
   // computing values
+  int *values = (int *)malloc(num * N * sizeof(int)); int *values_;
+  double *logps = (double *)malloc(num * N * sizeof(double)); double *logps_;
   int size = num; int chunk;
   for (n = 0; n < N; n++)
   {
@@ -105,6 +112,18 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
     }
   }
   
+  free(nums);
+  
+  npy_intp dims[] = {num, N};
+  npy_intp strides_values[] = {sizeof(int), num * sizeof(int)};
+  npy_intp strides_logps[] = {sizeof(double), num * sizeof(double)};
+  
+  PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, NPY_ARRAY_WRITEABLE, NULL);
+  PyObject *logps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_logps, logps, NPY_ARRAY_WRITEABLE, NULL);
+  
+  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
+  PyArray_SetBaseObject((PyArrayObject *) logps_array, PyCapsule_New(logps, NULL, free_wrap));
+  
   PyObject *out = PyTuple_Pack(2, values_array, logps_array);
   
   // this is required since PyTuple_Pack increments ref count of each element.
@@ -119,17 +138,16 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   int N, K, M;
   int n, k, m;
   double *data, *data_;
-  PyObject *P, *values_array, *ps_array;
+  PyObject *P;
   
-  static char *kwlist[] = {"P", "num", "values", "ps", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiOO", kwlist, &P, &M, &values_array, &ps_array))
+  static char *kwlist[] = {"P", "num", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oi", kwlist, &P, &M))
     Py_RETURN_NONE;
   
   N = PyArray_DIM(P, 0);
   K = PyArray_DIM(P, 1);
   data = (double *)PyArray_DATA((PyArrayObject *)P);
   
-  // preparations
   double *pdf = (double *)malloc(N * K * sizeof(double)); double *pdf_;
   double *cdf = (double *)malloc(N * K * sizeof(double)); double *cdf_;
   int *idx = (int *)malloc(N * K * sizeof(int)); int *idx_;
@@ -176,17 +194,9 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   printf("\n"); 
   */
   
-  // making buffers
-  PyArray_DIMS(values_array)[0] = M; PyArray_DIMS(values_array)[1] = N; 
-  PyArray_DIMS(ps_array)[0] = M; PyArray_DIMS(ps_array)[1] = N; 
+  int *values = (int *)malloc(N * M * sizeof(int)); int *values_;
+  double *ps = (double *)malloc(N * M * sizeof(double)); double *ps_;
   
-  PyArray_STRIDES(values_array)[0] = sizeof(int); PyArray_STRIDES(values_array)[1] = M * sizeof(int); 
-  PyArray_STRIDES(ps_array)[0] = sizeof(double); PyArray_STRIDES(ps_array)[1] = M * sizeof(double); 
-  
-  int *values = (int *)PyArray_DATA((PyArrayObject *)values_array); int *values_;
-  double *ps = (double *)PyArray_DATA((PyArrayObject *)ps_array); double *ps_;  
-  
-  // computing values
   double tmp;
   for (n = 0; n < N; n++)
   {
@@ -210,16 +220,32 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   free(cdf);
   free(idx);
   
-  Py_RETURN_NONE;
+  npy_intp dims[] = {M, N};
+  npy_intp strides_values[] = {sizeof(int), M * sizeof(int)};
+  npy_intp strides_ps[] = {sizeof(double), M * sizeof(double)};
+  
+  PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, NPY_ARRAY_WRITEABLE, NULL);
+  PyObject *ps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_ps, ps, NPY_ARRAY_WRITEABLE, NULL);
+  
+  PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
+  PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, free_wrap));
+  
+  PyObject *out = PyTuple_Pack(2, values_array, ps_array);
+  
+  // this is required since PyTuple_Pack increments ref count of each element.
+  Py_DECREF(values_array); 
+  Py_DECREF(ps_array);
+  return out;
 }
 
 
 
 
 static PyMethodDef npeMethods[] = {
+  {"view", (PyCFunction) view, METH_VARARGS | METH_KEYWORDS, "View the logP matrix."},
   {"product_det", (PyCFunction) product_det, METH_VARARGS | METH_KEYWORDS, "Deterministic product."},
   {"product_sto", (PyCFunction) product_sto, METH_VARARGS | METH_KEYWORDS, "Stochastic product."},
-  {"num", (PyCFunction) num, METH_VARARGS | METH_KEYWORDS, "Number of product results."},
+  {"free", (PyCFunction) free_, METH_VARARGS | METH_KEYWORDS, "Manually free an array."},
   {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
