@@ -11,18 +11,6 @@ from time import time as now
 import npe # numpy C extension
 
 
-def random_product(pops, num = 100):
-  for _ in range(num):
-    yield tuple(random.choice(tuple(pops_)) for pops_ in pops)
-
-def all_equal(iterator):
-    iterator = iter(iterator)
-    try:
-        first = next(iterator)
-    except StopIteration:
-        return True
-    return all(first == x for x in iterator)
-
 def is_identity(x):
   return (x.shape[0] == x.shape[1]) and (x == np.eye(x.shape[0])).all()
 
@@ -55,14 +43,6 @@ def logp_intn(n, a, b):
     return - scipy.integrate.quad(n, a, b)
   else:
     raise Exception("not supported n type: not a float, a tuple or a callable")
-
-def logp_migrate(logP, ins, outs):
-  buffer = 0
-  for in_, out in zip(ins, outs):
-    buffer += logP[in_, out]
-    if buffer == -math.inf:
-      break
-  return buffer
 
 
 class Phase:
