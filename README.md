@@ -47,7 +47,7 @@ A Phase is created by
 
     phase = glike.Phase(t, ns, grs, P, Q, populations)
 
-Where `t` is the starting timee, `ns` is the vector of coalescent rates, `grs` is the vector of growth rates, `P` is the mass migration matrix at the beginning of this phase, `Q` is the continuous migration rate matrix, and `populations` is the vector of population names. `t` and `ns` are required arguments, and others are optional. It is required that
+Where `t` is the starting timee, `ns` is the vector of coalescent rates, `grs` is the vector of growth rates, `P` is the mass migration matrix at the beginning of this phase, `Q` is the continuous migration rate matrix, and `populations` is the vector of population names. Only `t` and `ns` are required , other arguments are optional. The number of populations in this phase should be consistent among parameters, so it is required that
 
     len(ns) == len(grs) == P.shape[1] == Q.shape[1] == len(populations)
 
