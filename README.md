@@ -46,7 +46,7 @@ A Phase is created by
 
 Where `t` is the starting timee, `ns` is the vector of coalescent rates, `grs` is the vector of growth rates, `P` is the mass migration matrix at the beginning of this phase, `Q` is the continuous migration rate matrix, and `populations` is the vector of population names. `t` and `ns` are required arguments, and others are optional. It is required that
 
-  len(ns) == len(grs) == P.shape\[1\] == Q.shape\[1\] == len(populations)
+    len(ns) == len(grs) == P.shape\[1\] == Q.shape\[1\] == len(populations)
 
 When adding new Phases into Demogrpahy, the times and dimensions should match. Specifically, the `t1` or `t` of the newly added Phase should equal the `t2` or `t` of the last existing Phase, and the `Q.shape[0]` or `P.shape[0]` of the newly added Phase should match the `Q.shape[1]` or `P.shape[1]` of the last existing Phase.
 
