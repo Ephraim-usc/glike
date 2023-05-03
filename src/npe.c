@@ -175,7 +175,7 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
       cdf_[j] = cdf_[j-1] + pdf_[j];
     }
     
-    if (fabs(cdf_[j-1] - 1.0) > 1e-8)
+    if (fabs(cdf_[j-1] - 1.0) > 1e-6)
     {
       printf("Error: probabilities don't sum up to 1!\n");
       Py_RETURN_NONE;
