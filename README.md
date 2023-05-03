@@ -60,7 +60,11 @@ gLike cannot be applied directly to a demography that contains continuous migrat
 
     demo = demo.discretize(delta)
 
-Where `delta` is a float number indicating the interval widths.
+Where `delta` is a float number indicating the time interval (that is, any `phase` with `phase.Q != None` will be sliced into chunks of length `delta`).
+
+The resulting demography can be visualized by
+
+    demo.print()
 
 
 Demography parameter estimation
