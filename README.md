@@ -22,11 +22,12 @@ Full likelihood of genealogical trees
 
 Core functionality
 
-    logp = glike.glike_trees(trees, demo)
+    logp = glike.glike_trees(trees, demo, samples)
     
 Where `trees` is any enumerable that contains `tskit` genealogical trees.
-And `demo` is the hypothesized Demography created manually or from provided models in `models.py`.
-It returns the probability that such genealogical trees are generated under hypothesized demography.
+`demo` is the hypothesized Demography created manually or from provided models in `models.py`.
+`samples` is the dict that contains sample:population pairs, which specifies which sample is collected from which population.
+This function returns the probability that such genealogical trees are generated under hypothesized demography.
 
 
 Demography customization
