@@ -37,7 +37,7 @@ Demography customization
 
 A Demography object is initialized with
 
-    demo = glike.Demography()
+    demo = glike.Demo()
     
 And a number of Phases are added into this Demography
 
@@ -56,16 +56,22 @@ When adding new Phases into Demogrpahy, the times and dimensions should match. S
     phases[i].t < phases[i+1].t
     phases[i].P.shape[1] == phases[i+1].P.shape[0]
 
+gLike cannot be applied directly to a demography that contains continuous migrations, and requires it to be discretized first:
+
+    demo = demo.discretize(delta)
+
+Where `delta` is a float number indicating the interval widths.
+
+
+Demography parameter estimation
+------------
+
 To make a demographic model containing variable parameters, the idiom is
 
     def model(...):
       demo = glike.Demography()
       # add Phases that depend on the parameters
       return demo
-
-
-Demography parameter estimation
-------------
 
 We provide an function for estimating parameters 
 
