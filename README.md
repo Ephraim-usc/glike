@@ -48,8 +48,10 @@ Where `t` is the starting timee, `ns` is the vector of coalescent rates, `grs` i
 
     len(ns) == len(grs) == P.shape[1] == Q.shape[1] == len(populations)
 
-When adding new Phases into Demogrpahy, the times and dimensions should match. Specifically, the `t1` or `t` of the newly added Phase should equal the `t2` or `t` of the last existing Phase, and the `Q.shape[0]` or `P.shape[0]` of the newly added Phase should match the `Q.shape[1]` or `P.shape[1]` of the last existing Phase.
+When adding new Phases into Demogrpahy, the times and dimensions should match. Specifically, if the last added phase is `phases[i]`, and we are trying to add another phase `phases[i+1]`, then it is required that
 
+    phases[i].t < phases[i+1].t
+    phases[i].P.shape[1] == phases[i+1].P.shape[0]
 
 To make a demographic model containing variable parameters, the idiom is
 
