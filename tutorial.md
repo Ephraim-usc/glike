@@ -55,7 +55,7 @@ Where the demography consists of four phases, each defined by the starting time,
 Estimating parameters
 ------------
 
-There are several pieces of information needed to launch the estimation process.
+There are several pieces of information needed to describe the estimation task.
 `names` lists the names of each parameter
 
     names = ["t1", "t2", "t3", "r1", "r2", "N", "N_a", "N_b", "N_c", "N_d", "N_e"]
@@ -78,7 +78,7 @@ The estimation is launched by
 
     x, logp = estimate(trees, threeway_admixture_demo, search, prune = 0.5)
 
-Which prints 
+Which prints, for example
     
     [20, 80, 5000.0, 0.5, 0.5, 1000, 10000, 1000, 10000, 10000, 1000] -38919.783993402685
     [20, 80, 5400.0, 0.5, 0.5, 1000, 10000, 1000, 10000, 10000, 1000] -38693.018071448445
@@ -92,4 +92,11 @@ Which prints
     [20, 80, 5400.0, 0.4501, 0.5499, 1090.0, 10990.0, 1090.0, 10990.0, 10990.0, 1090.0] -38078.97551290889
     [20.5, 80, 5400.0, 0.4501, 0.5499, 1090.0, 10990.0, 1090.0, 10990.0, 10990.0, 1090.0] -38053.10669115948
     [20.5, 79.0, 5400.0, 0.4501, 0.5499, 1090.0, 10990.0, 1090.0, 10990.0, 10990.0, 1090.0] -38050.854700433134
+    [20.5, 79.0, 6060.0, 0.4501, 0.5499, 1090.0, 10990.0, 1090.0, 10990.0, 10990.0, 1090.0] -37721.66517975466
+    [20.5, 79.0, 6060.0, 0.38273, 0.5499, 1090.0, 10990.0, 1090.0, 10990.0, 10990.0, 1090.0] -37713.270123500275
+    [20.5, 79.0, 6060.0, 0.38273, 0.48254, 1090.0, 10990.0, 1090.0, 10990.0, 10990.0, 1090.0] -37711.62702384707
+    [20.5, 79.0, 6060.0, 0.38273, 0.48254, 1238.5, 10990.0, 1090.0, 10990.0, 10990.0, 1090.0] -37396.84843228326
     ....
+
+The estimation usually converges after 10~30 rounds (which means 110~330 lines of printed output).
+When the function finishes, x will be the estimated parameters, and logp will be the maximum likelihood ever reached.
