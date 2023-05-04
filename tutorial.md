@@ -99,4 +99,4 @@ Which prints, for example
     ....
 
 The estimation usually converges after 10~30 rounds (which means 110~330 lines of printed output).
-When the function finishes, x will be the estimated parameters, and logp will be the maximum likelihood ever reached.
+When the function finishes, `x` will be the estimated parameters, and `logp` will be the maximum likelihood ever reached.
