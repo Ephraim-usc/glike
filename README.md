@@ -16,7 +16,12 @@ download the package and install from local:
     
     python3 -m pip install ./sglike
 
-[tutorial](./tutorial.md)
+
+Tutorial
+------------
+
+See a simple [tutorial](./tutorial.md) to go though a toy example showing how glike works.
+
 
 Full likelihood of genealogical trees
 ------------
