@@ -3,14 +3,18 @@ Tutorial
 
 This is a toy example that replicates the experiment in Figure 2B of the paper.
 
+Import necessary packages to go through this tutorial
+
+    import numpy as np
+    import msprime
+    import glike
+
 
 Simulating the ARG by msprime
 ------------
 
 The three-way admixture model as defined in the msprime language is
 
-    import msprime
-    
     def threeway_admixture_demography(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e):
       demography = msprime.Demography()
       demography.add_population(name = "O", initial_size = N)
@@ -41,11 +45,11 @@ Defining the demographic model
 The three-way admixture model as defined in the glike language is
 
     def threeway_admixture_demo(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e):
-      demo = Demo()
-      demo.add_phase(Phase(0, [1/N]))
-      demo.add_phase(Phase(t1, [1/N_a, 1/N_b], P = np.array([[r1, 1-r1]])))
-      demo.add_phase(Phase(t2, [1/N_a, 1/N_c, 1/N_d], P = np.array([[1, 0, 0], [0, r2, 1-r2]])))
-      demo.add_phase(Phase(t3, [1/N_e], P = np.array([[1], [1], [1]])))
+      demo = glike.Demo()
+      demo.add_phase(glike.Phase(0, [1/N]))
+      demo.add_phase(glike.Phase(t1, [1/N_a, 1/N_b], P = np.array([[r1, 1-r1]])))
+      demo.add_phase(glike.Phase(t2, [1/N_a, 1/N_c, 1/N_d], P = np.array([[1, 0, 0], [0, r2, 1-r2]])))
+      demo.add_phase(glike.Phase(t3, [1/N_e], P = np.array([[1], [1], [1]])))
       return demo
 
 Where the demography consists of four phases, each defined by the starting time, the list of inverse population sizes, and the mass migration matrices.
@@ -69,13 +73,13 @@ There are several pieces of information needed to describe the estimation task.
 
 The search task is the defined as
 
-    search = Search(names, values, limits, precision = 0.02)
+    search = glike.Search(names, values, limits, precision = 0.02)
 
 Where `precision = 0.02` specifies the minimum step size in the hill-climbing optimization to be 2%.
 
 The estimation is launched by
 
-    x, logp = estimate(trees, threeway_admixture_demo, search, prune = 0.5)
+    x, logp = glike.estimate(trees, threeway_admixture_demo, search, prune = 0.5)
 
 Which prints, for example
     
