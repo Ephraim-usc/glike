@@ -7,7 +7,7 @@ This is a toy example that replicates the experiment in Figure 2B of the paper.
 Simulating the ARG by msprime
 ------------
 
-The true demography as defined in the msprime language is
+The three-way admixture model as defined in the msprime language is
 
     import msprime
     
@@ -24,6 +24,10 @@ The true demography as defined in the msprime language is
       demography.add_admixture(time=t2, derived="B", ancestral=["C", "D"], proportions = [r2, 1-r2])
       demography.add_population_split(time=t3, derived=["A", "C", "D"], ancestral="E")
       return demography
+
+The true demography is created using the true parameters
+
+    demography = threeway_admixture_demography(30, 60, 1e4, 0.4, 0.7, 2000, 20000, 3000, 30000, 10000, 5000)
 
 We simulate a 30Mb chromosome and select 10 equally distant trees
 
