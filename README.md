@@ -16,6 +16,9 @@ download the package and install from local:
     
     python3 -m pip install ./sglike
 
+There are three pre-requisite packages: `tskit`, `numpy` and `scipy`.
+Because glike contains a C extension module, a proper C environment is required.
+
 
 Tutorial
 ------------
