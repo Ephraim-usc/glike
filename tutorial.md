@@ -32,7 +32,7 @@ The true demography is created using the true parameters
 
     demography = threeway_admixture_demography(30, 60, 1e4, 0.4, 0.7, 2000, 20000, 3000, 30000, 10000, 5000)
 
-We simulate a 30Mb chromosome and select 10 equally distant trees
+We simulate 1000 haplotypes on a 30Mb chromosome and select 10 equally distant trees
 
     arg = msprime.sim_ancestry({"O": 1000}, sequence_length = 3e7, recombination_rate = 1e-8, demography = demography, ploidy = 1)
     arg = msprime.sim_mutations(arg, rate = 1e-8, discrete_genome = False)
