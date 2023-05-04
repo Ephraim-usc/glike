@@ -16,6 +16,7 @@ download the package and install from local:
     
     python3 -m pip install ./sglike
 
+[tutorial](./tutorial.md)
 
 Full likelihood of genealogical trees
 ------------
