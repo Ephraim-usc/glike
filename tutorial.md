@@ -19,7 +19,6 @@ The three-way admixture model as defined in the msprime language is
       demography.add_population(name = "C", initial_size = N_c)
       demography.add_population(name = "D", initial_size = N_d)
       demography.add_population(name = "E", initial_size = N_e)
-      
       demography.add_admixture(time=t1, derived="O", ancestral=["A", "B"], proportions = [r1, 1-r1])
       demography.add_admixture(time=t2, derived="B", ancestral=["C", "D"], proportions = [r2, 1-r2])
       demography.add_population_split(time=t3, derived=["A", "C", "D"], ancestral="E")
