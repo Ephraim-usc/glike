@@ -101,5 +101,5 @@ Which prints, for example
     [20.5, 79.0, 6060.0, 0.38273, 0.61472, 1238.5, 10990.0, 1090.0, 10990.0, 10990.0, 1090.0] -37396.84843228326
     ...
 
-The estimation usually converges after 10 ~ 30 rounds (which means 110~330 lines of printed output).
+The estimation usually converges after 10~30 rounds (which means 110~330 lines of printed output).
 When the function finishes, `x` will be the estimated parameters, and `logp` will be the maximum likelihood ever reached.
