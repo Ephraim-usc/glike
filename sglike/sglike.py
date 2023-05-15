@@ -43,9 +43,9 @@ class Phase:
   # P: transition matrix at beginning of Phase
   # Q: continuous migration matrix, will be discretized when added into demo
   # populations: names of populations
-  def __init__(self, t, ns, P = None, Q = None, populations = None):
+  def __init__(self, t, t_end, ns, grs = None, P = None, Q = None, populations = None):
     self.t = t
-    self.t_end = math.inf
+    self.t_end = t_end
     self.parent = None
     self.child = None
     
@@ -70,7 +70,7 @@ class Phase:
       self.logP = np.log(self.P)
     
     if Q is not None:
-      if Q.shape[0] != self.K or Q.shape[1] != self.K
+      if not (self.K == Q.shape[0] == Q.shape[1]):
         raise Exception("Cannot initialize phase: Q.shape[0] and Q.shape[1] should both equal len(ns)!")
       self.Q = Q
     else:
@@ -99,98 +99,43 @@ class Phase:
     return buffer
 
 class Demo:
-  def __init__(self, demography = None):
+  def __init__(self):
     self.phases = list()
-    if demography:
-      self.from_demography(demography)
   
-  def add_phase(self, phase):
+  def add_phase(self, phase, discretize = 100):
+    if phase.Q is not None:
+      ns, grs, P, Q, populations = phase.ns, phase.grs, phase.P, phase.Q, phase.populations
+      self.add_phase(Phase(phase.t, min(phase.t + discretize, phase.t_end), ns, grs, P = np.dot(P, scipy.linalg.expm(Q * min(discretize, phase.t_end-phase.t))), populations = populations))
+      for t in np.arange(phase.t + discretize, phase.t_end, discretize):
+        self.add_phase(Phase(t, min(t + discretize, phase.t_end), ns*np.exp(grs*(t-phase.t)), grs, P = scipy.linalg.expm(Q * min(discretize, phase.t_end-t)), populations = populations))
+      return
+    
     if len(self.phases):
       child = self.phases[-1]
-      assert child.t < phase.t, "time error when adding phase!"
-      assert child.K == phase.P.shape[0], "shape error when adding phase!"
+      if child.t_end != phase.t:
+        raise Exception("Cannot add phase: t should equal to t_end of the last existing phase!")
+      if child.K != phase.P.shape[0]:
+        raise Exception("Cannot add phase: phase.P.shape[0] is not equal to the number of populations in the last existing phase!")
       child.t_end = phase.t
       child.parent = phase
       phase.child = child
     else:
-      assert is_identity(phase.P), "first phase should have identity P!"
+      if phase.t != 0:
+        raise Exception("Cannot add phase: the first phase should have zero t!")
+      if not is_identity(phase.P):
+        raise Exception("Cannot add phase: the first phase should have identity P!")
     self.phases.append(phase)
-  
-  def at(self, t):
-    for phase in self.phases:
-      if t < phase.t_end:
-        return phase
   
   def print(self):
     import pandas as pd
     populations = None
     for phase in self.phases:
-      print(f"phase at {phase.t}")
+      print(f"[phase from {phase.t} to {phase.t_end}]")
       if not is_identity(phase.P):
         print(pd.DataFrame(phase.P, index = populations, columns = phase.populations))
-      print(dict(zip(phase.populations, phase.ns)))
+      print(pd.DataFrame({"ns":phase.ns, "grs":phase.grs}, index = phase.populations).T)
       print("")
       populations = phase.populations
-  
-  def from_demography(self, demography):
-    import msprime
-    import pandas as pd
-    t = 0
-    ns = list()
-    populations = list()
-    for population in demography.populations:
-      populations.append(population.name)
-      if population.growth_rate != 0:
-        ns.append((1/population.initial_size, population.growth_rate))
-      else:
-        ns.append(1/population.initial_size)
-    self.add_phase(Phase(0, ns, populations = populations))
-    
-    for event in demography.events:
-      if type(event) is msprime.demography.Admixture:
-        populations_ = populations; populations = populations.copy(); 
-        populations.remove(event.derived)
-        P = pd.DataFrame(0, index = populations_, columns = populations)
-        for population in populations:
-          P.loc[population, population] = 1
-        for anc, prop in zip(event.ancestral, event.proportions):
-          P.loc[event.derived, anc] = prop
-        P = P.values
-      elif type(event) is msprime.demography.PopulationSplit:
-        populations_ = populations; populations = populations.copy()
-        for derived in event.derived:
-          populations.remove(derived)
-        P = pd.DataFrame(0, index = populations_, columns = populations)
-        for population in populations:
-          P.loc[population, population] = 1
-        for derived in event.derived:
-          P.loc[derived, event.ancestral] = 1
-        P = P.values
-      elif type(event) is msprime.demography.PopulationParametersChange:
-        populations_ = populations; populations = populations.copy()
-        P = None
-      else:
-        continue
-      
-      t_ = t; t = event.time
-      ns_ = ns.copy()
-      ns = [None for _ in populations]
-      for population in populations:
-        n = ns_[populations_.index(population)]
-        if type(n) is float:
-          ns[populations.index(population)] = n
-        else:
-          ns[populations.index(population)] = (math.log(n[0]) + n[1] * (t-t_), n[1])
-      
-      if type(event) is msprime.demography.PopulationParametersChange:
-        if event.population == -1:
-          tmp = populations.copy()
-        else:
-          tmp = [event.population]
-        for population in tmp:
-          ns[populations.index(population)] = (1/event.initial_size, event.growth_rate) if event.growth_rate and event.growth_rate>0 else 1/event.initial_size
-      
-      self.add_phase(Phase(t, ns, P = P, populations = populations))
 
 
 class State:
