@@ -1,19 +1,18 @@
 import math
-import numpy as np
-import tskit
 import itertools
+import tskit
+import numpy as np
 import scipy
 import scipy.special
-import random
-from tqdm import tqdm
-from time import time as now
+import scipy.linalg
 
 import npe # numpy C extension
 
-
+# test if a numpy array is identity matrix
 def is_identity(x):
   return (x.shape[0] == x.shape[1]) and (x == np.eye(x.shape[0])).all()
 
+# wrapper around scipy.special.logsumexp while testing shortcut situations
 def logsumexp(x):
   if len(x) == 0:
     return -math.inf
@@ -22,54 +21,60 @@ def logsumexp(x):
   else:
     return scipy.special.logsumexp(x)
 
-# probability of coalescence at time a
-def logp_n(n, a):
-  if type(n) is float:
+# probability of coalescence at time a, given coalescence rate n and growth rate gr
+def logp_coal(n, gr, a):
+  if gr == 0:
     return math.log(n)
-  elif type(n) is tuple:
-    return math.log(n[0]) + n[1] * a
-  elif callable(n):
-    return math.log(n(a))
   else:
-    raise Exception("not supported n type: not a float, a tuple or a callable")
+    return math.log(n) + gr * a
 
-# probability of non-coalescence between a and b
-def logp_intn(n, a, b):
-  if type(n) is float:
+# probability of non-coalescence between a and b, given coalescence rate n and growth rate gr
+def logp_noncoal(n, gr, a, b):
+  if gr == 0:
     return - n * (b - a)
-  if type(n) is tuple:
-    return - n[0] / n[1] * (math.exp(b*n[1]) - math.exp(a*n[1]))
-  elif callable(n):
-    return - scipy.integrate.quad(n, a, b)
   else:
-    raise Exception("not supported n type: not a float, a tuple or a callable")
+    return - n/gr * (math.exp(b*gr) - math.exp(a*gr))
 
 
 class Phase:
   # t: beginning time of Phase
-  # ns: list of coalescent rates, each could be a number, a (initial_rate, growth_rate) tuple, or any function f(t)
+  # ns: list or 1d array of coalescent rates
+  # grs: list or 1d array of growth rates
   # P: transition matrix at beginning of Phase
-  def __init__(self, t, ns, P = None, populations = None):
-    self.stochastic = False
-    
+  # Q: continuous migration matrix, will be discretized when added into demo
+  # populations: names of populations
+  def __init__(self, t, ns, P = None, Q = None, populations = None):
     self.t = t
     self.t_end = math.inf
     self.parent = None
     self.child = None
     
-    self.ns = ns
+    self.ns = np.array(ns)
     self.K = len(ns) # number of populations (during continuous period)
     
+    if grs is not None:
+      if len(grs) != self.K:
+        raise Exception("Cannot initialize phase: len(grs) should equal len(ns)!!")
+      self.grs = np.array(grs)
+    else:
+      self.grs = np.zeros(self.K)
+    
     if P is not None:
-      assert P.shape[1] == self.K
+      if P.shape[1] != self.K:
+        raise Exception("Cannot initialize phase: P.shape[1] should equal len(ns)!")
       self.P = P
     else:
       self.P = np.identity(self.K)
     
-    with np.errstate(divide='ignore'):
-      self.ins_outs_mapping()
-      logP = np.log(self.P)
-      self.logP = logP
+    with np.errstate(divide='ignore'): # log(0) = -inf is expected
+      self.logP = np.log(self.P)
+    
+    if Q is not None:
+      if Q.shape[0] != self.K or Q.shape[1] != self.K
+        raise Exception("Cannot initialize phase: Q.shape[0] and Q.shape[1] should both equal len(ns)!")
+      self.Q = Q
+    else:
+      self.Q = None
     
     if populations is not None:
       assert len(populations) == self.K
@@ -77,28 +82,20 @@ class Phase:
     else:
       self.populations = ['ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i] for i in range(self.K)]
   
-  # build fasting mappings of non-zero migrations in P
-  def ins_outs_mapping(self):
-    self.ins2outs = [set() for _ in range(self.P.shape[0])]
-    self.outs2ins = [set() for _ in range(self.P.shape[1])]
-    ins, outs = np.where(self.P > 0)
-    for in_, out in zip(ins, outs):
-      self.ins2outs[in_].add(out)
-      self.outs2ins[out].add(in_)
-  
   # this function computes the logp of a genealogical tree during a non-migration period, given populations of lineages
   # N: number of lineages at t_end
   def logp(self, pop, N, coals):
     n = self.ns[pop]
+    gr = self.grs[pop]
     coals.sort(reverse=True)
     
     buffer = 0
-    time_ = self.t_end
-    for time, delta in coals:
-      buffer += 0.5*N*(N-1) * logp_intn(n, time, time_) if time_ > time and N >= 2 else 0 # think of a better way to deal with present samples!!!
-      buffer += delta * logp_n(n, time) if delta >= 1 else 0
-      N += delta; time_ = time
-    buffer += 0.5*N*(N-1) * logp_intn(n, self.t, time_) if N >= 2 else 0
+    b = self.t_end
+    for a, incr in coals:
+      buffer += N*(N-1)/2 * logp_noncoal(n, gr, a - self.t, b - self.t) if (b > a and N >= 2) else 0
+      buffer += incr * logp_coal(n, gr, a) if incr >= 1 else 0
+      N += incr; b = a
+    buffer += N*(N-1)/2 * logp_noncoal(n, gr, 0, b - self.t) if N >= 2 else 0
     return buffer
 
 class Demo:
