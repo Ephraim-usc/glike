@@ -159,8 +159,7 @@ class Bundle:
     self.ghosts = list() # indices of ghost lineages that are going to be deleted
     
     self.coals = list() # list of lists of (time, num_children - 1) tuples of nodes for each subtree
-    self.mask = np.zeros([0, self.phase.K], dtype = np.int8) # N x K binary mask matrix of possible populations
-    self.logmask = np.log(self.mask)
+    self.logmask = np.zeros([0, self.phase.K]) # N x K binary mask matrix of prior probabilities of population specification
     
     self.states = dict() # dict of (value, state) tuples
     self.parent = None
@@ -172,12 +171,10 @@ class Bundle:
       self.lins = [lin for i, lin in enumerate(self.lins) if i not in ghosts]
       self.dests = [dests for i, dests in enumerate(self.dests) if i not in ghosts]
       self.coals = [coal for i, coal in enumerate(self.coals) if i not in ghosts]
-      self.mask = np.array([mask_ for i,mask_ in enumerate(self.mask) if i not in ghosts])
+      self.logmask = np.array([logmask_ for i, logmask_ in enumerate(self.logmask) if i not in ghosts])
     
     self.N = len(self.lins)
     self.dict = {lin:i for i, lin in enumerate(self.lins)}
-    with np.errstate(divide='ignore'):
-      self.logmask = np.log(self.mask)
   
   # backward in time through mass migrations
   # creating new Bundle, computing possible populations for each lineage
@@ -186,7 +183,10 @@ class Bundle:
     bundle.lins = self.lins.copy(); bundle.refresh()
     bundle.dests = [{lin} for lin in bundle.lins]
     bundle.coals = [list() for _ in bundle.lins]
-    bundle.mask = (np.dot(self.mask, self.phase.parent.P) > 0).astype(np.int8)
+    
+    with np.errstate(divide='ignore'):
+      logmask_max = np.max(self.logmask, 1, keepdims=True)
+      bundle.logmask = np.log(np.dot(np.exp(self.logmask - logmask_max), self.phase.parent.P)) + logmask_max
     
     bundle.child = self
     self.parent = bundle
@@ -202,23 +202,23 @@ class Bundle:
       self.ghosts.extend(idx)
       self.dests.append(set().union(*[self.dests[i] for i in idx]))
       self.coals.append([coal for i in idx for coal in self.coals[i]] + [(time, len(children) - 1)])
-      mask_ = self.mask[idx,:].prod(axis = 0, dtype = np.int8)
+      logmask_ = self.logmask[idx,:].sum(axis = 0)
     else:
       self.dests.append(set())
       self.coals.append([(time, - 1)])
-      mask_ = np.ones(self.phase.K, dtype = np.int8)
+      logmask_ = np.zeros(self.phase.K)
     
     if pop != None: # designated by user
       if type(pop) is str:
         pop = self.phase.populations.index(pop)
-      mask_[np.arange(len(mask_)) != pop] = 0 # set all other elements to zero, except the pop-th
+      logmask_[np.arange(len(logmask_)) != pop] = -math.inf
     
-    self.mask = np.vstack([self.mask, mask_]) # this is slow!!!!!
+    self.logmask = np.vstack([self.logmask, logmask_]) # this is slow
   
   # make it the root bundle
   def root(self):
     self.states = dict()
-    pops = [np.nonzero(x)[0] for x in self.mask]
+    pops = [np.where(x > -math.inf)[0] for x in self.logmask]
     for value in itertools.product(*pops):
       state = State()
       self.states[value] = state
@@ -239,7 +239,6 @@ class Bundle:
   
   def emigrate(self):
     child = self.child
-    
     self.num_links = 0.0
     for value, state in self.states.items():
       outs = [None for _ in child.lins]
@@ -247,29 +246,20 @@ class Bundle:
         for dest in self.dests[i]:
           idx = child.dict[dest]
           outs[idx] = pop
-      
-      state.logP = self.phase.logP.T[outs, :] + child.logmask
-      state.num_links = (state.logP > -math.inf).sum(axis = 1).prod(dtype = float)
-      self.num_links += state.num_links
-    
-    #print(f"[{self.t}~{self.t_end}gen {self.phase.K} populations] [{len(self.child.lins)}-{len(self.lins)} lineages] [{len(self.states)} states] [{np.format_float_scientific(self.num_links, precision=6)} links]", flush = True)
+      state.logP = self.phase.logP.T[outs, :]
+      self.num_links += (state.logP + child.logmask > -math.inf).sum(axis = 1).prod(dtype = float)
   
-  def immigrate(self, MAX_LINKS = 1e5):
-    if hasattr(self.phase, 'mode') and self.phase.mode == "deterministic":
+  def immigrate(self, MAX_LINKS = 1e4):
+    if self.parent.num_links <= MAX_LINKS:
       self.immigrate_deterministic()
-    elif hasattr(self.phase, 'mode') and self.phase.mode == "stochastic":
-      self.immigrate_stochastic(MAX_LINKS)
     else:
-      parent = self.parent
-      if parent.num_links <= MAX_LINKS:
-        self.immigrate_deterministic()
-      else:
-        self.immigrate_stochastic(MAX_LINKS)
+      self.immigrate_stochastic(MAX_LINKS)
   
   def immigrate_deterministic(self):
     N = self.N
     parent = self.parent
     for _, state_parent in parent.states.items():
+      logPm = state_parent.logP.copy(); logPm[self.logmask == -math.inf] = -math.inf # masked logP
       values, logps = npe.product_det(state_parent.logP)
       logps = logps.sum(axis = 1)
       
