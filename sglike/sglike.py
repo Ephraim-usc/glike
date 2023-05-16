@@ -277,15 +277,19 @@ class Bundle:
     N = self.N
     parent = self.parent
     
-    for _, state_parent in parent.states.items():
-      W = np.exp(state_parent.logP) # can try different definitions
-      w = W.sum(axis=1, keepdims=True)
-      state_parent.W = W/w
-      state_parent.logw = np.log(w).sum()
-    parent.logw = logsumexp([state_parent.logw for state_parent in parent.states.values()])
+    minlogmask = math.log(1e-6 * self.t_end)
+    logmask[np.logical_and(logmask < minlogmask, logmask > -math.inf)] = minlogmask
     
     for _, state_parent in parent.states.items():
-      num = np.random.binomial(MAX_LINKS, math.exp(state_parent.logw - parent.logw))
+      W = np.exp(state_parent.logP + logmask)
+      w = W.sum(axis=1, keepdims=True)
+      state_parent.W = W/w
+    
+    logvs = np.array([state_parent.logv for state_parent in parent.states.values()])
+    tmp = np.exp(logvs - parent.logv); tmp /= tmp.sum()
+    nums = np.random.multinomial(MAX_LINKS, tmp)
+    
+    for _, state_parent in parent.states.items():
       if num == 0:
         continue
       
@@ -301,7 +305,7 @@ class Bundle:
         else:
           state = State()
           self.states[value] = state
-        logp_adj = logp + math.log(count) - math.log(MAX_LINKS) - (state_parent.logw - parent.logw + logw) # last term is the log prob. of sampling this state
+        logp_adj = logp + math.log(count) - math.log(MAX_LINKS) - (state_parent.logv - parent.logv + logw) # last term is the log prob. of sampling this state
         state_parent.children.append((logp_adj, state))
         state.parents.append((logp_adj, state_parent))
   
