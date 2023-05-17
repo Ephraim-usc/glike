@@ -294,10 +294,10 @@ class Bundle:
       if num == 0:
         continue
       
-      values, ws = npe.product_sto(state_parent.W, num)
+      values, ws, logps = npe.product_sto(state_parent.W, state_parent.logP, num)
       values, index, counts = np.unique(values, return_index=True, return_counts=True, axis = 0) # slow.
       logws = np.log(ws).sum(axis = 1)[index]
-      logps = state_parent.logP[np.arange(N)[:,None], values.T].sum(axis = 0)
+      logps = logps.sum(axis = 1)[index]
       
       for value, count, logw, logp in zip(values, counts, logws, logps):
         value = tuple(value)
