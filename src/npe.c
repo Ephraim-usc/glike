@@ -13,21 +13,6 @@ void free_wrap(PyObject *capsule) {
     free(memory);
 }
 
-static PyObject *free_(PyObject *self, PyObject *args, PyObject *kwds)
-{
-  PyObject *x;
-  void *data;
-  
-  static char *kwlist[] = {"x", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &x))
-    Py_RETURN_NONE;
-  
-  data = (void *)PyArray_DATA((PyArrayObject *)x);
-  free(data);
-  
-  Py_RETURN_NONE;
-}
-
 
 static PyObject *view(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -137,16 +122,18 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
 {
   int N, K, M;
   int n, k, m;
-  double *data, *data_;
-  PyObject *P;
+  double *W, *W_, *P, *P_;
+  PyObject *W_array;
+  PyObject *P_array;
   
-  static char *kwlist[] = {"P", "num", NULL};
-  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oi", kwlist, &P, &M))
+  static char *kwlist[] = {"W", "P", "num", NULL};
+  if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOi", kwlist, &W_array, &P_array, &M))
     Py_RETURN_NONE;
   
-  N = PyArray_DIM(P, 0);
-  K = PyArray_DIM(P, 1);
-  data = (double *)PyArray_DATA((PyArrayObject *)P);
+  N = PyArray_DIM(W_array, 0);
+  K = PyArray_DIM(W_array, 1);
+  W = (double *)PyArray_DATA((PyArrayObject *)W_array);
+  P = (double *)PyArray_DATA((PyArrayObject *)P_array);
   
   double *pdf = (double *)malloc(N * K * sizeof(double)); double *pdf_;
   double *cdf = (double *)malloc(N * K * sizeof(double)); double *cdf_;
@@ -155,7 +142,7 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   int i, j;
   for (n = 0; n < N; n++)
   {
-    data_ = data + n * K;
+    W_ = W + n * K;
     pdf_ = pdf + n * K;
     cdf_ = cdf + n * K;
     idx_ = idx + n * K;
@@ -163,8 +150,8 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
     i = 0;
     for (k = 0; k < K; k++)
     {
-      if (data_[k] < 1e-8) continue;
-      pdf_[i] = data_[k];
+      if (W_[k] < 1e-6) continue;
+      pdf_[i] = W_[k];
       idx_[i] = k;
       i ++;
     }
@@ -182,37 +169,30 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
     }
   }
   
-  /*
-  for (i = 0; i < N*K; i++)
-    printf("%f ", pdf[i]);
-  printf("\n");
-  for (i = 0; i < N*K; i++)
-    printf("%f ", cdf[i]);
-  printf("\n");
-  for (i = 0; i < N*K; i++)
-    printf("%d ", idx[i]);
-  printf("\n"); 
-  */
-  
   int *values = (int *)malloc(N * M * sizeof(int)); int *values_;
+  double *ws = (double *)malloc(N * M * sizeof(double)); double *ws_;
   double *ps = (double *)malloc(N * M * sizeof(double)); double *ps_;
   
-  double tmp;
+  double tmp; int value;
   for (n = 0; n < N; n++)
   {
-    data_ = data + n * K;
-    pdf_ = pdf + n * K;
+    W_ = W + n * K;
+    P_ = P + n * K;
     cdf_ = cdf + n * K;
     idx_ = idx + n * K;
-    values_ = values + n * M;
-    ps_ = ps + n * M;
     
+    values_ = values + n * M;
+    ws_ = ws + n * M;
+    ps_ = ps + n * M;
     for (m = 0; m < M; m++)
     {
       tmp = drand48();
       i = 0; while(cdf_[i] < tmp) i++;
-      values_[m] = idx_[i];
-      ps_[m] = pdf_[i];
+      value = idx_[i];
+      
+      values_[m] = value;
+      ws_[m] = W_[value];
+      ps_[m] = P_[value];
     }
   }
   
@@ -222,18 +202,22 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   
   npy_intp dims[] = {M, N};
   npy_intp strides_values[] = {sizeof(int), M * sizeof(int)};
+  npy_intp strides_ws[] = {sizeof(double), M * sizeof(double)};
   npy_intp strides_ps[] = {sizeof(double), M * sizeof(double)};
   
   PyObject *values_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_INT), 2, dims, strides_values, values, NPY_ARRAY_WRITEABLE, NULL);
+  PyObject *ws_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_ws, ws, NPY_ARRAY_WRITEABLE, NULL);
   PyObject *ps_array = PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(NPY_DOUBLE), 2, dims, strides_ps, ps, NPY_ARRAY_WRITEABLE, NULL);
   
   PyArray_SetBaseObject((PyArrayObject *) values_array, PyCapsule_New(values, NULL, free_wrap));
+  PyArray_SetBaseObject((PyArrayObject *) ws_array, PyCapsule_New(ws, NULL, free_wrap));
   PyArray_SetBaseObject((PyArrayObject *) ps_array, PyCapsule_New(ps, NULL, free_wrap));
   
-  PyObject *out = PyTuple_Pack(2, values_array, ps_array);
+  PyObject *out = PyTuple_Pack(3, values_array, ws_array, ps_array);
   
   // this is required since PyTuple_Pack increments ref count of each element.
   Py_DECREF(values_array); 
+  Py_DECREF(ws_array);
   Py_DECREF(ps_array);
   return out;
 }
@@ -245,7 +229,6 @@ static PyMethodDef npeMethods[] = {
   {"view", (PyCFunction) view, METH_VARARGS | METH_KEYWORDS, "View the logP matrix."},
   {"product_det", (PyCFunction) product_det, METH_VARARGS | METH_KEYWORDS, "Deterministic product."},
   {"product_sto", (PyCFunction) product_sto, METH_VARARGS | METH_KEYWORDS, "Stochastic product."},
-  {"free", (PyCFunction) free_, METH_VARARGS | METH_KEYWORDS, "Manually free an array."},
   {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
