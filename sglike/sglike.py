@@ -277,7 +277,7 @@ class Bundle:
     N = self.N
     parent = self.parent
     
-    minlogmask = math.log(1e-6 * self.t_end)
+    minlogmask = math.log(1e-5 * self.t_end)
     logmask = self.logmask.copy()
     logmask[np.logical_and(logmask < minlogmask, logmask > -math.inf)] = minlogmask
     
@@ -331,9 +331,12 @@ class Bundle:
   def print(self):
     print(f"{self.t_end}~{self.t}gen", flush = True)
     print(f"populations: {self.phase.populations}", flush = True)
-    print(f"lineages: {len(self.lins)}~{sum([len(dests) for dests in self.dests])}", flush = True)
-    print(f"number of states: {len(self.states)} states", flush = True)
+    print(f"# of lineages: {len(self.lins)}~{sum([len(dests) for dests in self.dests])}", flush = True)
+    print(f"# of states: {len(self.states)}", flush = True)
     print(f"logv: {self.logv}", flush = True)
+    logvs = sorted([state.logv for state in self.states.values()], reverse = True)[:5]
+    shares = [f"{math.exp(logv - self.logv)*100:.2f}%" for logv in logvs]
+    print(f"shares of top 5 states: {shares}", flush = True)
 
 def glike(tree, demo, samples = None, verbose = False):
   if samples is None:
