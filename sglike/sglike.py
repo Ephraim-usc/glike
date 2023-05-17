@@ -54,7 +54,7 @@ class Phase:
     
     if grs is not None:
       if len(grs) != self.K:
-        raise Exception("Cannot initialize phase: len(grs) should equal len(ns)!!")
+        raise Exception("Cannot initialize phase: len(grs) should equal len(ns)!")
       self.grs = np.array(grs)
     else:
       self.grs = np.zeros(self.K)
@@ -141,7 +141,7 @@ class Demo:
 class State:
   def __init__(self):
     self.logp = math.nan # evolution (coalescence and non-coalescence) log probability of this State
-    self.logu = math.nan # absolute probability P(state|origin)
+    self.logu = math.nan # absolute probability P(state|origin), currently not used
     self.logv = math.nan # absolute probability P(roots|state)
     self.children = list()
     self.parents = list()
@@ -278,6 +278,7 @@ class Bundle:
     parent = self.parent
     
     minlogmask = math.log(1e-6 * self.t_end)
+    logmask = self.logmask.copy()
     logmask[np.logical_and(logmask < minlogmask, logmask > -math.inf)] = minlogmask
     
     for _, state_parent in parent.states.items():
@@ -289,7 +290,7 @@ class Bundle:
     tmp = np.exp(logvs - parent.logv); tmp /= tmp.sum()
     nums = np.random.multinomial(MAX_LINKS, tmp)
     
-    for _, state_parent in parent.states.items():
+    for state_parent, num in zip(parent.states.values(), nums):
       if num == 0:
         continue
       
@@ -326,11 +327,25 @@ class Bundle:
       for state in self.states.values():
         state.logu = state.logp
     self.logu = logsumexp([state.logu for state in self.states.values()])
+  
+  def print(self):
+    print(f"{self.t_end}~{self.t}gen", flush = True)
+    print(f"populations: {self.phase.populations}", flush = True)
+    print(f"lineages: {len(self.lins)}~{sum([len(dests) for dests in self.dests])}", flush = True)
+    print(f"number of states: {len(self.states)} states", flush = True)
+    print(f"logv: {self.logv}", flush = True)
 
-
-def glike(tree, demo, samples = None):
-  if not samples:
+def glike(tree, demo, samples = None, verbose = False):
+  if samples is None:
     samples = {}
+  
+  if type(tree) != tskit.trees.Tree:
+    raise Exception("glike input type error: tree should be of type tskit.trees.Tree!")
+  if type(demo) != Demo:
+    raise Exception("glike input type error: demo should be of type Demo!")
+  if type(samples) != dict:
+    raise Exception("glike input type error: samples should be of type dict!")
+  
   times_nodes = iter(sorted([(round(tree.time(node),5), node) for node in tree.nodes()]))
   origin = Bundle(demo.phases[0])
   
@@ -352,61 +367,25 @@ def glike(tree, demo, samples = None):
   bundle.evaluate_logv()
   while bundle.child:
     bundle.emigrate()
+    if verbose:
+      print(f"{np.format_float_scientific(bundle.num_links, precision=6)} links\n", flush = True)
     bundle = bundle.child
     bundle.immigrate()
     bundle.evolve()
     bundle.evaluate_logv()
+    if verbose:
+      bundle.print()
   
-  # backward in time
-  bundle = origin
-  while bundle:
-    bundle.evaluate_logu()
-    bundle = bundle.parent
-  
-  return root.logu
+  return origin.logv
+
 
 def glike_trees(trees, demo, samples = None, prune = 0): # trees: generator or list of trees
+  if type(prune) not in (int, float):
+    raise Exception("glike_trees input type error: prune should be int or float!")
+  if not 0 <= prune <= 1:
+    raise Exception("glike_trees input error: prune should be within [0, 1]!")
+  
   logps = [glike(tree, demo, samples = samples) for tree in trees]
   logps.sort()
   logp = sum(logps[math.ceil(prune * len(logps)):])
   return logp
-
-
-def glike_verbose(tree, demo, samples = None):
-  if not samples:
-    samples = {}
-  times_nodes = iter(sorted([(round(tree.time(node),5), node) for node in tree.nodes()]))
-  origin = Bundle(demo.phases[0])
-  
-  # backward in time
-  bundle = origin
-  for t, node in times_nodes:
-    while t >= bundle.phase.t_end:
-      bundle.refresh()
-      bundle.transit()
-      bundle = bundle.parent
-    bundle.coal(t, node, tree.children(node), samples.get(node, None))
-  bundle.refresh()
-  root = bundle
-  
-  # forward in time
-  bundle = root
-  bundle.root()
-  bundle.evolve()
-  bundle.evaluate_logv()
-  while bundle.child:
-    bundle.emigrate()
-    print(f"{bundle.t}~{bundle.t_end}gen, {bundle.phase.K} populations, {len(bundle.child.lins)}-{len(bundle.lins)} lineages, {len(bundle.states)} states, {np.format_float_scientific(bundle.num_links, precision=6)} links.", flush = True)
-    bundle = bundle.child
-    bundle.immigrate()
-    bundle.evolve()
-    bundle.evaluate_logv()
-  print(f"{bundle.t}~{bundle.t_end}gen, {bundle.phase.K} populations, {len(bundle.lins)} lineages, {len(bundle.states)} states.", flush = True)
-  
-  # backward in time
-  bundle = origin
-  while bundle:
-    bundle.evaluate_logu()
-    bundle = bundle.parent
-  
-  return root
