@@ -117,7 +117,8 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   return out;
 }
 
-// it's required that P is row-first allocated in memory
+// W and P should be of the same size, and both row-first allocated
+// this function is not open to the user, so we don't explicitly check for errors
 static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
 {
   int N, K, M;
