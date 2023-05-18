@@ -107,7 +107,7 @@ def american_admixture_demography(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, 
   demography.add_symmetric_migration_rate_change(time = t2, populations = ["afr", "eur"], rate = m4)
   
   demography.add_mass_migration(time=t3, source="eur", dest="afr", proportion=1)
-  demography.add_symmetric_migration_rate_change(time = t2, populations = ["afr", "eur"], rate = 0)
+  demography.add_symmetric_migration_rate_change(time = t3, populations = ["afr", "eur"], rate = 0)
   
   demography.add_population_parameters_change(time=t4, initial_size = N_anc, growth_rate=0, population="afr")
   return demography
