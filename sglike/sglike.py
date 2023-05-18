@@ -72,7 +72,10 @@ class Phase:
     if Q is not None:
       if not (self.K == Q.shape[0] == Q.shape[1]):
         raise Exception("Cannot initialize phase: Q.shape[0] and Q.shape[1] should both equal len(ns)!")
-      self.Q = Q
+      if Q.any():
+        self.Q = Q
+      else:
+        self.Q = None
     else:
       self.Q = None
     
