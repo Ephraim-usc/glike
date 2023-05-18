@@ -70,48 +70,44 @@ def threeway_admixture_demography(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e
 
 
 ########## American Admixture ###########
-def american_admixture_demo(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admix, N_ooa, N_anc, gr_eur, gr_asia, gr_admix):
+def american_admixture_demo(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admix, N_ooa, N_anc, gr_eur, gr_asia, gr_admix, m1, m2, m3, m4):
+  Q0 = np.array([[-m1-m2, m1, m2, 0], [m1, -m1-m3, m3, 0], [m2, m3, -m2-m3, 0], [0, 0, 0, 0]])
+  Q1 = np.array([[-m1-m2, m1, m2], [m1, -m1-m3, m3], [m2, m3, -m2-m3]])
+  Q2 = np.array([[-m4, m4], [m4, -m4]])
+  
   demo = Demo()
-  demo.add_phase(Phase(0, [1/N_afr, (1/N_eur, gr_eur), (1/N_asia, gr_asia), (1/N_admix, gr_admix)],
-                      populations = ["afr", "eur", "asia", "admix"]))
-  P_admixture = np.array([
-      [1, 0, 0],
-      [0, 1, 0],
-      [0, 0, 1],
-      [r1, r2, 1-r1-r2]
-  ])
-  demo.add_phase(Phase(t1, [1/N_afr, (1/N_eur*math.exp(gr_eur*t1), gr_eur), (1/N_asia*math.exp(gr_asia*t1), gr_asia)], P = P_admixture,
-                      populations = ["afr", "eur", "asia"]))
-  P_asia_split = np.array([
-      [1, 0],
-      [0, 1],
-      [0, 1]
-  ])
-  demo.add_phase(Phase(t2, [1/N_afr, 1/N_ooa], P = P_asia_split,
-                      populations = ["afr", "eur"]))
-  P_ooa_split = np.array([
-      [1],
-      [1]
-  ])
-  demo.add_phase(Phase(t3, [1/N_afr], P = P_ooa_split,
-                       populations = ["afr"]))
-  demo.add_phase(Phase(t4, [1/N_anc],
-                       populations = ["afr"]))
+  demo.add_phase(Phase(0, t1, [1/N_afr, 1/N_eur, 1/N_asia, 1/N_admix], [0, gr_eur, gr_asia, gr_admix], Q = Q0, populations = ["afr", "eur", "asia", "admix"]))
+  
+  P_admixture = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1], [r1, r2, 1-r1-r2]])
+  demo.add_phase(Phase(t1, t2, [1/N_afr, 1/N_eur*math.exp(gr_eur * t1), 1/N_asia*math.exp(gr_asia * t1)], [0, gr_eur, gr_asia], P = P_admixture, Q = Q1, populations = ["afr", "eur", "asia"]))
+  
+  P_asia_split = np.array([[1, 0], [0, 1], [0, 1]])
+  demo.add_phase(Phase(t2, t3, [1/N_afr, 1/N_ooa], P = P_asia_split, Q = Q2, populations = ["afr", "eur"]))
+  
+  P_ooa_split = np.array([[1], [1]])
+  demo.add_phase(Phase(t3, [1/N_afr], P = P_ooa_split, populations = ["afr"]))
+  
+  demo.add_phase(Phase(t4, [1/N_anc], populations = ["afr"]))
   return demo
 
-def american_admixture_demography(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admix, N_ooa, N_anc, gr_eur, gr_asia, gr_admix):
+def american_admixture_demography(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admix, N_ooa, N_anc, gr_eur, gr_asia, gr_admix, m1, m2, m3, m4):
   demography = msprime.Demography()
   demography.add_population(name = "afr", initial_size = N_afr)
   demography.add_population(name = "eur", initial_size = N_eur, growth_rate = gr_eur)
   demography.add_population(name = "asia", initial_size = N_asia, growth_rate = gr_asia)
   demography.add_population(name = "admix", initial_size = N_admix, growth_rate = gr_admix)
+  demography.set_symmetric_migration_rate(populations = ["afr", "eur"], rate = m1)
+  demography.set_symmetric_migration_rate(populations = ["afr", "asia"], rate = m2)
+  demography.set_symmetric_migration_rate(populations = ["eur", "asia"], rate = m3)
   
   demography.add_admixture(time=t1, derived="admix", ancestral=["afr", "eur", "asia"], proportions = [r1, r2, 1-r1-r2])
   
   demography.add_mass_migration(time=t2, source="asia", dest="eur", proportion=1)
   demography.add_population_parameters_change(time=t2, initial_size = N_ooa, growth_rate=0, population="eur")
+  demography.add_symmetric_migration_rate_change(time = t2, populations = ["AFR", "EUR"], rate = m4)
   
   demography.add_mass_migration(time=t3, source="eur", dest="afr", proportion=1)
+  demography.add_symmetric_migration_rate_change(time = t2, populations = ["afr", "eur"], rate = 0)
   
   demography.add_population_parameters_change(time=t4, initial_size = N_anc, growth_rate=0, population="afr")
   return demography
