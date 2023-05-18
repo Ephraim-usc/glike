@@ -371,6 +371,9 @@ def glike(tree, demo, samples = None, verbose = False):
   bundle.root()
   bundle.evolve()
   bundle.evaluate_logv()
+  if verbose:
+      bundle.print()
+  
   while bundle.child:
     bundle.emigrate()
     if verbose:
