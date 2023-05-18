@@ -263,7 +263,7 @@ class Bundle:
     parent = self.parent
     for _, state_parent in parent.states.items():
       logPm = state_parent.logP.copy(); logPm[self.logmask == -math.inf] = -math.inf # masked logP
-      values, logps = npe.product_det(state_parent.logP)
+      values, logps = npe.product_det(logPm)
       logps = logps.sum(axis = 1)
       
       for value, logp in zip(values, logps):
