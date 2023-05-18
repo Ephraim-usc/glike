@@ -76,7 +76,8 @@ def american_admixture_demo(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admi
   Q2 = np.array([[-m4, m4], [m4, -m4]])
   
   demo = Demo()
-  demo.add_phase(Phase(0, t1, [1/N_afr, 1/N_eur, 1/N_asia, 1/N_admix], [0, gr_eur, gr_asia, gr_admix], Q = Q0, populations = ["afr", "eur", "asia", "admix"]), discretize = 200)
+  demo.add_phase(Phase(0, 1e-6, [1/N_afr, 1/N_eur, 1/N_asia, 1/N_admix], [0, gr_eur, gr_asia, gr_admix], populations = ["afr", "eur", "asia", "admix"]))
+  demo.add_phase(Phase(1e-6, t1, [1/N_afr, 1/N_eur, 1/N_asia, 1/N_admix], [0, gr_eur, gr_asia, gr_admix], Q = Q0, populations = ["afr", "eur", "asia", "admix"]), discretize = 200)
   
   P_admixture = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1], [r1, r2, 1-r1-r2]])
   demo.add_phase(Phase(t1, t2, [1/N_afr, 1/N_eur*math.exp(gr_eur * t1), 1/N_asia*math.exp(gr_asia * t1)], [0, gr_eur, gr_asia], P = P_admixture, Q = Q1, populations = ["afr", "eur", "asia"]), discretize = 200)
