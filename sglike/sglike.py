@@ -391,7 +391,6 @@ def glike(tree, demo, samples = None, flow = 1e4, spread = 1e-5, verbose = False
   
   return origin.logv
 
-
 def glike_trees(trees, demo, samples = None, flow = 1e4, spread = 1e-5, prune = 0): # trees: generator or list of trees
   if type(prune) not in (int, float):
     raise Exception("glike_trees input type error: prune should be int or float!")
