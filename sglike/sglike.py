@@ -341,6 +341,7 @@ class Bundle:
     shares = [f"{math.exp(logv - self.logv)*100:.2f}%" for logv in logvs]
     print(f"shares of top 5 states: {shares}", flush = True)
 
+
 def glike(tree, demo, samples = None, flow = 1e4, spread = 1e-5, verbose = False):
   if samples is None:
     samples = {}
