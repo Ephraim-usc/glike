@@ -44,24 +44,47 @@ class Phase:
   # Q: continuous migration matrix, will be discretized when added into demo
   # populations: names of populations
   def __init__(self, t, t_end, ns, grs = None, P = None, Q = None, populations = None):
-    self.t = t
-    self.t_end = t_end
     self.parent = None
     self.child = None
     
+    if type(t) not in (int, float):
+      raise Exception("Cannot initialize phase: t should be a number!")
+    if type(t_end) not in (int, float):
+      raise Exception("Cannot initialize phase: t_end should be a number!")
+    if not (0 <= t < t_end):
+      raise Exception("Cannot initialize phase: it's required that 0 <= t < t_end!")
+    self.t = float(t)
+    self.t_end = float(t_end)
+    
+    if type(ns) not in (list, np.ndarray):
+      raise Exception("Cannot initialize phase: ns should be a list or a numpy array!")
+    if (type(ns) is np.ndarray) and (ns.ndim != 1):
+      raise Exception("Cannot initialize phase: ns should be a list or a 1d array!")
+    if min(ns) <= 0:
+      raise Exception("Cannot initialize phase: ns should be all positive!")
     self.ns = np.array(ns)
     self.K = len(ns) # number of populations (during continuous period)
     
     if grs is not None:
+      if type(grs) not in (list, np.ndarray):
+        raise Exception("Cannot initialize phase: grs should be a list or a numpy array!")
+      if (type(grs) is np.ndarray) and (ns.ndim != 1):
+        raise Exception("Cannot initialize phase: grs should be a list or a 1d array!")
+      if min(grs) < 0:
+        raise Exception("Cannot initialize phase: grs should be all non-negative!")
       if len(grs) != self.K:
-        raise Exception("Cannot initialize phase: len(grs) should equal len(ns)!")
+        raise Exception("Cannot initialize phase: grs should be of equal length as ns!")
       self.grs = np.array(grs)
     else:
       self.grs = np.zeros(self.K)
     
     if P is not None:
+      if (type(P) != np.ndarray) or (P.ndim != 2):
+        raise Exception("Cannot initialize phase: P should be a 2d numpy array!")
       if P.shape[1] != self.K:
         raise Exception("Cannot initialize phase: P.shape[1] should equal len(ns)!")
+      if P.min() < 0:
+        raise Exception("Cannot initialize phase: P should be all non-negative!")
       self.P = P
     else:
       self.P = np.identity(self.K)
@@ -70,8 +93,12 @@ class Phase:
       self.logP = np.log(self.P)
     
     if Q is not None:
+      if (type(Q) != np.ndarray) or (Q.ndim != 2):
+        raise Exception("Cannot initialize phase: Q should be a 2d numpy array!")
       if not (self.K == Q.shape[0] == Q.shape[1]):
         raise Exception("Cannot initialize phase: Q.shape[0] and Q.shape[1] should both equal len(ns)!")
+      if Q.min() < 0:
+        raise Exception("Cannot initialize phase: Q should be all non-negative!")
       if Q.any():
         self.Q = Q
       else:
@@ -80,7 +107,10 @@ class Phase:
       self.Q = None
     
     if populations is not None:
-      assert len(populations) == self.K
+      if type(populations) not in (list, np.ndarray):
+        raise Exception("Cannot initialize phase: populations should be a list or a numpy array!")
+      if (type(populations) is np.ndarray) and (populations.ndim != 1):
+        raise Exception("Cannot initialize phase: populations should be a list or a 1d array!")
       self.populations = populations
     else:
       self.populations = ['ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i] for i in range(self.K)]
@@ -118,7 +148,7 @@ class Demo:
       if child.t_end != phase.t:
         raise Exception("Cannot add phase: t should equal to t_end of the last existing phase!")
       if child.K != phase.P.shape[0]:
-        raise Exception("Cannot add phase: phase.P.shape[0] is not equal to the number of populations in the last existing phase!")
+        raise Exception("Cannot add phase: phase.P.shape[0] should equal the number of populations of the last existing phase!")
       child.t_end = phase.t
       child.parent = phase
       phase.child = child
