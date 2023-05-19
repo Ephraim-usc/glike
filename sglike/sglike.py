@@ -97,8 +97,6 @@ class Phase:
         raise Exception("Cannot initialize phase: Q should be a 2d numpy array!")
       if not (self.K == Q.shape[0] == Q.shape[1]):
         raise Exception("Cannot initialize phase: Q.shape[0] and Q.shape[1] should both equal len(ns)!")
-      if Q.min() < 0:
-        raise Exception("Cannot initialize phase: Q should be all non-negative!")
       if Q.any():
         self.Q = Q
       else:
