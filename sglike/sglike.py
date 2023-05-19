@@ -351,7 +351,7 @@ def glike(tree, demo, samples = None, flow = 1e4, spread = 1e-5, verbose = False
     raise Exception("glike input type error: demo should be of type Demo!")
   if type(samples) != dict:
     raise Exception("glike input type error: samples should be of type dict!")
-  if type(flow) != int:
+  if type(flow) not in (int, float):
     raise Exception("glike input type error: flow should be an int!")
   if (type(spread) not in (int, float)) or (spread > 1):
     raise Exception("glike input type error: spread should be a number between 0 and 1 (e.g., 1e-5)!")
