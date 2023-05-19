@@ -351,6 +351,10 @@ def glike(tree, demo, samples = None, flow = 1e4, spread = 1e-5, verbose = False
     raise Exception("glike input type error: demo should be of type Demo!")
   if type(samples) != dict:
     raise Exception("glike input type error: samples should be of type dict!")
+  if type(flow) != int:
+    raise Exception("glike input type error: flow should be an int!")
+  if (type(spread) not in (int, float)) or (spread > 1):
+    raise Exception("glike input type error: spread should be a number between 0 and 1 (e.g., 1e-5)!")
   
   times_nodes = iter(sorted([(round(tree.time(node),5), node) for node in tree.nodes()]))
   origin = Bundle(demo.phases[0])
@@ -388,13 +392,13 @@ def glike(tree, demo, samples = None, flow = 1e4, spread = 1e-5, verbose = False
   return origin.logv
 
 
-def glike_trees(trees, demo, samples = None, prune = 0): # trees: generator or list of trees
+def glike_trees(trees, demo, samples = None, flow = 1e4, spread = 1e-5, prune = 0): # trees: generator or list of trees
   if type(prune) not in (int, float):
     raise Exception("glike_trees input type error: prune should be int or float!")
   if not 0 <= prune <= 1:
     raise Exception("glike_trees input error: prune should be within [0, 1]!")
   
-  logps = [glike(tree, demo, samples = samples) for tree in trees]
+  logps = [glike(tree, demo, samples = samples, flow = flow, spread = spread) for tree in trees]
   logps.sort()
   logp = sum(logps[math.ceil(prune * len(logps)):])
   return logp
