@@ -252,11 +252,11 @@ class Bundle:
       state.logP = self.phase.logP.T[outs, :]
       self.num_links += (state.logP + child.logmask > -math.inf).sum(axis = 1).prod(dtype = float)
   
-  def immigrate(self, MAX_LINKS = 1e4):
-    if self.parent.num_links <= MAX_LINKS:
+  def immigrate(self, flow, spread):
+    if self.parent.num_links <= flow:
       self.immigrate_deterministic()
     else:
-      self.immigrate_stochastic(MAX_LINKS)
+      self.immigrate_stochastic(flow, spread)
   
   def immigrate_deterministic(self):
     N = self.N
@@ -276,11 +276,11 @@ class Bundle:
         state_parent.children.append((logp, state))
         state.parents.append((logp, state_parent))
   
-  def immigrate_stochastic(self, MAX_LINKS):
+  def immigrate_stochastic(self, flow, spread):
     N = self.N
     parent = self.parent
     
-    minlogmask = math.log(1e-5 * self.t_end)
+    minlogmask = math.log(spread * self.t_end)
     logmask = self.logmask.copy()
     logmask[np.logical_and(logmask < minlogmask, logmask > -math.inf)] = minlogmask
     
@@ -291,7 +291,7 @@ class Bundle:
     
     logvs = np.array([state_parent.logv for state_parent in parent.states.values()])
     tmp = np.exp(logvs - parent.logv); tmp /= tmp.sum()
-    nums = np.random.multinomial(MAX_LINKS, tmp)
+    nums = np.random.multinomial(flow, tmp)
     
     for state_parent, num in zip(parent.states.values(), nums):
       if num == 0:
@@ -309,7 +309,7 @@ class Bundle:
         else:
           state = State()
           self.states[value] = state
-        logp_adj = logp + math.log(count) - math.log(MAX_LINKS) - (state_parent.logv - parent.logv + logw) # last term is the log prob. of sampling this state
+        logp_adj = logp + math.log(count) - math.log(flow) - (state_parent.logv - parent.logv + logw) # last term is the log prob. of sampling this state
         state_parent.children.append((logp_adj, state))
         state.parents.append((logp_adj, state_parent))
   
@@ -341,7 +341,7 @@ class Bundle:
     shares = [f"{math.exp(logv - self.logv)*100:.2f}%" for logv in logvs]
     print(f"shares of top 5 states: {shares}", flush = True)
 
-def glike(tree, demo, samples = None, verbose = False):
+def glike(tree, demo, samples = None, flow = 1e4, spread = 1e-5, verbose = False):
   if samples is None:
     samples = {}
   
@@ -379,7 +379,7 @@ def glike(tree, demo, samples = None, verbose = False):
     if verbose:
       print(f"{np.format_float_scientific(bundle.num_links, precision=6)} links\n", flush = True)
     bundle = bundle.child
-    bundle.immigrate()
+    bundle.immigrate(flow, spread)
     bundle.evolve()
     bundle.evaluate_logv()
     if verbose:
