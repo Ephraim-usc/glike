@@ -52,7 +52,7 @@ class Phase:
     if type(t_end) not in (int, float):
       raise Exception("Cannot initialize phase: t_end should be a number!")
     if not (0 <= t < t_end):
-      raise Exception("Cannot initialize phase: it's required that 0 <= t < t_end!")
+      raise Exception("Cannot initialize phase: it is required that 0 <= t < t_end!")
     self.t = float(t)
     self.t_end = float(t_end)
     
