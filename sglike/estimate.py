@@ -67,18 +67,18 @@ class Search():
     return True
 
 
-def estimate(trees, model, search, samples = None, prune = 0):
+def estimate(trees, model, search, samples = None, flow = 1e4, spread = 1e-5, prune = 0.5):
   x = search.get()
-  logp_max = glike_trees(trees, model(*x), samples = samples, prune = prune)
+  logp_max = glike_trees(trees, model(*x), samples = samples, flow = flow, spread = spread, prune = prune)
   print(str(x) + " " + str(logp_max), flush = True)
   
   x_prev = x.copy()
   for _ in range(100):
     for name in [name for name in search.names if name not in search.names_fixed]:
       x_up = search.up(name)
-      logp_up = glike_trees(trees, model(*x_up), samples = samples, prune = prune)
+      logp_up = glike_trees(trees, model(*x_up), samples = samples, flow = flow, spread = spread, prune = prune)
       x_down = search.down(name)
-      logp_down = glike_trees(trees, model(*x_down), samples = samples, prune = prune)
+      logp_down = glike_trees(trees, model(*x_down), samples = samples, flow = flow, spread = spread, prune = prune)
       
       if (logp_up > max(logp_down, logp_max)):
         search.set(x_up)
