@@ -138,7 +138,7 @@ class Demo:
       ns, grs, P, Q, populations = phase.ns, phase.grs, phase.P, phase.Q, phase.populations
       self.add_phase(Phase(phase.t, min(phase.t + discretize, phase.t_end), ns, grs, P = np.dot(P, scipy.linalg.expm(Q * min(discretize, phase.t_end-phase.t))), populations = populations))
       for t in np.arange(phase.t + discretize, phase.t_end, discretize):
-        t = float(t)
+        t = round(float(t), 8)
         self.add_phase(Phase(t, min(t + discretize, phase.t_end), ns*np.exp(grs*(t-phase.t)), grs, P = scipy.linalg.expm(Q * min(discretize, phase.t_end-t)), populations = populations))
       return
     
