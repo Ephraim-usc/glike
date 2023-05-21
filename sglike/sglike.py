@@ -218,6 +218,7 @@ class Bundle:
     
     with np.errstate(divide='ignore'):
       logmask_max = np.max(self.logmask, 1, keepdims=True)
+      logmask_max[logmask_max == -np.inf] = 0 # this is to avoid the (-inf - -inf) error
       bundle.logmask = np.log(np.dot(np.exp(self.logmask - logmask_max), self.phase.parent.P)) + logmask_max
     
     bundle.child = self
