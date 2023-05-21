@@ -50,8 +50,8 @@ def threeway_admixture_demography(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e
 
 
 ########## Neandertal admixture (stdpopsim 3I21) ###########
-def neandertal_admixture_demo(t1, t2, t3, t4, N_yri, N_ceu, N_nea, m):
-  Q = np.array([[0, 0, 0], [0, -m, m], [0, m, -m]])
+def neandertal_admixture_demo(t1, t2, t3, t4, N_yri, N_ceu, N_nea, m1):
+  Q = np.array([[0, 0, 0], [0, 0, 0], [0, m1, -m1]])
   demo = Demo()
   demo.add_phase(Phase(0, t1, [1/N_yri, 1/N_ceu, 1/N_nea], populations = ["yri", "ceu", "nea"]))
   demo.add_phase(Phase(t1, t2, [1/N_yri, 1/N_ceu, 1/N_nea], Q = Q, populations = ["yri", "ceu", "nea"]))
@@ -60,13 +60,13 @@ def neandertal_admixture_demo(t1, t2, t3, t4, N_yri, N_ceu, N_nea, m):
   demo.add_phase(Phase(t4, math.inf, [1/N_yri], P = np.array([[1], [1]]), populations = ["yri"]))
   return demo
 
-def neandertal_admixture_demography(t1, t2, t3, t4, N_yri, N_ceu, N_nea, m):
+def neandertal_admixture_demography(t1, t2, t3, t4, N_yri, N_ceu, N_nea, m1):
   demography = msprime.Demography()
   demography.add_population(name = "yri", initial_size = N_yri)
   demography.add_population(name = "ceu", initial_size = N_ceu)
   demography.add_population(name = "nea", initial_size = N_nea)
-  demography.add_symmetric_migration_rate_change(time = t1, populations = ["ceu", "nea"], rate = m)
-  demography.add_symmetric_migration_rate_change(time = t2, populations = ["ceu", "nea"], rate = 0)
+  demography.add_migration_rate_change(time = t1, rate = m1, source = "nea", dest = "ceu")
+  demography.add_migration_rate_change(time = t2, rate = 0, source = "nea", dest = "ceu")
   demography.add_mass_migration(t3, source = "ceu", dest = "yri", proportion = 1)
   demography.add_mass_migration(t4, source = "nea", dest = "yri", proportion = 1)
   return demography
