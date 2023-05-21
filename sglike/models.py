@@ -53,11 +53,11 @@ def threeway_admixture_demography(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e
 def neandertal_admixture_demo(t1, t2, t3, t4, N_yri, N_ceu, N_nea, m):
   Q = np.array([[0, 0, 0], [0, -m, m], [0, m, -m]])
   demo = Demo()
-  demo.add_phase(Phase(0, t1, [1/N_yri, 1/N_ceu, 1/N_nea]))
-  demo.add_phase(Phase(t1, t2, [1/N_yri, 1/N_ceu, 1/N_nea], Q = Q))
-  demo.add_phase(Phase(t2, t3, [1/N_yri, 1/N_ceu, 1/N_nea]))
-  demo.add_phase(Phase(t3, t4, [1/N_yri, 1/N_nea], P = np.array([[1, 0], [1, 0], [0, 1]])))
-  demo.add_phase(Phase(t4, math.inf, [1/N_yri], P = np.array([[1], [1]])))
+  demo.add_phase(Phase(0, t1, [1/N_yri, 1/N_ceu, 1/N_nea], populations = ["yri", "ceu", "nea"]))
+  demo.add_phase(Phase(t1, t2, [1/N_yri, 1/N_ceu, 1/N_nea], Q = Q, populations = ["yri", "ceu", "nea"]))
+  demo.add_phase(Phase(t2, t3, [1/N_yri, 1/N_ceu, 1/N_nea], populations = ["yri", "ceu", "nea"]))
+  demo.add_phase(Phase(t3, t4, [1/N_yri, 1/N_nea], P = np.array([[1, 0], [1, 0], [0, 1]]), populations = ["yri", "nea"]))
+  demo.add_phase(Phase(t4, math.inf, [1/N_yri], P = np.array([[1], [1]]), populations = ["yri"]))
   return demo
 
 def neandertal_admixture_demography(t1, t2, t3, t4, N_yri, N_ceu, N_nea, m):
