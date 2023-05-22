@@ -21,6 +21,16 @@ def logsumexp(x):
   else:
     return scipy.special.logsumexp(x)
 
+# we do not use np.arange because it has errors at ~10 digits after the decimal point
+def intervals(start, stop, step):
+  a = []
+  t = start
+  while t < stop:
+    a.append(t)
+    t += step
+  b = a[1:]+[stop]
+  return list(zip(a,b))
+
 # probability of coalescence at time a, given coalescence rate n and growth rate gr
 def logp_coal(n, gr, a):
   if gr == 0:
@@ -136,10 +146,10 @@ class Demo:
   def add_phase(self, phase, discretize = 100):
     if phase.Q is not None:
       ns, grs, P, Q, populations = phase.ns, phase.grs, phase.P, phase.Q, phase.populations
-      self.add_phase(Phase(phase.t, min(phase.t + discretize, phase.t_end), ns, grs, P = np.dot(P, scipy.linalg.expm(Q * min(discretize, phase.t_end-phase.t))), populations = populations))
-      for t in np.arange(phase.t + discretize, phase.t_end, discretize):
-        t = round(float(t), 8)
-        self.add_phase(Phase(t, min(t + discretize, phase.t_end), ns*np.exp(grs*(t-phase.t)), grs, P = scipy.linalg.expm(Q * min(discretize, phase.t_end-t)), populations = populations))
+      ts = intervals(phase.t, phase.t_end, discretize); t, t_end = ts[0]
+      self.add_phase(Phase(t, t_end, ns, grs, P = np.dot(P, scipy.linalg.expm(Q * (t_end - t))), populations = populations))
+      for t, t_end in ts[1:]:
+        self.add_phase(Phase(t, t_end, ns*np.exp(grs*(t-phase.t)), grs, P = scipy.linalg.expm(Q * (t_end - t)), populations = populations))
       return
     
     if len(self.phases):
