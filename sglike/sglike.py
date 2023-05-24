@@ -93,7 +93,7 @@ class Phase:
         raise Exception("Cannot initialize phase: P should be a 2d numpy array!")
       if P.shape[1] != self.K:
         raise Exception("Cannot initialize phase: P.shape[1] should equal len(ns)!")
-      if P.min() < -1e-8:
+      if P.min() < -1e-8: # as P is in numpy array format, we allow small numerical errors
         raise Exception("Cannot initialize phase: P should be all non-negative!")
       self.P = P
     else:
