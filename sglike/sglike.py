@@ -107,6 +107,8 @@ class Phase:
         raise Exception("Cannot initialize phase: Q should be a 2d numpy array!")
       if not (self.K == Q.shape[0] == Q.shape[1]):
         raise Exception("Cannot initialize phase: Q.shape[0] and Q.shape[1] should both equal len(ns)!")
+      if not np.allclose(Q.sum(axis = 1), 0, atol = 1e-8):
+        raise Exception("Cannot initialize phase: all rows of Q should sum up to 0!")
       if Q.any():
         self.Q = Q
       else:
