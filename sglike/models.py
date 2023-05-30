@@ -204,13 +204,13 @@ def nh_demo(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_
   Q1 = np.array([[-m_afr_eur-m_afr_asia-m_afr_pol, m_afr_eur, m_afr_asia, m_afr_pol], 
                  [m_afr_eur, -m_afr_eur-m_eur_asia-m_eur_pol, m_eur_asia, m_eur_pol], 
                  [m_afr_asia, m_eur_asia, -m_afr_asia-m_eur_asia-m_asia_pol, m_asia_pol],
-                 [m_afr_pol, m_eur_pol, -m_asia_pol, -m_afr_pol-m_eur_pol-m_asia_pol]])
+                 [m_afr_pol, m_eur_pol, m_asia_pol, -m_afr_pol-m_eur_pol-m_asia_pol]])
   
-  Q1 = np.array([[-m_afr_eur-m_afr_asia, m_afr_eur, m_afr_asia], 
+  Q2 = np.array([[-m_afr_eur-m_afr_asia, m_afr_eur, m_afr_asia], 
                  [m_afr_eur, -m_afr_eur-m_eur_asia, m_eur_asia], 
                  [m_afr_asia, m_eur_asia, -m_afr_asia-m_eur_asia]])
   
-  Q2 = np.array([[-m_afr_eur, m_afr_eur], 
+  Q3 = np.array([[-m_afr_eur, m_afr_eur], 
                  [m_afr_eur, -m_afr_eur]])
   
   demo = Demo()
