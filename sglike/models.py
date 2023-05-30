@@ -200,32 +200,43 @@ def ancient_europe_demography(t1, t2, t3, t4, t5, t6, r1, r2, r3, N_ana, N_neo, 
 
 
 ########## Native Hawaiian ###########
-def nh_demo(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_aa, N_ooa, N_anc, gr):
+def nh_demo(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_aa, N_ooa, N_anc, gr, m_afr_eur, m_afr_asia, m_afr_pol, m_eur_asia, m_eur_pol, m_asia_pol):
+  Q1 = np.array([[-m_afr_eur-m_afr_asia-m_afr_pol, m_afr_eur, m_afr_asia, m_afr_pol], 
+                 [m_afr_eur, -m_afr_eur-m_eur_asia-m_eur_pol, m_eur_asia, m_eur_pol], 
+                 [m_afr_asia, m_eur_asia, -m_afr_asia-m_eur_asia-m_asia_pol, m_asia_pol],
+                 [m_afr_pol, m_eur_pol, -m_asia_pol, -m_afr_pol-m_eur_pol-m_asia_pol]])
+  
+  Q1 = np.array([[-m_afr_eur-m_afr_asia, m_afr_eur, m_afr_asia], 
+                 [m_afr_eur, -m_afr_eur-m_eur_asia, m_eur_asia], 
+                 [m_afr_asia, m_eur_asia, -m_afr_asia-m_eur_asia]])
+  
+  Q2 = np.array([[-m_afr_eur, m_afr_eur], 
+                 [m_afr_eur, -m_afr_eur]])
+  
   demo = Demo()
   demo.add_phase(Phase(0, t1, [(1/N_admix, gr)]))
   P_admixture = np.array([
       [r1, r2, r3, 1-r1-r2-r3]
   ])
-  demo.add_phase(Phase(t1, t2, [1/N_afr, 1/N_eur, 1/N_asia, 1/N_pol], P = P_admixture))
+  demo.add_phase(Phase(t1, t2, [1/N_afr, 1/N_eur, 1/N_asia, 1/N_pol], P = P_admixture, Q = Q1, populations = ["afr", "eur", "asia", "pol"]), discretize = 100)
   P_pol_split = np.array([
       [1, 0, 0],
       [0, 1, 0],
       [0, 0, 1],
       [0, 0, 1]
   ])
-  demo.add_phase(Phase(t2, t3, [1/N_afr, 1/N_eur, 1/N_aa], P = P_pol_split))
+  demo.add_phase(Phase(t2, t3, [1/N_afr, 1/N_eur, 1/N_aa], P = P_pol_split, Q = Q2, populations = ["afr", "eur", "asia"]), discretize = 200)
   P_asia_split = np.array([
       [1, 0],
       [0, 1],
       [0, 1]
   ])
-  demo.add_phase(Phase(t3, t4, [1/N_afr, 1/N_ooa], P = P_asia_split))
+  demo.add_phase(Phase(t3, t4, [1/N_afr, 1/N_ooa], P = P_asia_split, Q = Q3, populations = ["afr", "eur"]), discretize = 200)
   P_ooa_split = np.array([
       [1],
       [1]
   ])
   demo.add_phase(Phase(t4, math.inf, [1/N_anc], P = P_ooa_split))
-  demo.phases[0].mode = "deterministic"
   return demo
 
 def nh_demography(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_aa, N_ooa, N_anc, gr):
