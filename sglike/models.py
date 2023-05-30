@@ -214,7 +214,7 @@ def nh_demo(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_
                  [m_afr_eur, -m_afr_eur]])
   
   demo = Demo()
-  demo.add_phase(Phase(0, t1, [(1/N_admix, gr)]))
+  demo.add_phase(Phase(0, t1, [1/N_admix], [gr], populations = ["admix"]))
   P_admixture = np.array([
       [r1, r2, r3, 1-r1-r2-r3]
   ])
