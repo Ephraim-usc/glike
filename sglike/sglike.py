@@ -292,7 +292,8 @@ class Bundle:
           idx = child.dict[dest]
           outs[idx] = pop
       state.logP = self.phase.logP.T[outs, :]
-      self.num_links += (state.logP + child.logmask > -math.inf).sum(axis = 1).prod(dtype = float)
+      with np.errstate(over='ignore'): # if too large then just let it be inf
+        self.num_links += (state.logP + child.logmask > -math.inf).sum(axis = 1).prod(dtype = float)
   
   def immigrate(self, flow, spread):
     if self.parent.num_links <= flow:
