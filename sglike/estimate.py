@@ -1,4 +1,4 @@
-from .sglike import *
+from .glike import *
 
 class Search():
   def __init__(self, names, values, limits = None, names_fixed = None, precision = 0.05):
