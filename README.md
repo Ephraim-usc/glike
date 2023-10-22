@@ -12,9 +12,9 @@ Installation
 
 download the package and install from local:
 
-    git clone https://github.com/Ephraim-usc/sglike.git
+    git clone https://github.com/Ephraim-usc/glike.git
     
-    python3 -m pip install ./sglike
+    python3 -m pip install ./glike
 
 There are three pre-requisite packages: `tskit`, `numpy` and `scipy`.
 Because glike contains a C extension module, a proper C environment is required.
@@ -107,8 +107,6 @@ Empirically, if the output parameters take values very close to the lower or upp
 About this project
 -------------
 
-This is an ongoing project, please refer to our poster at ASHG 2022 for a brief introduction.
+This project is introduced [here](https://www.biorxiv.org/content/10.1101/2023.10.10.561787v1).
 
 If you are interested in knowing more, please let us know. Email the author: caoqifan@usc.edu
-
-![](images/poster_ashg.png)
