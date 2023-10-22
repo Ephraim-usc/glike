@@ -1,5 +1,5 @@
 import msprime
-from .sglike import *
+from .glike import *
 
 
 ########## Twoway Admixture ###########
