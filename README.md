@@ -34,7 +34,10 @@ Core functionality
     logp = glike.glike_trees(trees, demo, samples, prune)
     
 Where `trees` is any enumerable that contains `tskit` genealogical trees.
-It should be noted that a `tskit.TreeSequence` object is not directly iterable, and it's the user's duty to manually pick out trees that are selective neutral and mutually independent, and to wrap them in a list or other iterable objects. 
+It should be noted that a `tskit.TreeSequence` object is not directly iterable, and 
+
+Note that it is the user's duty to manually pick out trees that are selective neutral and independent, and to wrap them in a list or other iterable objects.
+A `tskit.TreeSequence` object is not directly iterable and thus not a legitimate input. Although `ts.trees()` would work grammatically, it is generally not recommended as all trees are being used, whereas neighboring trees are usually not independent from each other. 
 
 `demo` is the hypothesized Demography created manually (see the following section) or from provided models in `models.py`.
 
@@ -46,7 +49,7 @@ The default is an empty dictionary.
 `prune` is the proportion of discarding low likelihood trees, enabling this feature often reduces noise when dealing with reconstructed trees.
 The default is zero, meaning that all trees are reserved. 
 
-This function returns the probability that such genealogical trees are generated under the hypothesized demography.
+This function returns the log probability that such genealogical trees are generated under the hypothesized demography.
 
 
 Demography customization
