@@ -56,7 +56,7 @@ A Phase is created by
 
     phase = glike.Phase(t, t_end, ns, grs, P, Q, populations)
 
-Where `t` is the starting (most recent) time, `t_end` is the ending (most ancient) time, `ns` is the vector of coalescent rates, `grs` is the vector of growth rates, `P` is the mass migration matrix at the beginning of this phase, `Q` is the continuous migration rate matrix, and `populations` is the vector of population names. Only `t`, `t_end` and `ns` are required , other arguments are optional. The number of populations in this phase should be consistent among parameters, so it is required that
+Where `t` is the starting (most recent) time, `t_end` is the ending (most ancient) time, `ns` is the vector of coalescent rates, `grs` is the vector of growth rates (a positive value means the population size is growing forward in time, or equivalently, the coalescent rate is growing backward in time), `P` is the mass migration matrix at the beginning of this phase, `Q` is the continuous migration rate matrix, and `populations` is the vector of population names. Only `t`, `t_end` and `ns` are required , other arguments are optional. The number of populations in this phase should be consistent among parameters, so it is required that
 
     len(ns) == len(grs) == P.shape[1] == Q.shape[1] == len(populations)
 
