@@ -105,7 +105,7 @@ We use a Search object to tell the information about initial values and restrict
 
     search = Search(names, values, limits, fixed)
 
-Where `names` is a list of the names of the parameters, `values` is a list of initial parameter values, `fixed` is a list of the names of fixed parameters so that their values will keep untouched. `limits` is a list of tuples `(low, high)` where `low` and `high` could be a number or the name of another parameter. For example, if our model has three events happening between 0 and 100 generations ago, in order to estimate the times of these three events we could do
+Where `names` is a list of the names of the parameters, `values` is a list of initial parameter values, `fixed` is a list of the names of fixed parameters so that their values will keep untouched. `limits` is a list of tuples `(low, high)` where `low` and `high` could be a number or a string expression containing names of the parameters (which will be evaluated at runtime using `eval()`). For example, if our model has three events happening between 0 and 100 generations ago, in order to estimate the times of these three events we could do
 
     names = ["t1", "t2", "t3"]
     values = [25, 50, 75] # or other initial values you see fit
