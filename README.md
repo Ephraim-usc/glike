@@ -39,7 +39,9 @@ It should be noted that a `tskit.TreeSequence` object is not directly iterable, 
 `demo` is the hypothesized Demography created manually (see the following section) or from provided models in `models.py`.
 
 `samples` is the dict that contains `sample:population` pairs, which specifies which sample is collected from which population.
-`population` could be specified in integer as the population index, or in string as the population name.
+The population can be identified either by an integer representing the population index or a string denoting the population name.
+Samples not mentioned in the dictionary are considered potentially originating from any available population at the time of the sample.
+The default is an empty dictionary.
 
 `prune` is the proportion of discarding low likelihood trees, this often reduces noise when dealing with reconstructed trees.
 
