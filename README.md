@@ -36,7 +36,7 @@ Core functionality
 Where `trees` is any enumerable that contains `tskit` genealogical trees.
 Note that it is the user's duty to manually pick out trees that are selective neutral and independent, and to wrap them in a list or other iterable objects.
 A `tskit.TreeSequence` object is not directly iterable and thus not a legitimate input. 
-Although calling `ts.trees()` to enumerate all trees in the `tskit.TreeSequence` would work grammatically, it is not recommended in most cases, because neighboring trees are generally not independent from each other. 
+Although calling `ts.trees()` to enumerate all trees in the `tskit.TreeSequence` would work grammatically, it is not recommended in most cases, since neighboring trees are generally not independent from each other. 
 
 `demo` is the hypothesized Demography created manually (see the following section) or from provided models in `models.py`.
 
