@@ -40,10 +40,11 @@ It should be noted that a `tskit.TreeSequence` object is not directly iterable, 
 
 `samples` is the dict that contains `sample:pop` pairs, which specifies which sample is collected from which population.
 The population can be identified either by an integer representing the population index or a string denoting the population name.
-Samples not mentioned in the dictionary are considered potentially originating from any available population at the time of the sample.
+Samples not mentioned in the dictionary are considered potentially from any available population at the time of the sample.
 The default is an empty dictionary.
 
-`prune` is the proportion of discarding low likelihood trees, this often reduces noise when dealing with reconstructed trees.
+`prune` is the proportion of discarding low likelihood trees, enabling this feature often reduces noise when dealing with reconstructed trees.
+The default is zero, meaning that all trees are reserved. 
 
 This function returns the probability that such genealogical trees are generated under the hypothesized demography.
 
