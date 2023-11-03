@@ -1,7 +1,7 @@
 gLike
 ========
 
-genealogical Likelihood (gLike) is a maximum likelihood method to infer the demographic history
+Genealogical Likelihood (gLike) is a maximum likelihood method to infer the demographic history
 of given populations that best explains the observed genealogical relationships between sample haplotypes. 
 This is, to our knowledge, the first attempt to infer all types of parameters
 (split times, admixture times and proportions, migration rates) in a complex demography model under a unified framework.
