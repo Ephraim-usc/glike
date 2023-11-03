@@ -48,6 +48,7 @@ def logp_noncoal(n, gr, a, b):
 
 class Phase:
   # t: beginning time of Phase
+  # t_end: ending time of Phase
   # ns: list or 1d array of coalescent rates
   # grs: list or 1d array of growth rates
   # P: transition matrix at beginning of Phase
