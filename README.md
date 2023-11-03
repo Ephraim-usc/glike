@@ -54,15 +54,15 @@ And a number of Phases are added into this Demography
 
 A Phase is created by
 
-    phase = glike.Phase(t, ns, grs, P, Q, populations)
+    phase = glike.Phase(t, t_end, ns, grs, P, Q, populations)
 
-Where `t` is the starting timee, `ns` is the vector of coalescent rates, `grs` is the vector of growth rates, `P` is the mass migration matrix at the beginning of this phase, `Q` is the continuous migration rate matrix, and `populations` is the vector of population names. Only `t` and `ns` are required , other arguments are optional. The number of populations in this phase should be consistent among parameters, so it is required that
+Where `t` is the starting (most recent) time, `t_end` is the ending (most ancient) time, `ns` is the vector of coalescent rates, `grs` is the vector of growth rates, `P` is the mass migration matrix at the beginning of this phase, `Q` is the continuous migration rate matrix, and `populations` is the vector of population names. Only `t` and `ns` are required , other arguments are optional. The number of populations in this phase should be consistent among parameters, so it is required that
 
     len(ns) == len(grs) == P.shape[1] == Q.shape[1] == len(populations)
 
 When adding new Phases into Demogrpahy, the times and dimensions should match. Specifically, if the last added phase is `phases[i]`, and we are trying to add another phase `phases[i+1]`, then it is required that
 
-    phases[i].t < phases[i+1].t
+    phases[i].t < phases[i].t_end = phases[i+1].t < phases[i+1].t_end
     phases[i].P.shape[1] == phases[i+1].P.shape[0]
 
 gLike cannot be applied directly to a demography that contains continuous migrations, and requires it to be discretized first:
