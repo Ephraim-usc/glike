@@ -68,9 +68,9 @@ When adding new Phases into Demogrpahy, the times and dimensions should match. S
 
 gLike cannot be applied directly to a demography that contains continuous migrations, and requires it to be discretized first:
 
-    demo = demo.discretize(delta)
+    demo.add_phase(phase, discretize)
 
-Where `delta` is a float number indicating the time interval (that is, any `phase` with `phase.Q != None` will be sliced into chunks of length `delta`).
+Where `discretize` is a float number indicating the time interval (that is, if `phase.Q != None`, `phase` will be sliced into chunks of `discretize` generations).
 
 The resulting demography can be visualized by
 
