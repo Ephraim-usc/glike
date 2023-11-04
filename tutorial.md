@@ -49,7 +49,7 @@ The three-way admixture model as defined in the glike language is
       demo.add_phase(glike.Phase(0, t1, [1/N]))
       demo.add_phase(glike.Phase(t1, t2, [1/N_a, 1/N_b], P = np.array([[r1, 1-r1]])))
       demo.add_phase(glike.Phase(t2, t3, [1/N_a, 1/N_c, 1/N_d], P = np.array([[1, 0, 0], [0, r2, 1-r2]])))
-      demo.add_phase(glike.Phase(t3, math.inf, [1/N_e], P = np.array([[1], [1], [1]])))
+      demo.add_phase(glike.Phase(t3, np.inf, [1/N_e], P = np.array([[1], [1], [1]])))
       return demo
 
 Where the demography consists of four phases, each defined by the starting and ending time, the list of inverse population sizes, and the mass migration matrices.
