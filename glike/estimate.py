@@ -67,7 +67,7 @@ class Search():
     return True
 
 
-def estimate(trees, model, search, samples = None, flow = 1e4, spread = 1e-5, prune = 0.5):
+def estimate(trees, model, search, samples = None, flow = 10000, spread = 1e-5, prune = 0.5):
   x = search.get()
   logp = glike_trees(trees, model(*x), samples = samples, flow = flow, spread = spread, prune = prune)
   print(str(x) + " " + str(logp), flush = True)
