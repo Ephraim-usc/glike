@@ -67,14 +67,14 @@ class Search():
     return True
 
 
-def estimate(trees, model, search, samples = None, flow = 10000, spread = 1e-5, prune = 0.5):
+def estimate(trees, model, search, samples = None, flow = 10000, spread = 1e-5, prune = 0.5, epochs = 100):
   x = search.get()
   logp = glike_trees(trees, model(*x), samples = samples, flow = flow, spread = spread, prune = prune)
   print(str(x) + " " + str(logp), flush = True)
   
   xs = []
   logps = []
-  for _ in range(100):
+  for _ in range(epochs):
     for name in [name for name in search.names if name not in search.names_fixed]:
       x = search.get()
       logp = glike_trees(trees, model(*x), samples = samples, flow = flow, spread = spread, prune = prune)
