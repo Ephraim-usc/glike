@@ -7,7 +7,7 @@ from tqdm import tqdm
 import tsinfer
 
 
-def write_relate_input(arg, name):
+def write_relate_input(arg, name, recomb_rate = 1e-8):
   haps_file = open(name + ".haps", "wt")
   prev_position = 0
   for variant in tqdm(arg.variants(), total = arg.num_mutations):
@@ -29,7 +29,7 @@ def write_relate_input(arg, name):
     string = "UNR" + str(sample + 1) + " NA" + " 0\n"
     bytes = sample_file.write(string)
   sample_file.close()
-  
+
   map_file = open(name + ".map", "wt")
   map_file.write("pos COMBINED_rate Genetic_Map\n")
   prev_position = 0
@@ -39,8 +39,8 @@ def write_relate_input(arg, name):
       continue
     prev_position = position
     
-    string = str(position) + " " + str(1.0) + " "
-    string = string + str(variant.position / 1000000) + "\n"
+    string = str(position) + " " + str(recomb_rate * 1e8) + " "
+    string = string + str(variant.position * recomb_rate * 1e2) + "\n"
     map_file.write(string)
   map_file.close()
 
