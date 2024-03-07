@@ -121,8 +121,10 @@ def american_admixture_demography(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, 
 ########## Ancient Europe (stdpopsim 4A21) ###########
 def ancient_europe_demo(t1, t2, t3, t4, t5, t6, r1, r2, r3, N_ana, N_neo, N_whg, N_bronze, N_yam, N_ehg, N_chg, N_ne, N_wa, N_ooa, gr):
   demo = Demo()
-  demo.add_phase(Phase(0, t1, [1/N_ana, 1/N_neo, 1/N_whg, (1/(N_bronze*math.exp(gr*t1)) , gr), 1/N_yam, 1/N_ehg, 1/N_chg],
-                      populations = ["ana", "neo", "whg", "bronze", "yam", "ehg", "chg"]))
+  demo.add_phase(Phase(0, t1, 
+                       ns = [1/N_ana, 1/N_neo, 1/N_whg, 1/(N_bronze*math.exp(gr*t1)), 1/N_yam, 1/N_ehg, 1/N_chg],
+                       grs = [0.0, 0.0, 0.0, gr, 0.0, 0.0, 0.0],
+                       populations = ["ana", "neo", "whg", "bronze", "yam", "ehg", "chg"]))
   P_bronze_admixture = np.array([
       [1, 0, 0, 0, 0, 0],
       [0, 1, 0, 0, 0, 0],
