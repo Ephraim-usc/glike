@@ -119,4 +119,4 @@ About this project
 
 This project is introduced [here](https://www.biorxiv.org/content/10.1101/2023.10.10.561787v1).
 
-If you are interested in knowing more, please let us know. Email the author: caoqifan@usc.edu
+If you are interested in knowing more, please let us know. Email the author: fcq1116@gmail.com
