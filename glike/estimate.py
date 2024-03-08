@@ -84,9 +84,11 @@ def estimate(trees, model, search, samples = None, flow = 10000, spread = 1e-5, 
       logp_down = glike_trees(trees, model(*x_down), samples = samples, flow = flow, spread = spread, prune = prune)
       
       if verbose:
+        print(" ", flush = True)
         print("x_up: " + str(x_up) + " " + str(logp_up), flush = True)
         print("x: " + str(x) + " " + str(logp), flush = True)
         print("x_down: " + str(x_down) + " " + str(logp_down), flush = True)
+        print(" ", flush = True)
       
       if (logp_up > max(logp_down, logp)):
         search.set(x_up)
