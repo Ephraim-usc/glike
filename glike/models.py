@@ -75,9 +75,9 @@ def neandertal_admixture_demography(t1, t2, t3, t4, N_yri, N_ceu, N_nea, m1):
 
 ########## American Admixture (stdpopsim 4B11) ###########
 def american_admixture_demo(t1, t2, t3, t4, r1, r2, N_afr, N_eur, N_asia, N_admix, N_ooa, N_anc, gr_eur, gr_asia, gr_admix, m1, m2, m3, m4):
-  Q0 = np.array([[-m1-m2, m1, m2, 0], [m1, -m1-m3, m3, 0], [m2, m3, -m2-m3, 0], [0, 0, 0, 0]])
-  Q1 = np.array([[-m1-m2, m1, m2], [m1, -m1-m3, m3], [m2, m3, -m2-m3]])
-  Q2 = np.array([[-m4, m4], [m4, -m4]])
+  Q0 = np.array([[-m1-m2, m1, m2, 0], [m1, -m1-m3, m3, 0], [m2, m3, -m2-m3, 0], [0, 0, 0, 0]]) if max(m1, m2, m3) > 0 else None
+  Q1 = np.array([[-m1-m2, m1, m2], [m1, -m1-m3, m3], [m2, m3, -m2-m3]]) if max(m1, m2, m3) > 0 else None
+  Q2 = np.array([[-m4, m4], [m4, -m4]]) if m4 > 0 else None
   
   demo = Demo()
   demo.add_phase(Phase(0, 1e-6, [1/N_afr, 1/N_eur, 1/N_asia, 1/N_admix], [0, gr_eur, gr_asia, gr_admix], populations = ["afr", "eur", "asia", "admix"]))
