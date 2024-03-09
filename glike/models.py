@@ -202,11 +202,12 @@ def ancient_europe_demography(t1, t2, t3, t4, t5, t6, r1, r2, r3, N_ana, N_neo, 
 
 
 ########## Native Hawaiian ###########
-def nh_demo(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_aa, N_ooa, N_anc, gr, m_afr_eur, m_afr_asia, m_afr_pol, m_eur_asia, m_eur_pol, m_asia_pol):
+def native_hawaiians_demo(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_aa, N_ooa, N_anc, gr, 
+                          m_afr_eur = 0.0, m_afr_asia = 0.0, m_afr_pol = 0.0, m_eur_asia = 0.0, m_eur_pol = 0.0, m_asia_pol = 0.0):
   Q = np.array([[-m_afr_eur-m_afr_asia-m_afr_pol, m_afr_eur, m_afr_asia, m_afr_pol], 
                 [m_afr_eur, -m_afr_eur-m_eur_asia-m_eur_pol, m_eur_asia, m_eur_pol], 
                 [m_afr_asia, m_eur_asia, -m_afr_asia-m_eur_asia-m_asia_pol, m_asia_pol],
-                [m_afr_pol, m_eur_pol, m_asia_pol, -m_afr_pol-m_eur_pol-m_asia_pol]])
+                [m_afr_pol, m_eur_pol, m_asia_pol, -m_afr_pol-m_eur_pol-m_asia_pol]]) if max(m_afr_eur, m_afr_asia, m_afr_pol, m_eur_asia, m_eur_pol, m_asia_pol) > 0 else None
   
   demo = Demo()
   demo.add_phase(Phase(0, t1, [1/N_admix], [gr], populations = ["admix"]))
@@ -234,6 +235,27 @@ def nh_demo(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_
   demo.add_phase(Phase(t4, math.inf, [1/N_anc], P = P_ooa_split))
   return demo
 
+def native_hawaiians_demography(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_aa, N_ooa, N_anc, gr):
+  demography = msprime.Demography()
+  demography.add_population(name = "admix", initial_size = N_admix, growth_rate = gr)
+  demography.add_population(name = "afr", initial_size = N_afr)
+  demography.add_population(name = "eur", initial_size = N_eur)
+  demography.add_population(name = "asia", initial_size = N_asia)
+  demography.add_population(name = "pol", initial_size = N_pol)
+  
+  demography.add_admixture(time=t1, derived="admix", ancestral=["afr", "eur", "asia", "pol"], proportions = [r1, r2, r3, 1-r1-r2-r3])
+  
+  demography.add_population_split(time=t2, derived=["pol"], ancestral="asia")
+  demography.add_population_parameters_change(time=t2, initial_size = N_aa, growth_rate=0, population="asia")
+  
+  demography.add_population_split(time=t3, derived=["asia"], ancestral="eur")
+  demography.add_population_parameters_change(time=t3, initial_size = N_ooa, growth_rate=0, population="eur")
+  
+  demography.add_population_split(time=t4, derived=["eur"], ancestral="afr")
+  demography.add_population_parameters_change(time=t4, initial_size = N_anc, growth_rate=0, population="afr")
+  return demography
+
+'''
 def nh_demo_(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_aa, N_ooa, N_anc, gr, m_afr_eur, m_afr_asia, m_afr_pol, m_eur_asia, m_eur_pol, m_asia_pol):
   Q1 = np.array([[-m_afr_eur-m_afr_asia-m_afr_pol, m_afr_eur, m_afr_asia, m_afr_pol], 
                  [m_afr_eur, -m_afr_eur-m_eur_asia-m_eur_pol, m_eur_asia, m_eur_pol], 
@@ -272,23 +294,5 @@ def nh_demo_(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N
   ])
   demo.add_phase(Phase(t4, math.inf, [1/N_anc], P = P_ooa_split))
   return demo
+'''
 
-def nh_demography(t1, t2, t3, t4, r1, r2, r3, N_admix, N_afr, N_eur, N_asia, N_pol, N_aa, N_ooa, N_anc, gr):
-  demography = msprime.Demography()
-  demography.add_population(name = "admix", initial_size = N_admix, growth_rate = gr)
-  demography.add_population(name = "afr", initial_size = N_afr)
-  demography.add_population(name = "eur", initial_size = N_eur)
-  demography.add_population(name = "asia", initial_size = N_asia)
-  demography.add_population(name = "pol", initial_size = N_pol)
-  
-  demography.add_admixture(time=t1, derived="admix", ancestral=["afr", "eur", "asia", "pol"], proportions = [r1, r2, r3, 1-r1-r2-r3])
-  
-  demography.add_population_split(time=t2, derived=["pol"], ancestral="asia")
-  demography.add_population_parameters_change(time=t2, initial_size = N_aa, growth_rate=0, population="asia")
-  
-  demography.add_population_split(time=t3, derived=["asia"], ancestral="eur")
-  demography.add_population_parameters_change(time=t3, initial_size = N_ooa, growth_rate=0, population="eur")
-  
-  demography.add_population_split(time=t4, derived=["eur"], ancestral="afr")
-  demography.add_population_parameters_change(time=t4, initial_size = N_anc, growth_rate=0, population="afr")
-  return demography
