@@ -1,9 +1,23 @@
 from .glike import *
 
-def estimate(trees, samples, model, transform, limits, flow = 10000, spread = 1e-5, prune = 0.5, epochs = 100, verbose = False):
-  print(, flush = True)
+def round_sig(x, sig = 6):
+  if type(x) is list:
+    return [round_sig(x_, sig) for x_ in x]
+  else:
+    return round(x, sig-int(math.floor(math.log10(abs(x))))-1)
 
-
+def estimate(trees, model, samples, transform, limits, flow = 10000, spread = 1e-5, prune = 0.5, epochs = 100, verbose = False):
+  _population_size = 10
+  population = []; scores = []
+  
+  print("Estimating parameters by Genetic Algorithm. Step 1: generating initial population", flush = True)
+  for _ in range(_population_size):
+    values = [random.uniform(low, high) for low, high in limits]
+    logp = glike_trees(trees, model(*transform(values)), samples = samples, flow = flow, spread = spread, prune = prune)
+    print("{round_sig(values)}, {logp}", flush = True)
+    population.append(values); scores.append(logp)
+  
+  
 
 
 
