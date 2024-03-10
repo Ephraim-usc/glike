@@ -16,9 +16,16 @@ def generate_offspring(values1, values2, limits, precisions):
     values.append(value)
   return values
 
-def estimate(trees, model, samples, transform, limits, precisions, flow = 10000, spread = 1e-5, prune = 0.5, epochs = 100, verbose = False):
+def generate_up_down(values, limits, precisions, pos):
+  values_up = values.copy(); values_down = values.copy()
+  values_up[pos] = min(limits[pos][1], values[pos] + precisions[pos])
+  values_down[pos] = max(limits[pos][0], values[pos] - precisions[pos])
+  return values_up, values_down
+
+def estimate(trees, model, samples, transform, limits, precisions, flow = 10000, spread = 1e-5, prune = 0.5, verbose = False):
   _population_size = 10
-  _num_offsprings = 100
+  _num_offsprings = 50
+  _num_epochs = 10
   population = []; scores = []
   
   print("Estimating parameters. Step 1: generating initial population (Genetic Algorithm)", flush = True)
@@ -56,6 +63,27 @@ def estimate(trees, model, samples, transform, limits, precisions, flow = 10000,
       print("\n")
   
   print("Estimating parameters. Step 3: Refining best genome", flush = True)
+  values = population[0]; score = scores[0]
+  for _ in range(_num_epochs):
+    for pos in range(len(values)):
+      values_up, values_down = generate_up_down(values, limits, precisions, pos)
+      logp_up = glike_trees(trees, model(*transform(values_up)), samples = samples, flow = flow, spread = spread, prune = prune)
+      print(f"{round_sig(transform(values_up))}, {logp_up}", flush = True)
+      logp = glike_trees(trees, model(*transform(values)), samples = samples, flow = flow, spread = spread, prune = prune)
+      print(f"{round_sig(transform(values))}, {logp}", flush = True)
+      logp_down = glike_trees(trees, model(*transform(values_down)), samples = samples, flow = flow, spread = spread, prune = prune)
+      print(f"{round_sig(transform(values_down))}, {logp_down}", flush = True)
+      
+      if (logp_up > max(logp_down, logp)):
+        values = values_up.copy(); logp = logp_up
+      elif (logp_down > max(logp_up, logp)):
+        values = values_down.copy(); logp = logp_down
+    
+    print("\nCurrent best at epoch {_}:", flush = True)
+    print(f"{round_sig(transform(values))}, {logp}", flush = True)
+    print("\n")
+  
+  return values, logp
   
 
 
