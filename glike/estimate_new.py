@@ -1,4 +1,5 @@
 from .glike import *
+import random
 
 def round_sig(x, sig = 4):
   if type(x) is list:
@@ -17,7 +18,7 @@ def generate_offspring(values1, values2, limits, precisions):
 
 def estimate(trees, model, samples, transform, limits, precisions, flow = 10000, spread = 1e-5, prune = 0.5, epochs = 100, verbose = False):
   _population_size = 10
-  _num_children = 100
+  _num_offsprings = 100
   population = []; scores = []
   
   print("Estimating parameters. Step 1: generating initial population (Genetic Algorithm)", flush = True)
@@ -35,11 +36,11 @@ def estimate(trees, model, samples, transform, limits, precisions, flow = 10000,
     print(f"{round_sig(transform(genome))}, {score}", flush = True)
   print("\n")
   
-  print("Estimating parameters. Step 2:  (Genetic Algorithm)", flush = True)
+  print("Estimating parameters. Step 2: generating offsprings (Genetic Algorithm)", flush = True)
   for _ in range(_num_offsprings):
     idx1, idx2 = random.randrange(_population_size), random.randrange(_population_size)
     values1, values2 = population[idx1], population[idx2]
-    values = generate_offspring(values1, values2)
+    values = generate_offspring(values1, values2, limits, precisions)
     logp = glike_trees(trees, model(*transform(values)), samples = samples, flow = flow, spread = spread, prune = prune)
     print(f"{round_sig(transform(values))}, {logp}", flush = True)
     
@@ -48,13 +49,14 @@ def estimate(trees, model, samples, transform, limits, precisions, flow = 10000,
       population = [genome for score, genome in sorted(zip(scores, population), reverse = True)]
       scores = [score for score, genome in sorted(zip(scores, population), reverse = True)]
     
-    if _%population_size == 0:
-      print("\nCurrent population:", flush = True)
+    if _ > 0 and _%_population_size == 0:
+      print("\nPopulation at generation {_//_population_size}:", flush = True)
       for genome, score in zip(population, scores):
         print(f"{round_sig(transform(genome))}, {score}", flush = True)
       print("\n")
-
-
+  
+  print("Estimating parameters. Step 3: Refining best genome", flush = True)
+  
 
 
 
