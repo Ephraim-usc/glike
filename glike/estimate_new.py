@@ -10,13 +10,14 @@ def estimate(trees, model, samples, transform, limits, flow = 10000, spread = 1e
   _population_size = 10
   population = []; scores = []
   
-  print("Estimating parameters by Genetic Algorithm. Step 1: generating initial population", flush = True)
+  print("Estimating parameters. Step 1: generating initial population (Genetic Algorithm)", flush = True)
   for _ in range(_population_size):
     values = [random.uniform(low, high) for low, high in limits]
     logp = glike_trees(trees, model(*transform(values)), samples = samples, flow = flow, spread = spread, prune = prune)
     print(f"{round_sig(transform(values))}, {logp}", flush = True)
     population.append(values); scores.append(logp)
   
+  print("Estimating parameters. Step 2:  (Genetic Algorithm)", flush = True)
   
 
 
