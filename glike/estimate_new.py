@@ -8,6 +8,7 @@ def round_sig(x, sig = 4):
 
 def estimate(trees, model, samples, transform, limits, flow = 10000, spread = 1e-5, prune = 0.5, epochs = 100, verbose = False):
   _population_size = 10
+  _num_mutations = 100
   population = []; scores = []
   
   print("Estimating parameters. Step 1: generating initial population (Genetic Algorithm)", flush = True)
@@ -18,7 +19,15 @@ def estimate(trees, model, samples, transform, limits, flow = 10000, spread = 1e
     population.append(values); scores.append(logp)
   
   print("Estimating parameters. Step 2:  (Genetic Algorithm)", flush = True)
-  
+  for _ in range(_num_mutations):
+    idx1, idx2 = random.randrange(_population_size), random.randrange(_population_size)
+    values1, values2 = population[idx1], population[idx2]
+    recomb = [i for i in range(_population_size) if random.randrange(2) > 0]
+    values = values1.copy(); values[recomb] = values2[recomb]
+    logp = glike_trees(trees, model(*transform(values)), samples = samples, flow = flow, spread = spread, prune = prune)
+    print(f"{round_sig(transform(values))}, {logp}", flush = True)
+    
+    population.append(values); scores.append(logp)
 
 
 
