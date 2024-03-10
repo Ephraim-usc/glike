@@ -1,6 +1,6 @@
 from .glike import *
 
-def round_sig(x, sig = 6):
+def round_sig(x, sig = 4):
   if type(x) is list:
     return [round_sig(x_, sig) for x_ in x]
   else:
@@ -14,7 +14,7 @@ def estimate(trees, model, samples, transform, limits, flow = 10000, spread = 1e
   for _ in range(_population_size):
     values = [random.uniform(low, high) for low, high in limits]
     logp = glike_trees(trees, model(*transform(values)), samples = samples, flow = flow, spread = spread, prune = prune)
-    print("{round_sig(values)}, {logp}", flush = True)
+    print(f"{round_sig(transform(values))}, {logp}", flush = True)
     population.append(values); scores.append(logp)
   
   
