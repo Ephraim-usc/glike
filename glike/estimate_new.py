@@ -6,9 +6,18 @@ def round_sig(x, sig = 4):
   else:
     return round(x, sig-int(math.floor(math.log10(abs(x))))-1)
 
-def estimate(trees, model, samples, transform, limits, flow = 10000, spread = 1e-5, prune = 0.5, epochs = 100, verbose = False):
+def generate_offspring(values1, values2, limits, precisions):
+  values = []
+  for value1, value2, limit, precision in zip(values1, values2, limits, precisions):
+    value = value2 if np.random.rand() > 0.5 else value1
+    value += precision * np.random.normal()
+    value = max(value, limit[0]); value = min(value, limit[1])
+    values.append(value)
+  return values
+
+def estimate(trees, model, samples, transform, limits, precisions, flow = 10000, spread = 1e-5, prune = 0.5, epochs = 100, verbose = False):
   _population_size = 10
-  _num_mutations = 100
+  _num_children = 100
   population = []; scores = []
   
   print("Estimating parameters. Step 1: generating initial population (Genetic Algorithm)", flush = True)
@@ -18,16 +27,32 @@ def estimate(trees, model, samples, transform, limits, flow = 10000, spread = 1e
     print(f"{round_sig(transform(values))}, {logp}", flush = True)
     population.append(values); scores.append(logp)
   
+  population = [genome for score, genome in sorted(zip(scores, population), reverse = True)]
+  scores = [score for score, genome in sorted(zip(scores, population), reverse = True)]
+  
+  print("\nInitial population:", flush = True)
+  for genome, score in zip(population, scores):
+    print(f"{round_sig(transform(genome))}, {score}", flush = True)
+  print("\n")
+  
   print("Estimating parameters. Step 2:  (Genetic Algorithm)", flush = True)
-  for _ in range(_num_mutations):
+  for _ in range(_num_offsprings):
     idx1, idx2 = random.randrange(_population_size), random.randrange(_population_size)
     values1, values2 = population[idx1], population[idx2]
-    recomb = [i for i in range(_population_size) if random.randrange(2) > 0]
-    values = values1.copy(); values[recomb] = values2[recomb]
+    values = generate_offspring(values1, values2)
     logp = glike_trees(trees, model(*transform(values)), samples = samples, flow = flow, spread = spread, prune = prune)
     print(f"{round_sig(transform(values))}, {logp}", flush = True)
     
-    population.append(values); scores.append(logp)
+    if logp > scores[-1]:
+      population[-1] = values; scores[-1] = logp
+      population = [genome for score, genome in sorted(zip(scores, population), reverse = True)]
+      scores = [score for score, genome in sorted(zip(scores, population), reverse = True)]
+    
+    if _%population_size == 0:
+      print("\nCurrent population:", flush = True)
+      for genome, score in zip(population, scores):
+        print(f"{round_sig(transform(genome))}, {score}", flush = True)
+      print("\n")
 
 
 
