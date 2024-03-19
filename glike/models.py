@@ -25,7 +25,7 @@ def threeway_split_demography(t1, t2, N_a, N_b, N_c, N_d, N_e):
 
 
 ########## Threeway Admixture ###########
-def threeway_admixture_demo(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e):
+def threeway_admixture_demo(t1 = 30, t2 = 60, t3 = 10000, r1 = 0.4, r2 = 0.7, N = 2000, N_a = 20000, N_b = 3000, N_c = 30000, N_d = 10000, N_e = 5000):
   demo = Demo()
   demo.add_phase(Phase(0, t1, [1/N]))
   demo.add_phase(Phase(t1, t2, [1/N_a, 1/N_b], P = np.array([[r1, 1-r1]])))
@@ -33,7 +33,7 @@ def threeway_admixture_demo(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e):
   demo.add_phase(Phase(t3, math.inf, [1/N_e], P = np.array([[1], [1], [1]])))
   return demo
 
-def threeway_admixture_demography(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e):
+def threeway_admixture_demography(t1 = 30, t2 = 60, t3 = 10000, r1 = 0.4, r2 = 0.7, N = 2000, N_a = 20000, N_b = 3000, N_c = 30000, N_d = 10000, N_e = 5000):
   demography = msprime.Demography()
   demography.add_population(name = "O", initial_size = N)
   demography.add_population(name = "A", initial_size = N_a)
