@@ -219,7 +219,7 @@ def native_hawaiians_demo(t1 = 19, t2 = 411, t3 = 1040, t4 = 2004, r1 = 0.0, r2 
                 [m_afr_pol, m_eur_pol, m_asia_pol, -m_afr_pol-m_eur_pol-m_asia_pol]]) if max(m_afr_eur, m_afr_asia, m_afr_pol, m_eur_asia, m_eur_pol, m_asia_pol) > 0 else None
   
   demo = Demo()
-  demo.add_phase(Phase(0, t1, [1/N_admix], [gr], populations = ["admix"]))
+  demo.add_phase(Phase(0, t1, [1/N_admix * math.exp(-t1 * gr)], [gr], populations = ["admix"]))
   P_admixture = np.array([
       [r1, r2, r3, 1-r1-r2-r3]
   ])
@@ -248,7 +248,7 @@ def native_hawaiians_demography(t1 = 19, t2 = 411, t3 = 1040, t4 = 2004, r1 = 0.
                                 N_admix = 35682, N_afr = 10000, N_eur = 13388, N_asia = 25234, N_pol = 15695, N_aa = 2702, N_ooa = 2470, N_anc = 2665, gr = 0.078, 
                                 m_afr_eur = 0.0, m_afr_asia = 0.0, m_afr_pol = 0.0, m_eur_asia = 0.0, m_eur_pol = 0.0, m_asia_pol = 0.0):
   demography = msprime.Demography()
-  demography.add_population(name = "admix", initial_size = N_admix, growth_rate = gr)
+  demography.add_population(name = "admix", initial_size = N_admix * math.exp(t1 * gr), growth_rate = gr)
   demography.add_population(name = "afr", initial_size = N_afr)
   demography.add_population(name = "eur", initial_size = N_eur)
   demography.add_population(name = "asia", initial_size = N_asia)
@@ -277,7 +277,7 @@ def latinos_demo(t1 = 25, t2 = 253, t3 = 1018, t4 = 2094, r1 = 0.107, r2 = 0.442
                 [m_afr_pol, m_eur_pol, m_asia_pol, -m_afr_pol-m_eur_pol-m_asia_pol]]) if max(m_afr_eur, m_afr_asia, m_afr_pol, m_eur_asia, m_eur_pol, m_asia_pol) > 0 else None
   
   demo = Demo()
-  demo.add_phase(Phase(0, t1, [1/N_admix], [gr], populations = ["admix"]))
+  demo.add_phase(Phase(0, t1, [1/N_admix  * math.exp(-t1 * gr)], [gr], populations = ["admix"]))
   P_admixture = np.array([
       [r1, r2, r3, 1-r1-r2-r3]
   ])
@@ -306,7 +306,7 @@ def latinos_demography(t1 = 25, t2 = 253, t3 = 1018, t4 = 2094, r1 = 0.107, r2 =
                        N_admix = 41579, N_afr = 4986, N_eur = 13341, N_asia = 10000, N_pol = 73170, N_aa = 3092, N_ooa = 2948, N_anc = 2846, gr = 0.132, 
                        m_afr_eur = 0.0, m_afr_asia = 0.0, m_afr_pol = 0.0, m_eur_asia = 0.0, m_eur_pol = 0.0, m_asia_pol = 0.0):
   demography = msprime.Demography()
-  demography.add_population(name = "admix", initial_size = N_admix, growth_rate = gr)
+  demography.add_population(name = "admix", initial_size = N_admix * math.exp(t1 * gr), growth_rate = gr)
   demography.add_population(name = "afr", initial_size = N_afr)
   demography.add_population(name = "eur", initial_size = N_eur)
   demography.add_population(name = "asia", initial_size = N_asia)
