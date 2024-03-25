@@ -3,6 +3,28 @@ from .glike import *
 
 
 ########## Twoway Admixture ###########
+def twoway_admixture_demo(t1, t2, t3, r1, N, N_a, N_b, N_b_, N_e):
+  demo = glike.Demo()
+  demo.add_phase(glike.Phase(0, t1, [1/N]))
+  demo.add_phase(glike.Phase(t1, t2, [1/N_a, 1/N_b], P = np.array([[r1, 1-r1]])))
+  demo.add_phase(glike.Phase(t2, t3, [1/N_a, 1/N_b_]))
+  demo.add_phase(glike.Phase(t3, np.inf, [1/N_e], P = np.array([[1], [1]])))
+  return demo
+
+def twoway_admixture_demography(t1, t2, t3, r1, N, N_a, N_b, N_b_, N_e):
+  demography = msprime.Demography()
+  demography.add_population(name = "O", initial_size = N)
+  demography.add_population(name = "A", initial_size = N_a)
+  demography.add_population(name = "B", initial_size = N_b)
+  demography.add_population(name = "E", initial_size = N_e)
+  demography.add_admixture(time=t1, derived="O", ancestral=["A", "B"], proportions = [r1, 1-r1])
+  demography.add_population_parameters_change(time = t2, initial_size = N_b_, population = "B")
+  demography.add_population_split(time=t3, derived=["A", "B"], ancestral="E")
+  
+  return demography
+
+
+########## Threeway Split ###########
 def threeway_split_demo(t1, t2, N_a, N_b, N_c, N_d, N_e):
   demo = Demo()
   demo.add_phase(Phase(0, t1, [1/N_a, 1/N_b, 1/N_c], populations = ["A", "B", "C"]))
