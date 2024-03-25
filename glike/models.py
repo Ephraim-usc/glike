@@ -4,7 +4,7 @@ from .glike import *
 
 ########## Twoway Admixture ###########
 def twoway_admixture_demo(t1, t2, t3, r1, N, N_a, N_b, N_b_, N_e):
-  demo = glike.Demo()
+  demo = Demo()
   demo.add_phase(glike.Phase(0, t1, [1/N]))
   demo.add_phase(glike.Phase(t1, t2, [1/N_a, 1/N_b], P = np.array([[r1, 1-r1]])))
   demo.add_phase(glike.Phase(t2, t3, [1/N_a, 1/N_b_]))
