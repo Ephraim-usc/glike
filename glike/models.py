@@ -151,7 +151,7 @@ def american_admixture_demography(t1 = 12, t2 = 920, t3 = 2040, t4 = 5920,
 ########## Ancient Europe (stdpopsim 4A21) ###########
 def ancient_europe_demo(t1 = 140, t2 = 180, t3 = 200, t4 = 600, t5 = 800, t6 = 1500, 
                         r1 = 0.5, r2 = 0.5, r3 = 0.75, 
-                        N_ana = 50000, N_neo = 500000, N_whg = 10000, N_bronze = 50000, N_yam = 5000, N_ehg = 10000, N_chg = 10000, N_ne = 5000, N_wa = 5000, N_ooa = 5000, 
+                        N_ana = 50000, N_neo = 50000, N_whg = 10000, N_bronze = 50000, N_yam = 5000, N_ehg = 10000, N_chg = 10000, N_ne = 5000, N_wa = 5000, N_ooa = 5000, 
                         gr = 0.067):
   demo = Demo()
   demo.add_phase(Phase(0, t1,
@@ -213,13 +213,13 @@ def ancient_europe_demo(t1 = 140, t2 = 180, t3 = 200, t4 = 600, t5 = 800, t6 = 1
 
 def ancient_europe_demography(t1 = 140, t2 = 180, t3 = 200, t4 = 600, t5 = 800, t6 = 1500, 
                               r1 = 0.5, r2 = 0.5, r3 = 0.75, 
-                              N_ana = 50000, N_neo = 500000, N_whg = 10000, N_bronze = 50000, N_yam = 5000, N_ehg = 10000, N_chg = 10000, N_ne = 5000, N_wa = 5000, N_ooa = 5000, 
+                              N_ana = 50000, N_neo = 50000, N_whg = 10000, N_bronze = 50000, N_yam = 5000, N_ehg = 10000, N_chg = 10000, N_ne = 5000, N_wa = 5000, N_ooa = 5000, 
                               gr = 0.067):
   demography = msprime.Demography()
   demography.add_population(name = "ana", initial_size = N_ana)
   demography.add_population(name = "neo", initial_size = N_neo)
   demography.add_population(name = "whg", initial_size = N_whg)
-  demography.add_population(name = "bronze", initial_size = N_bronze, growth_rate = gr)
+  demography.add_population(name = "bronze", initial_size = N_bronze * math.exp(gr*t1), growth_rate = gr)
   demography.add_population(name = "yam", initial_size = N_yam)
   demography.add_population(name = "ehg", initial_size = N_ehg)
   demography.add_population(name = "chg", initial_size = N_chg)
