@@ -51,7 +51,7 @@ The default is an empty dictionary.
 
 `prune` is a float number between 0 and 1, that specifies the proportion of discarding low likelihood trees.
 Enabling this feature often reduces noise when dealing with reconstructed trees.
-The default is 0.0, meaning that all trees are reserved. 
+The default is 0.0, meaning that all trees are preserved. 
 
 This function returns the log probability that such genealogical trees are generated under the hypothesized demography.
 
@@ -59,15 +59,20 @@ This function returns the log probability that such genealogical trees are gener
 Demography customization
 ------------
 
-A Demography object is initialized with
+Different from population-based languages to describe a demography (such as in `msprime`), gLike represents a demography as a series of phases (or intervals) going backward in time.
+These phases are gapless in between, ensuring they collectively represent a complete history.
+Each phase contains a certain number of populations, which can vary between phases.
+At the transition from one phase to the next, a migration matrix defines the probabilities of lineages moving from one population to another.
+
+A demography object is initialized with
 
     demo = glike.Demo()
-    
-And a number of Phases are added into this Demography
+
+And a number of phases are added into this Demography
 
     demo.add_phase(phase)
 
-A Phase is created by
+A phase is created by
 
     phase = glike.Phase(t, t_end, ns, grs, P, Q, populations)
 
@@ -85,10 +90,12 @@ Only `t`, `t_end` and `ns` are required , other arguments are optional. The numb
 
     len(ns) == len(grs) == P.shape[1] == len(populations)
 
-When adding new Phases into Demogrpahy, the times and dimensions should match. Specifically, if the last added phase is `phases[i]`, and we are trying to add another phase `phases[i+1]`, then it is required that 
+When adding new phases into a demogrpahy, the times and dimensions should match. Specifically, if the last added phase is `phases[i]`, and we are trying to add another phase `phases[i+1]`, then it is required that 
 
     phases[i].t_end == phases[i+1].t
     phases[i].P.shape[1] == phases[i+1].P.shape[0]
+
+We recommend adding phases until `np.inf` for safety, although for gLike's purpose it suffices if the demography covers the oldest lineage in the input trees. 
 
 The resulting demography can be visualized by
 
