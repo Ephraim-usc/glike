@@ -66,30 +66,24 @@ A Phase is created by
 
     phase = glike.Phase(t, t_end, ns, grs, P, Q, populations)
 
-Where `t` is the starting (most recent) time. `t_end` is the ending (most ancient) time. 
+Where `t` is the starting (most recent) time in generations. `t_end` is the ending (most ancient) time in generations. It is required that `t_end` is greater than `t`. 
 
-`ns` is the vector of coalescent rates at the start of the phase (at time `t`). 
+`ns` is the 1D array of coalescent rates at the start of the phase (at time `t`). 
 
 `grs` is the 1D array of growth rates (a positive growth rate means the population size is growing forward in time, or equivalently, the coalescent rate is growing backward in time). The default is a vector of all zeros, meaning all populations have constant sizes during this phase.
 
 `P` is the 2D array of migration matrix at the beginning of this phase, where `P[i, j]` means the probability of a lineage from the `i`-th population (in the previous phase) to migrate into the `j`-th population in the current phase. The default is an identity matrix, meaning that no migration happens between population. Note that `P` must be provided if this phase has a different number of popuations than the previous phase.
 
-`populations` is the vector of population names, this is only useful for visualizing the demography or convenience in assigning population identities to samples. If not provided, alphabatical names would be automatically given (i.e., A, B, C, ...). 
+`populations` is the 1D array of population names, this is only useful for visualizing the demography or conveniently assigning population identities to samples. If not provided, alphabatical names (A, B, C, ...) would be automatically given to populations. 
 
 Only `t`, `t_end` and `ns` are required , other arguments are optional. The number of populations in this phase should be consistent among parameters, so it is required that
 
     len(ns) == len(grs) == P.shape[1] == len(populations)
 
-When adding new Phases into Demogrpahy, the times and dimensions should match. Specifically, if the last added phase is `phases[i]`, and we are trying to add another phase `phases[i+1]`, then it is required that
+When adding new Phases into Demogrpahy, the times and dimensions should match. Specifically, if the last added phase is `phases[i]`, and we are trying to add another phase `phases[i+1]`, then it is required that 
 
-    phases[i].t < phases[i].t_end = phases[i+1].t < phases[i+1].t_end
+    phases[i].t_end == phases[i+1].t
     phases[i].P.shape[1] == phases[i+1].P.shape[0]
-
-gLike cannot be applied directly to a demography that contains continuous migrations, and requires it to be discretized first:
-
-    demo.add_phase(phase, discretize)
-
-Where `discretize` is a float number indicating the time interval (that is, if `phase.Q != None`, `phase` will be sliced into chunks of `discretize` generations).
 
 The resulting demography can be visualized by
 
