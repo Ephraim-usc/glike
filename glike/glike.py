@@ -52,7 +52,7 @@ class Phase:
   # ns: list or 1d array of coalescent rates
   # grs: list or 1d array of growth rates
   # P: transition matrix at beginning of Phase
-  # Q: continuous migration matrix, will be discretized when added into demo
+  # Q: continuous migration matrix, will be discretized when added into demo (this parameter is not recommended, gLike with continuous migration is still under development)
   # populations: names of populations
   def __init__(self, t, t_end, ns, grs = None, P = None, Q = None, populations = None):
     self.parent = None
