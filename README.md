@@ -23,7 +23,9 @@ Because glike contains a C extension module, a proper C environment is required.
 Tutorial
 ------------
 
-See a simple [tutorial](./tutorial.md) to go though a toy example showing how glike works.
+In the following sections, we introduce the API of the gLike model.
+
+For an intuitive understanding of how gLike works, see a simple [tutorial](./tutorial.md) that walks though a toy example.
 
 
 Full likelihood of genealogical trees
