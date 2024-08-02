@@ -44,6 +44,8 @@ Although calling `ts.trees()` to enumerate all trees in the `tskit.TreeSequence`
 
 `samples` is the dict that contains `sample:pop` pairs, which specifies which sample is collected from which population.
 The population can be identified either by an integer representing the population index or a string denoting the population name.
+For example, `{4:2, 13:"A"}` means that lineage 4 is in the second population (at time `tree.time(4)`), and lineage 13 is in the population named A (at time `tree.time(13)`).
+In essense, the parameter `samples` restricts the graph of states (GOS) to contain only states that are compatible with these known population identities.
 Samples not mentioned in the dictionary are considered potentially from any available population at the time of the sample.
 The default is an empty dictionary.
 
