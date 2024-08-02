@@ -1,7 +1,7 @@
 from .glike import *
 
 class Search():
-  def __init__(self, names, values, limits = None, names_fixed = None, precision = 0.05):
+  def __init__(self, x0, limits = None, names_fixed = None, precision = 0.05):
     self.names = list(x0.keys())
     self.values = x0.copy()
     if limits is None:
