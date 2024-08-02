@@ -74,7 +74,7 @@ And a number of phases are added into this Demography
 
 A phase is created by
 
-    phase = glike.Phase(t, t_end, ns, grs, P, Q, populations)
+    phase = glike.Phase(t, t_end, ns, grs, P, populations)
 
 Where `t` is the starting (most recent) time in generations. `t_end` is the ending (most ancient) time in generations. It is required that `t_end` is greater than `t`. 
 
