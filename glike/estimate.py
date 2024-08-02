@@ -2,10 +2,10 @@ from .glike import *
 
 class Search():
   def __init__(self, names, values, limits = None, names_fixed = None, precision = 0.05):
-    self.names = names
-    self.values = dict(zip(names, values))
+    self.names = list(x0.keys())
+    self.values = x0.copy()
     if limits is None:
-      limits = [(0, math.inf) for _ in names]
+      limits = [(0, math.inf) for _ in self.names]
     self.limits = dict(zip(names, limits))
     if names_fixed is None:
       names_fixed = []
@@ -14,7 +14,7 @@ class Search():
     self.precision = precision
   
   def get(self):
-    return list(self.values.values())
+    return self.values
   
   def set(self, values):
     self.values = dict(zip(self.names, values))
@@ -67,46 +67,48 @@ class Search():
     return True
 
 
-def estimate(trees, model, search, samples = None, flow = 10000, spread = 1e-5, prune = 0.5, epochs = 100, verbose = False):
-  x = search.get()
-  logp = glike_trees(trees, model(*x), samples = samples, flow = flow, spread = spread, prune = prune)
-  print(str(x) + " " + str(logp), flush = True)
+def maximize(fun, x0, limits = None, precision = 0.05, epochs = 20, verbose = False):
+  search = Search(x0, limits = limits, precision = precision)
+  names = list(x0.keys())
+  
+  y0 = fun(**x0)
+  print(str(x0) + " " + str(y0), flush = True)
   
   xs = []
-  logps = []
+  ys = []
   for _ in range(epochs):
-    for name in [name for name in search.names if name not in search.names_fixed]:
+    for name in names:
       x = search.get()
-      logp = glike_trees(trees, model(*x), samples = samples, flow = flow, spread = spread, prune = prune)
+      y = fun(**x)
       x_up = search.up(name)
-      logp_up = glike_trees(trees, model(*x_up), samples = samples, flow = flow, spread = spread, prune = prune)
+      y_up = fun(**x_up)
       x_down = search.down(name)
-      logp_down = glike_trees(trees, model(*x_down), samples = samples, flow = flow, spread = spread, prune = prune)
+      y_down = fun(**x_down)
       
       if verbose:
         print(" ", flush = True)
-        print("x_up: " + str(x_up) + " " + str(logp_up), flush = True)
-        print("x: " + str(x) + " " + str(logp), flush = True)
-        print("x_down: " + str(x_down) + " " + str(logp_down), flush = True)
+        print("x_up: " + str(x_up) + " " + str(y_up), flush = True)
+        print("x: " + str(x) + " " + str(y), flush = True)
+        print("x_down: " + str(x_down) + " " + str(y_down), flush = True)
         print(" ", flush = True)
       
-      if (logp_up > max(logp_down, logp)):
+      if (y_up > max(y_down, y)):
         search.set(x_up)
         search.faster(name)
-      elif (logp_down > max(logp_up, logp)):
+      elif (y_down > max(y_up, y)):
         search.set(x_down)
         search.faster(name)
       else:
         search.slower(name)
     
     x = search.get()
-    logp = glike_trees(trees, model(*x), samples = samples, flow = flow, spread = spread, prune = prune)
-    xs.append(x); logps.append(logp)
-    print(str(x) + " " + str(logp), flush = True)
+    y = fun(**x)
+    xs.append(x); ys.append(y)
+    print(str(x) + " " + str(y), flush = True)
     
-    if len(logps) >= 5 and sum(logps[-5:-3]) >= sum(logps[-2:]):
+    if len(ys) >= 5 and sum(ys[-5:-3]) >= sum(ys[-2:]):
       break
   
-  idx = logps.index(max(logps))
-  x, logp = xs[idx], logps[idx]
-  return x, logp
+  idx = ys.index(max(ys))
+  x, y = xs[idx], ys[idx]
+  return x, y
