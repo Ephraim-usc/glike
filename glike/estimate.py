@@ -2,12 +2,15 @@ from .glike import *
 
 # 用interval来约束fixed params
 class Search():
-  def __init__(self, x0, limits = None, precision = 0.05):
+  def __init__(self, x0, limits = None, names_fixed = None, precision = 0.05):
     self.names = list(x0.keys())
     self.values = x0.copy()
     if limits is None:
       limits = [(0, math.inf) for _ in self.names]
     self.limits = dict(zip(self.names, limits))
+    if names_fixed is None:
+      names_fixed = []
+    self.names_fixed = names_fixed
     self.lrs = {name:0.1 for name in self.names}
     self.precision = precision
   
@@ -36,7 +39,7 @@ class Search():
       step = (high - value) * lr
     step = max(step, 1e-5)
     values = self.values.copy()
-    values[name] = round(min(high - 1e-5, value + step), 5)
+    values[name] = min(high, round(value + step, 5))
     return list(values.values())
   
   def down(self, name):
@@ -60,7 +63,7 @@ class Search():
   
   def cold(self):
     for name in self.names:
-      if self.lrs[name] > self.precision:
+      if (name not in self.names_fixed) and (self.lrs[name] > self.precision):
         return False
     return True
 
