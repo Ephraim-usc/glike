@@ -176,7 +176,7 @@ In this example, we demonstrate how to estimate some, but not all, of the demogr
             r1 = 0.5, r2 = 0.5, r3 = 0.75, 
             N_ana = 50000, N_neo = 50000, N_whg = 10000, N_bronze = 50000, N_yam = 5000, N_ehg = 10000, N_chg = 10000, N_ne = 5000, N_wa = 5000, N_ooa = 5000, 
             gr = 0.067):
-      demo = ancient_europe_demo(r1, r2, r3, N_ana, N_neo, N_whg, N_bronze, N_yam, N_ehg, N_chg, N_ne, N_wa, N_ooa, gr)
+      demo = glike.ancient_europe_demo(t1, t2, t3, t4, t5, t6, r1, r2, r3, N_ana, N_neo, N_whg, N_bronze, N_yam, N_ehg, N_chg, N_ne, N_wa, N_ooa, gr)
       return glike.glike_trees(trees, demo, kappa = 3000)
 
 Note that this function has default parameters, providing the flexibility that `x` will not be required to provide all parameter values.
