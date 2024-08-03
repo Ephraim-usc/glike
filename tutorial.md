@@ -109,10 +109,21 @@ Which outputs something like
     -80165.92668862805
 
 This is the probability of `demo` to generate the genealogical trees in `trees`.
+Feel free to change the parameters a bit and see how the likelihood changes (drops in most cases).
 
 
 Estimating parameters
 ------------
+
+gLike provides a function `maximize` that mimics the popular `scipy.optimize.minimize` function, but has been made convenient for optimizing demographic parameters in several ways. The most important grammatical difference is that `glike.maximize` works with named parameters. Specifically,
+
+1. It accepts a dict for `x0` (rather than a 1D array), so that the function is called in the `fun(**x)` way.
+2. It accepts string expressions containing parameter names in `bounds`, which will be interpreted by `eval` during runtime.
+
+
+
+
+
 
 There are several pieces of information needed to describe the estimation task.
 `names` lists the names of each parameter
