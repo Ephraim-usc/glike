@@ -98,16 +98,17 @@ The output is
 Which lists all phases in this demography. 
 In each phase, the migration matrix -- if applicable -- is printed first.
 Then the coalescence rates (i.e. inverse of population sizes) and growth rates are printed.
+Note that because we did not specify names of the populations, alphabetical names (A, B, C, ...) are automatically created.
 
-We may check out gLike by
-    
+We can now play with gLike by
+
     glike.glike_trees(trees, demo)
 
 Which outputs something like
 
     -80165.92668862805
 
-That gives the probability of `demo` to generate the genealogical trees in `trees`.
+This is the probability of `demo` to generate the genealogical trees in `trees`.
 
 
 Estimating parameters
