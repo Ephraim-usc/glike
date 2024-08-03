@@ -146,6 +146,10 @@ A more complicated example
 
 More advanced features (samples from mulitple pupulations, ancient DNA samples, etc.) can be demonstrated by replicating the experiment in Figure 5B of the paper.
 
-
+  demography = glike.ancient_europe_demography()
+  arg = msprime.sim_ancestry({'ana', 'neo', 'whg', 'bronze', 'yam', 'ehg', 'chg', 'ne', 'wa', 'ooa'}, 
+                             sequence_length = 3e7, recombination_rate = 1e-8, demography = demography, ploidy = 1)
+  arg = msprime.sim_mutations(arg, rate = 1e-8, discrete_genome = False)
+  trees = [arg.at(pos).copy() for pos in range(3000000, 30000000, 3000000)]
 
 
