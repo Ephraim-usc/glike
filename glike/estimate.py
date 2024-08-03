@@ -17,7 +17,7 @@ class Search():
     return self.values
   
   def set(self, values):
-    self.values = dict(zip(self.names, values))
+    self.values = values
   
   def limit(self, name):
     limit = self.limits[name]
@@ -39,7 +39,7 @@ class Search():
     step = max(step, 1e-5)
     values = self.values.copy()
     values[name] = min(high, round(value + step, 5))
-    return list(values.values())
+    return values
   
   def down(self, name):
     value = self.values[name]
@@ -52,7 +52,7 @@ class Search():
     step = max(step, 1e-5)
     values = self.values.copy()
     values[name] = round(max(low + 1e-5, value - step), 5)
-    return list(values.values())
+    return values
   
   def faster(self, name):
     self.lrs[name] = min(0.5, self.lrs[name] * 1.5)
