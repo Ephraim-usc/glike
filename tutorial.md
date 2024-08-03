@@ -126,7 +126,7 @@ To use `glike.maximize` for parameter estimation, we need to first define a wrap
       return glike.glike_trees(trees, demo)
     
     x0 = {"t1":10, "t2":20, "t3":5000.0, "r1":0.5, "r2":0.5, "N":10000, "N_a":10000, "N_b":10000, "N_c":10000, "N_d":10000, "N_e":10000}
-    bounds = [(1, "t2"),("t1", "t3"),("t2", 1e5),(0.0,1.0),(0.0,1.0),(100,1000000),(100,1000000),(100,1000000),(100,1000000),(100,1000000),(100,1000000)]
+    bounds = [(1, "t2"), ("t1", "t3"), ("t2", 1e5), (0.0,1.0), (0.0,1.0), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000)]
 
 Then running
 
@@ -145,6 +145,8 @@ A more complicated example
 
 More advanced features (samples from mulitple pupulations, ancient DNA samples, etc.) can be demonstrated by replicating the experiment in Figure 5B of the paper.
 
+gLike provides some demographic models (with default parameters hard-coded into them) in the `glike.models` module. In this example we will use them to avoid manually writting demographic models. The genealogcial trees under the Ancient European model can be simulated by
+
     demography = glike.ancient_europe_demography()
     samples_msprime = [msprime.SampleSet(20, population = "ana", time = 260),
                msprime.SampleSet(20, population = "neo", time = 180),
@@ -156,7 +158,8 @@ More advanced features (samples from mulitple pupulations, ancient DNA samples, 
     arg = msprime.sim_ancestry(samples_msprime, sequence_length = 3e7, recombination_rate = 1e-8, demography = demography, ploidy = 1)
     trees = [arg.at(pos).copy() for pos in range(3000000, 30000000, 3000000)]
 
-Because samples are collected from known populations, this information must be conveyed to gLike through the `samples` parameter constructed as
+Note that samples are collected from different popuations at different times in history.
+This information must be conveyed to gLike through the `samples` parameter constructed as
 
     tmp = ["ana"] * 20 + ["neo"] * 20 + ["whg"] * 20 + ["bronze"] * 100 + ["yam"] * 20 + ["ehg"] * 20 + ["chg"] * 20
     samples = {i:pop for i, pop in enumerate(tmp)}
@@ -167,18 +170,27 @@ Printing `samples` would give
 
 That denotes the population identities of specified lineages.
 
+In this example, we demonstrate how to estimate some, but not all, of the demographic parameters. The wrapper function is now written as 
+
     def fun(t1 = 140, t2 = 180, t3 = 200, t4 = 600, t5 = 800, t6 = 1500, 
             r1 = 0.5, r2 = 0.5, r3 = 0.75, 
             N_ana = 50000, N_neo = 50000, N_whg = 10000, N_bronze = 50000, N_yam = 5000, N_ehg = 10000, N_chg = 10000, N_ne = 5000, N_wa = 5000, N_ooa = 5000, 
             gr = 0.067):
       demo = ancient_europe_demo(r1, r2, r3, N_ana, N_neo, N_whg, N_bronze, N_yam, N_ehg, N_chg, N_ne, N_wa, N_ooa, gr)
-      return glike.glike_trees(trees, demo, flow = 3000)
+      return glike.glike_trees(trees, demo, kappa = 3000)
+
+Note that this function has default parameters, providing the flexibility that `x` will not be required to provide all parameter values.
+Also note that here we use a slightly smaller `kappa` value to reduce computational time (at the cost of accuracy).
+
+If we want to estimate only time parameters, we may do
+
+    x0 = {"t1":120, "t2":170, "t3":190, "t4":500, "t5":600, "t6":1300}
+    bounds = [(1, "t2"), ("t1", "t3"), ("t2", "t4"), ("t3", "t5"), ("t5", 10000)]
+    glike.maximize(fun, x0, bounds = bounds)
+
+If we want to estimate the population sizes and growth rates, we may do
     
-    x0 = {"t1", "t2", "t3", "t4", "t5", "t6", "r1", "r2", "r3", "N_ana", "N_neo", "N_whg", "N_bronze", "N_yam", "N_ehg", "N_chg", "N_ne", "N_wa", "N_ooa", "gr"}
-    bounds = [(1,159),(161,"min(249, t3)"),("max(181, t2)",249),(301, "t5"),("t4","t6"),("t5",5000),
-              (0.01, 0.99),(0.01,0.99),(0.01,0.99),
-              (100,100000),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000),
-              (0.0001,0.1)]
-    
+    x0 = {"N_ana":10000, "N_neo":10000, "N_whg":10000, "N_bronze":10000, "N_yam":10000, "N_ehg":10000, "N_chg":10000, "N_ne":10000, "N_wa":10000, "N_ooa":10000, "gr":0.01}
+    bounds = [(100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (1e-4, 1e0)]
     glike.maximize(fun, x0, bounds = bounds)
 
