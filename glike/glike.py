@@ -296,11 +296,11 @@ class Bundle:
       with np.errstate(over='ignore'): # if too large then just let it be inf
         self.num_links += (state.logP + child.logmask > -math.inf).sum(axis = 1).prod(dtype = float)
   
-  def immigrate(self, flow, spread):
-    if self.parent.num_links <= flow:
+  def immigrate(self, kappa, spread):
+    if self.parent.num_links <= kappa:
       self.immigrate_deterministic()
     else:
-      self.immigrate_stochastic(flow, spread)
+      self.immigrate_stochastic(kappa, spread)
   
   def immigrate_deterministic(self):
     N = self.N
@@ -320,7 +320,7 @@ class Bundle:
         state_parent.children.append((logp, state))
         state.parents.append((logp, state_parent))
   
-  def immigrate_stochastic(self, flow, spread):
+  def immigrate_stochastic(self, kappa, spread):
     N = self.N
     parent = self.parent
     
@@ -335,7 +335,7 @@ class Bundle:
     
     logvs = np.array([state_parent.logv for state_parent in parent.states.values()])
     tmp = np.exp(logvs - parent.logv); tmp /= tmp.sum()
-    nums = np.random.multinomial(flow, tmp)
+    nums = np.random.multinomial(kappa, tmp)
     
     for state_parent, num in zip(parent.states.values(), nums):
       if num == 0:
@@ -353,7 +353,7 @@ class Bundle:
         else:
           state = State()
           self.states[value] = state
-        logp_adj = logp + math.log(count) - math.log(flow) - (state_parent.logv - parent.logv + logw) # last term is the log prob. of sampling this state
+        logp_adj = logp + math.log(count) - math.log(kappa) - (state_parent.logv - parent.logv + logw) # last term is the log prob. of sampling this state
         state_parent.children.append((logp_adj, state))
         state.parents.append((logp_adj, state_parent))
   
@@ -386,7 +386,7 @@ class Bundle:
     print(f"shares of top 5 states: {shares}", flush = True)
 
 
-def glike(tree, demo, samples = None, flow = 10000, spread = 1e-5, verbose = False):
+def glike(tree, demo, samples = None, kappa = 10000, spread = 1e-5, verbose = False):
   if samples is None:
     samples = {}
   
@@ -396,8 +396,8 @@ def glike(tree, demo, samples = None, flow = 10000, spread = 1e-5, verbose = Fal
     raise Exception("glike input type error: demo should be of type Demo!")
   if type(samples) != dict:
     raise Exception("glike input type error: samples should be of type dict!")
-  if type(flow) not in (int, ):
-    raise Exception("glike input type error: flow should be an int!")
+  if type(kappa) not in (int, ):
+    raise Exception("glike input type error: kappa should be an int!")
   if (type(spread) not in (int, float)) or (spread > 1):
     raise Exception("glike input type error: spread should be a number between 0 and 1 (e.g., 1e-5)!")
   
@@ -428,7 +428,7 @@ def glike(tree, demo, samples = None, flow = 10000, spread = 1e-5, verbose = Fal
     if verbose:
       print(f"{np.format_float_scientific(bundle.num_links, precision=6)} links\n", flush = True)
     bundle = bundle.child
-    bundle.immigrate(flow, spread)
+    bundle.immigrate(kappa, spread)
     bundle.evolve()
     bundle.evaluate_logv()
     if verbose:
@@ -436,13 +436,13 @@ def glike(tree, demo, samples = None, flow = 10000, spread = 1e-5, verbose = Fal
   
   return origin.logv
 
-def glike_trees(trees, demo, samples = None, flow = 10000, spread = 1e-5, prune = 0): # trees: generator or list of trees
+def glike_trees(trees, demo, samples = None, kappa = 10000, spread = 1e-5, prune = 0): # trees: generator or list of trees
   if type(prune) not in (int, float):
     raise Exception("glike_trees input type error: prune should be int or float!")
   if not 0 <= prune <= 1:
     raise Exception("glike_trees input error: prune should be within [0, 1]!")
   
-  logps = [glike(tree, demo, samples = samples, flow = flow, spread = spread) for tree in trees]
+  logps = [glike(tree, demo, samples = samples, kappa = kappa, spread = spread) for tree in trees]
   logps.sort()
   logp = sum(logps[math.ceil(prune * len(logps)):])
   return logp
