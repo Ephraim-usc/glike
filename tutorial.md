@@ -143,7 +143,7 @@ When the function finishes, `x` will be the estimated parameters, and `logp` wil
 A more complicated example
 ------------
 
-More advanced features (samples from mulitple pupulations, ancient DNA samples, etc.) can be demonstrated by replicating the experiment in Figure 5B of the paper.
+More advanced features (samples from mulitple pupulations, ancient DNA samples, the `kappa` parameter, etc.) can be demonstrated by replicating the experiment in Figure 5B of the paper.
 
 gLike provides some demographic models (with default parameters hard-coded into them) in the `glike.models` module. In this example we will use them to avoid manually writting demographic models. The genealogcial trees under the Ancient European model can be simulated by
 
