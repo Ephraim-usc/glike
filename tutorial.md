@@ -156,7 +156,7 @@ More advanced features (samples from mulitple pupulations, ancient DNA samples, 
     arg = msprime.sim_ancestry(samples_msprime, sequence_length = 3e7, recombination_rate = 1e-8, demography = demography, ploidy = 1)
     trees = [arg.at(pos).copy() for pos in range(3000000, 30000000, 3000000)]
 
-Because samples are collected from different populations, this information must be conveyed to gLike through the `samples` parameter constructed as
+Because samples are collected from known populations, this information must be conveyed to gLike through the `samples` parameter constructed as
 
     tmp = ["ana"] * 20 + ["neo"] * 20 + ["whg"] * 20 + ["bronze"] * 100 + ["yam"] * 20 + ["ehg"] * 20 + ["chg"] * 20
     samples = {i:pop for i, pop in enumerate(tmp)}
