@@ -30,7 +30,8 @@ The three-way admixture model as defined in the msprime language is
 
 The true demography is created using the true parameters
 
-    demography = threeway_admixture_demography(30, 60, 1e4, 0.4, 0.7, 2000, 20000, 3000, 30000, 10000, 5000)
+    x_true = {"t1":30, "t2":60, "t3":1e4, "r1":0.4, "r2":0.7, "N":2000, "N_a":20000, "N_b":3000, "N_c":30000, "N_d":10000, "N_e":5000}
+    demography = threeway_admixture_demography(**x_true)
 
 We simulate 1000 haplotypes on a 30Mb chromosome and select 10 equally distant trees
 
@@ -69,6 +70,60 @@ The three-way admixture model as defined in the glike language is
       return demo
 
 Where the demography consists of four phases, each defined by the starting and ending time, the list of inverse population sizes, and the mass migration matrices.
+
+
+Defining the demographic model
+------------
+
+It is recommended to always check if the demographic model is written correctly. Here we create the true demography as an example:
+
+    demo = threeway_admixture_demo(**x_true)
+    demo.print()
+
+The output is
+
+    [phase from 0.0 to 30.0]
+              A
+    ns   0.0005
+    grs  0.0000
+    
+    [phase from 30.0 to 60.0]
+         A    B
+    A  0.4  0.6
+               A         B
+    ns   0.00005  0.000333
+    grs  0.00000  0.000000
+    
+    [phase from 60.0 to 10000.0]
+         A    B    C
+    A  1.0  0.0  0.0
+    B  0.0  0.7  0.3
+               A         B       C
+    ns   0.00005  0.000033  0.0001
+    grs  0.00000  0.000000  0.0000
+    
+    [phase from 10000.0 to inf]
+       A
+    A  1
+    B  1
+    C  1
+              A
+    ns   0.0002
+    grs  0.0000
+
+Which lists all phases in this demography. 
+In each phase, the migration matrix -- if applicable -- is printed first.
+Then the coalescence rates (i.e. inverse of population sizes) and growth rates are printed.
+
+We may check out gLike by
+    
+    glike.glike_trees(trees, demo)
+
+Which outputs something like
+
+    -80165.92668862805
+
+That gives the probability of `demo` to generate the genealogical trees in `trees`.
 
 
 Estimating parameters
