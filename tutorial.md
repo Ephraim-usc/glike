@@ -137,5 +137,15 @@ Would generate
 
     xxx
 
-The estimation usually converges after 10 ~ 30 rounds, which takes around 2 hours.
+This usually takes around 2 hours on a personal computer.
 When the function finishes, `x` will be the estimated parameters, and `logp` will be the maximum likelihood ever reached.
+
+
+A more complicated example
+------------
+
+More advanced features (samples from mulitple pupulations, ancient DNA samples, etc.) can be demonstrated by replicating the experiment in Figure 5B of the paper.
+
+
+
+
