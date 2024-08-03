@@ -115,59 +115,27 @@ Feel free to change the parameters a bit and see how the likelihood changes (dro
 Estimating parameters
 ------------
 
-gLike provides a function `maximize` that mimics the popular `scipy.optimize.minimize` function, but has been made convenient for optimizing demographic parameters in several ways. The most important grammatical difference is that `glike.maximize` works with named parameters. Specifically,
+gLike provides a function `maximize` that mimics the popular `scipy.optimize.minimize` function, but has been made convenient for optimizing demographic parameters. The most important grammatical difference is that `glike.maximize` works with named parameters. For example,
 
 1. It accepts a dict for `x0` (rather than a 1D array), so that the function is called in the `fun(**x)` way.
 2. It accepts string expressions containing parameter names in `bounds`, which will be interpreted by `eval` during runtime.
 
+To use `glike.maximize` for parameter estimation, we need to first define a wrapper function, the initial values, and boundaries
 
-
-
-
-
-There are several pieces of information needed to describe the estimation task.
-`names` lists the names of each parameter
-
-    names = ["t1", "t2", "t3", "r1", "r2", "N", "N_a", "N_b", "N_c", "N_d", "N_e"]
-
-`values` gives an initial guess of the parameters
-
-    values = [20, 80, 5000.0, 0.5, 0.5, 1000, 10000, 1000, 10000, 10000, 1000]
-
-`limits` gives the list of tuples containing the lower and upper bound of each parameter
-
-    limits = [(10, "t2"),("t1", 100),(1e3, 2e4),(0.001,0.999),(0.001,0.999),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000)]
-
-The search task is the defined as
-
-    search = glike.Search(names, values, limits, precision = 0.02)
-
-Where `precision = 0.02` specifies the minimum step size in the hill-climbing optimization to be 2%.
-
-The estimation is launched by
-
-    x, logp = glike.estimate(trees, threeway_admixture_demo, search, prune = 0.5)
-
-Which prints, for example
+    def fun(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e):
+      demo = threeway_admixture_demo(t1, t2, t3, r1, r2, N, N_a, N_b, N_c, N_d, N_e)
+      return glike.glike_trees(trees, demo)
     
-    [20, 80, 5000.0, 0.5, 0.5, 1000, 10000, 1000, 10000, 10000, 1000] -38918.96248255331
-    [21.0, 78.0, 5400.0, 0.4501, 0.5499, 1090.0, 10990.0, 1090.0, 10990.0, 10990.0, 1090.0] -38228.46344287755
-    [22.65, 74.7, 6060.0, 0.4501, 0.48254, 1238.5, 12623.5, 1238.5, 12623.5, 12623.5, 1238.5] -37374.656869676255
-    [25.49625, 69.0075, 7198.5, 0.4501, 0.48254, 1494.6625, 15441.2875, 1494.6625, 15441.2875, 15441.2875, 1494.6625] -36433.658071892474
-    [30.72623, 58.54753, 9290.49375, 0.43326, 0.53671, 1965.36109, 20618.97203, 1965.36109, 20618.97203, 15441.2875, 1965.36109] -35762.026886215186
-    [30.72623, 58.54753, 9290.49375, 0.40895, 0.53671, 1965.36109, 20618.97203, 2898.04164, 20618.97203, 12852.44523, 2898.04164] -35733.769256650114
-    [30.72623, 58.54753, 9290.49375, 0.37453, 0.57572, 1965.36109, 20618.97203, 2898.04164, 25748.71504, 12852.44523, 4297.06246] -35717.3123988045
-    [30.72623, 62.02519, 9290.49375, 0.32726, 0.57572, 1965.36109, 18054.10053, 3597.55205, 25748.71504, 12852.44523, 6395.59369] -35709.98502238328
-    [30.72623, 62.02519, 9808.64961, 0.32726, 0.57572, 2081.94616, 18054.10053, 3597.55205, 30557.84911, 13659.4359, 6395.59369] -35701.13391522842
-    [30.07854, 59.03019, 9808.64961, 0.29629, 0.56233, 2081.94616, 16370.90361, 3597.55205, 30557.84911, 12372.34882, 4821.69527] -35697.27254368971
-    [30.07854, 59.03019, 9808.64961, 0.29629, 0.54161, 1989.04243, 16370.90361, 3269.65655, 30557.84911, 14119.72036, 6592.331] -35696.90557883543
-    [30.07854, 59.03019, 9808.64961, 0.29629, 0.57417, 1989.04243, 15226.8557, 3269.65655, 30557.84911, 17113.97118, 6592.331] -35695.66375478204
-    [30.07854, 60.04802, 9808.64961, 0.3068, 0.61954, 1989.04243, 13631.44514, 3269.65655, 29487.06535, 17113.97118, 4969.24825] -35691.35596414065
-    [30.07854, 60.04802, 9984.8226, 0.32313, 0.55876, 2026.82328, 15772.16205, 3269.65655, 27937.35683, 17113.97118, 4969.24825] -35689.053793104555
-    [30.07854, 60.04802, 9984.8226, 0.29733, 0.55876, 2026.82328, 15772.16205, 3206.26342, 27937.35683, 18476.62578, 4969.24825] -35688.672897231605
-    [30.07854, 60.04802, 9984.8226, 0.29733, 0.55876, 1988.28681, 15772.16205, 3206.26342, 27937.35683, 16268.94069, 4969.24825] -35690.18506807915
-    [30.07854, 60.04802, 9984.8226, 0.29733, 0.5852, 1988.28681, 16701.93143, 3268.38869, 27380.60969, 19182.6363, 5197.49426] -35688.99700226109
-    ...
+    x0 = {"t1":10, "t2":20, "t3":5000.0, "r1":0.5, "r2":0.5, "N":10000, "N_a":10000, "N_b":10000, "N_c":10000, "N_d":10000, "N_e":10000}
+    bounds = [(10, "t2"),("t1", 100),(1e3, 2e4),(0.001,0.999),(0.001,0.999),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000),(100,100000)]
+
+Then running
+
+    glike.maximize(fun, x0, bounds = bounds)
+
+Would generate
+
+    xxx
 
 The estimation usually converges after 10 ~ 30 rounds, which takes around 2 hours.
 When the function finishes, `x` will be the estimated parameters, and `logp` will be the maximum likelihood ever reached.
