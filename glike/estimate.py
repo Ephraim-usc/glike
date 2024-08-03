@@ -1,6 +1,5 @@
 from .glike import *
 
-# 用interval来约束fixed params
 class Search():
   def __init__(self, x0, limits = None, names_fixed = None, precision = 0.05):
     self.names = list(x0.keys())
@@ -69,6 +68,13 @@ class Search():
 
 
 def maximize(fun, x0, limits = None, precision = 0.05, epochs = 20, verbose = False):
+  # fun: The objective function to be maximized.
+  # x0: the dict of initial parameters, such that the initial output would be fun(**x0)
+  # limits: the list of 2-tuples that defines the boundaries
+  # precision: a float that defines the (proportional) step size
+  # epochs: an integer that defines the maximum number of epochs
+  # verbose: True if intermediate results are printed, False if not
+  
   search = Search(x0, limits = limits, precision = precision)
   names = list(x0.keys())
   
