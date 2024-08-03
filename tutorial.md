@@ -72,7 +72,7 @@ The three-way admixture model as defined in the glike language is
 Where the demography consists of four phases, each defined by the starting and ending time, the list of inverse population sizes, and the mass migration matrices.
 
 
-Defining the demographic model
+Checking out
 ------------
 
 It is recommended to always check if the demographic model is written correctly. Here we create the true demography as an example:
