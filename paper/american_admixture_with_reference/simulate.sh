@@ -19,7 +19,7 @@ N_asia = 554 * math.exp(0.0048 * 920)
 N_admix = 30000 * math.exp(0.05 * 12)
 
 demography = glike.american_admixture_demography(12, 920, 2040, 5920, 0.17, 0.33, 14474, N_eur, N_asia, N_admix, 1861, 7310, 0.0038, 0.0048, 0.05)
-arg = msprime.sim_ancestry({"admix":1000, "eur":500, "afr":500, "asia":500}, sequence_length = 3e7, recombination_rate = 1e-8, demography = demography, ploidy = 1)
+arg = msprime.sim_ancestry({"afr":500, "eur":500, "asia":500, "admix":1000}, sequence_length = 3e7, recombination_rate = 1e-8, demography = demography, ploidy = 1)
 arg = msprime.sim_mutations(arg, rate = 1e-8, discrete_genome = False)
 arg.dump("true_${name}.trees")
 
@@ -29,7 +29,7 @@ END
 
 
 cd tsinfer_${name}
-~/bin/tsinfer infer rec.samples -p -t 4 --recombination-rate 1e-10 
+~/bin/tsinfer infer rec.samples -p -t 4 --recombination-rate 1e-8
 ~/bin/tsdate preprocess rec.trees preprocessed.trees
 ~/bin/tsdate date preprocessed.trees dated.trees 10000 -m 1e-8 --progress
 cd ..
