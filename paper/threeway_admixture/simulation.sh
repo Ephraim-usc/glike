@@ -27,9 +27,9 @@ END
 
 
 cd tsinfer_${name}
-~/bin/tsinfer infer tmp.samples -p -t 4 --recombination-rate 1e-8
-~/bin/tsdate preprocess tmp.trees preprocessed.trees
-~/bin/tsdate date preprocessed.trees dated.trees 10000 -m 1e-8 --progress
+tsinfer infer tmp.samples -p -t 4 --recombination-rate 1e-8
+tsdate preprocess tmp.trees preprocessed.trees
+tsdate date preprocessed.trees dated.trees 10000 -m 1e-8 --progress
 cd ..
 cp tsinfer_${name}/dated.trees ./tsdate_${name}.trees
 rm -r -f tsinfer_${name}
