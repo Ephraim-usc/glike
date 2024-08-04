@@ -34,7 +34,7 @@ Full likelihood of genealogical trees
 
 Core functionality
 
-    logp = glike.glike_trees(trees, demo, samples, prune)
+    logp = glike.glike_trees(trees, demo, samples, kappa, prune)
     
 Where `trees` is any enumerable that contains `tskit` genealogical trees.
 Note that it is the user's duty to manually pick out trees that are selective neutral and independent, and to wrap them in a list or other iterable objects.
@@ -50,6 +50,10 @@ In essense, the parameter `samples` restricts the graph of states (GOS) to conta
 Although rarely useful, inner nodes in the genealogical trees may also be included in `samples`.
 Lineages not mentioned in the dictionary are considered potentially from any available population at the time of the sample.
 The default is an empty dictionary.
+
+`kappa` is an integer that controls the maximum number of connections between layers (see the paper for a more technical explanation). 
+It effectively controls the trade-off between accuracy and computational cost.
+The default value is 10000. Experiments in the paper were conducted with this default value.
 
 `prune` is a float number between 0 and 1, that specifies the proportion of discarding low likelihood trees.
 Enabling this feature often reduces noise when dealing with reconstructed trees.
@@ -144,6 +148,8 @@ The computational time and memory cost for a gLike evaluation of a tree depends 
 (3) number of ancestral populations increase the number of states in an exponential manner
 
 (4) samples from ancestral populations help determine population identities of lineages from admixed samples, therefore effectively reducing the number of states.
+
+(5) adjust the parameter `kappa` to achieve a balance between accuracy and computational cost.
 
 
 About this project
