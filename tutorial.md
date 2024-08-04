@@ -132,12 +132,11 @@ Then running
 
     glike.maximize(fun, x0, bounds = bounds)
 
-Would generate
-
-    xxx
-
+Would start the process of optimizing the function.
 This usually takes around 2 hours on a personal computer.
 When the function finishes, `x` will be the estimated parameters, and `logp` will be the maximum likelihood ever reached.
+To reproduce Figure 2B of the paper, this process has to be repeated 50 times, and the estimates have to be averaged over the 50 replicates.
+See for [threeway admixture scripts](./paper/threeway_admixture) the scripts used on an SLURM cluster.
 
 
 A more complicated example
