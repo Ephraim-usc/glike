@@ -8,7 +8,7 @@ Nasia$
 Nooa$
 Nanc$
 //Sample sizes
-100
+1000
 0
 0
 0
