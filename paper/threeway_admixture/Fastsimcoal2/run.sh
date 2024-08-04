@@ -29,7 +29,7 @@ for i in `seq 1 20`
 do
 if [ ! -f ${i}.bestlhoods ]; then
 echo "running the ${i}-th estimation"
-fsc28 -t ThreeWayAdmixture.tpl -n 100000 -d -e ThreeWayAdmixture.est -M -L 40 -q
+fsc28 -t ThreeWayAdmixture.tpl -n 100000 -d -e ThreeWayAdmixture.est -M -L 40 -q -c12 -B12
 cp ThreeWayAdmixture/ThreeWayAdmixture.bestlhoods ${i}.bestlhoods
 rm ThreeWayAdmixture -r -f
 fi
