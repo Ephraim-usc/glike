@@ -1,0 +1,22 @@
+// Priors and rules file
+// *********************
+
+[PARAMETERS]
+//#isInt? #name   #dist.#min  #max
+//all Ns are in number of haploid individuals
+1  T1$  unif 0  50 output
+1  T2$  unif T1$  100 output paramInRange
+1  T3$  unif 50000  200000 output
+0  R1$  unif 0  1 output
+0  R2$  unif 0  1 output
+1  NO$  unif 1000 100000 output
+1  NA$  unif 1000 100000 output
+1  NB$  unif 1000 100000 output
+1  NC$  unif 1000 100000 output
+1  ND$  unif 1000 100000 output
+1  NE$  unif 1000 100000 output
+
+
+[RULES]
+
+[COMPLEX PARAMETERS]
