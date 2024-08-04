@@ -1,7 +1,7 @@
 '''
 This file contains the original code that generated the Figures 2, 3, 4 and 5 in the paper.
 It involves paths and file names of finished experiments on the authors' server, which need to be modified by each user. 
-But the functions for plotting demographies and boxplots can be directly used.
+But the functions for plotting demographies, boxplots and other graphics can be directly used.
 '''
 
 import os
