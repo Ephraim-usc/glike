@@ -1,3 +1,8 @@
+'''
+This file contains the original code that generated the Figures 2, 3, 4 and 5 in the paper.
+It involves paths and file names of finished experiments, which need to be modified by each user. 
+'''
+
 import os
 import pickle
 import math
