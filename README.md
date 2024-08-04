@@ -27,6 +27,7 @@ In the following sections, we introduce the API of the gLike model.
 
 For an intuitive understanding of how gLike works, see a simple [tutorial](./tutorial.md) that walks though a toy example.
 
+Find in [paper scripts](./paper/) codes for reproducing the figures in the paper.
 
 Full likelihood of genealogical trees
 ------------
