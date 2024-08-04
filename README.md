@@ -41,9 +41,9 @@ Note that it is the user's duty to manually pick out trees that are selective ne
 A `tskit.TreeSequence` object is not directly iterable and thus not a legitimate input. 
 Although calling `ts.trees()` to enumerate all trees in the `tskit.TreeSequence` would work grammatically, it is not recommended in most cases, since neighboring trees are generally not independent from each other. 
 
-`demo` is the hypothesized Demography created manually (see the following section) or from provided models in `models.py`.
+`demo` is a hypothesized Demography created manually (see the following section) or from provided models in `models.py`.
 
-`samples` is the dict that contains `sample:pop` pairs, which specifies which sample is collected from which population.
+`samples` is a `dict` that contains `sample:pop` pairs, which specifies which sample is collected from which population.
 The population can be identified either by an integer representing the population index or a string denoting the population name.
 For example, `{4:2, 13:"A"}` means that lineage 4 is in the second population (at time `tree.time(4)`), and lineage 13 is in the population named A (at time `tree.time(13)`).
 In essense, the parameter `samples` restricts the graph of states (GOS) to contain only states that are compatible with these known population identities.
@@ -111,29 +111,30 @@ The resulting demography can be visualized by
 Demography parameter estimation
 ------------
 
-To make a demographic model containing variable parameters, the idiom is
+gLike provides a function `maximize` that mimics the popular `scipy.optimize.minimize` function, but has been made convenient for optimizing demographic parameters.
 
-    def model(...):
+    x, logp = glike.maximize(fun, x0, bounds = bounds)
+
+`fun` is the objective funciton that is called in the `fun(**x)` way, note that `x` must contain all parameters that `fun` does not have a default value.
+
+`x0` is a `dict` object that contains the intial values represented as `param:value` pairs, where `param` is the name of the parameter (of type `str`), and `value` is the value (of type `float`).
+
+`bounds` is a list of 2-tuples, of the same length as `x0`, where each tuple contains the lower and upper bound of the parameter. Specifically, it is a list of tuples `(low, high)` where `low` and `high` could be a number or a string expression including names of the parameters (which will be evaluated at runtime by `eval()`). For example, 
+
+  x0 = {"t1":25, "t2":50, "t3":75]
+  bounds = [(0, "t2"), ("t1", "t3"), ("t2", 100)]
+
+Means that three parameters are being estimated, with names `t1`, `t2` and `t3`. Their initial values are `25`, `50` and `75`, respectively. 
+The boundary conditions require that `0 < t1 < t2 < t3 < 100`.
+Empirically, if the output parameters take values very close to the lower or upper limits, it's likely that the estimation is stuck in a local optimal, or the proposed model is not well compatible with the genealogical trees. If that's the case, it's suggested to try other initial values or demography models.
+
+The wrapper function `fun` for estimating demographic parameters can usually be constructed like:
+
+    def func(...):
       demo = glike.Demography()
       # add Phases that depend on the parameters
-      return demo
-
-We provide an function for estimating parameters 
-
-    glike.estimate(trees, model, search)
-
-Which runs a smart maximum likelihood protocol specially designed for glike to find the estimated parameters.
-We use a Search object to tell the information about initial values and restrictions of the parameters. It is created with
-
-    search = Search(names, values, limits, fixed)
-
-Where `names` is a list of the names of the parameters, `values` is a list of initial parameter values, `fixed` is a list of the names of fixed parameters so that their values will keep untouched. `limits` is a list of tuples `(low, high)` where `low` and `high` could be a number or a string expression involving names of the parameters (which will be evaluated at runtime by `eval()`). For example, if our model has three events happening between 0 and 100 generations ago, in order to estimate the times of these three events we could do
-
-    names = ["t1", "t2", "t3"]
-    values = [25, 50, 75] # or other initial values you see fit
-    limits = [(0, "t2"), ("t1", "t3"), ("t2", 100)]
-
-Empirically, if the output parameters take values very close to the lower or upper limits, it's likely that the estimation is stuck in a local optimal, or the proposed model is not well compatible with the genealogical trees. If that's the case, it's suggested to try other initial values or demography models.
+      # define samples if needed
+      return glike.glike_trees(trees, demo, samples, kappa, prune)
 
 
 Runtime considerations
