@@ -9,6 +9,7 @@ name=${SLURM_ARRAY_TASK_ID}
 python3 << END
 import os
 import math
+import msprime
 import tsinfer
 import tsdate
 import glike
