@@ -1,12 +1,12 @@
 '''
 This file contains the original code that generated the Figures 2, 3, 4 and 5 in the paper.
-It involves paths and file names of finished experiments, which need to be modified by each user. 
+It involves paths and file names of finished experiments on the authors' server, which need to be modified by each user. 
 But the functions for plotting demographies and boxplots can be directly used.
 '''
 
 import os
 import pickle
-import math
+import math 
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
