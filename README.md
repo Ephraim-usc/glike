@@ -41,9 +41,9 @@ Note that it is the user's duty to manually pick out trees that are selective ne
 A `tskit.TreeSequence` object is not directly iterable and thus not a legitimate input. 
 Although calling `ts.trees()` to enumerate all trees in the `tskit.TreeSequence` would work grammatically, it is not recommended in most cases, since neighboring trees are generally not independent from each other. 
 
-`demo` is a hypothesized Demography created manually (see the following section) or from provided models in `models.py`.
+`demo` is a `glike.Demo` object, representing the hypothesized demography. It may be created manually (see the following section) or from provided models in `models.py`.
 
-`samples` is a `dict` that contains `sample:pop` pairs, which specifies which sample is collected from which population.
+`samples` is a `dict` object that contains `sample:pop` pairs, which specifies which sample is collected from which population.
 The population can be identified either by an integer representing the population index or a string denoting the population name.
 For example, `{4:2, 13:"A"}` means that lineage 4 is in the second population (at time `tree.time(4)`), and lineage 13 is in the population named A (at time `tree.time(13)`).
 In essense, the parameter `samples` restricts the graph of states (GOS) to contain only states that are compatible with these known population identities.
