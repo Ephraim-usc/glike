@@ -132,6 +132,20 @@ Where `names` is a list of the names of the parameters, `values` is a list of in
 Empirically, if the output parameters take values very close to the lower or upper limits, it's likely that the estimation is stuck in a local optimal, or the proposed model is not well compatible with the genealogical trees. If that's the case, it's suggested to try other initial values or demography models.
 
 
+Runtime considerations
+------------
+
+The computational time and memory cost for a gLike evaluation of a tree depends on the number of states and the number of connections between states, or, in the language of graph theory, the number of vertices and edges of the GOS. We note that there is not an intuitive way to predict the runtime of gLike on different demographic models (see the paper for a detailed discussion). In our experience, the following guidelines may be helpful:
+
+(1) always simulate data and test gLike on true parameters to make sure the runtime is acceptable
+
+(2) moving demographic events to the more recent times generally increases the number of states, because more lineages will be involved
+
+(3) number of ancestral populations increase the number of states in an exponential manner
+
+(4) samples from ancestral populations help determine population identities of lineages from admixed samples, therefore effectively reducing the number of states.
+
+
 About this project
 -------------
 
