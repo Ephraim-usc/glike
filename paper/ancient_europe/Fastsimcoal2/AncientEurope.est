@@ -1,0 +1,32 @@
+// Priors and rules file
+// *********************
+
+[PARAMETERS]
+//#isInt? #name   #dist.#min  #max
+//all Ns are in number of haploid individuals
+1  T1$  unif 10  160 output 
+1  T2$  unif 160  190 output
+1  T3$  unif 190  250 output
+1  T4$  unif 501  1000 output
+1  T5$  unif T4$  1000 output paramInRange
+1  T6$  unif T5$  10000 output paramInRange
+0  R1$  unif 0.01  0.99 output
+0  R2$  unif 0.01  0.99 output
+0  R3$  unif 0.01  0.99 output
+1  Nana$  unif 1000 100000 output
+1  Nneo$  unif 1000 100000 output
+1  Nwhg$  unif 1000 100000 output
+1  Nbronze$  unif 1000 100000 output
+1  Nyam$  unif 1000 100000 output
+1  Nehg$  unif 1000 100000 output
+1  Nchg$  unif 1000 100000 output
+1  Nne$  unif 1000 100000 output
+1  Nwa$  unif 1000 100000 output
+1  Nooa$  unif 1000 100000 output
+0  GR$  logunif 0.001 1 output
+
+
+[RULES]
+
+[COMPLEX PARAMETERS]
+0 GBR$ = 0 - GR$ hide
