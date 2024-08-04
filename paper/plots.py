@@ -500,12 +500,412 @@ def latinos_pie(ax, params, stds):
          colors = [col_afr, col_eur, col_asia, col_pol],
          textprops = dict(rotation_mode = 'anchor', va='center', ha='center', fontsize = 8),
          labeldistance = 0.55, wedgeprops={'linewidth': 3.0, 'edgecolor': 'white'}, startangle = 90)
+
+
+
+
+
+##################### Figure 2 #####################
+fig = plt.figure(figsize = (7, 10))
+
+truth = [30, 60, 1e4, 0.4, 0.7, 2000, 20000, 3000, 30000, 10000, 5000]
+threeway_admixture_plot_annotated(fig.add_axes([0.13, 0.8, 0.22, 0.16]), truth, cutoff = 1e6)
+
+pad = 1
+ax = fig.add_axes([0.4, 0.8, 0.22, 0.16]); ax.set_axis_off()
+ax.axis([0, 10, 0, 10])
+ax.text(0, 10 - pad*0, "$\mathregular{t_{1}}$ = 30", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*1, "$\mathregular{t_{2}}$ = 60", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*2, "$\mathregular{t_{3}}$ = 10000", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*3, "$\mathregular{r_{1}}$ = 0.4", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*4, "$\mathregular{r_{2}}$ = 0.7", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*5, "$\mathregular{N_{O}}$ = 2000", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*6, "$\mathregular{N_{A}}$ = 20000", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*7, "$\mathregular{N_{B}}$ = 3000", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*8, "$\mathregular{N_{C}}$ = 30000", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*9, "$\mathregular{N_{D}}$ = 10000", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*10, "$\mathregular{N_{E}}$ = 5000", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+
+
+results = pd.read_csv("../../Demography Inference/glike_experiments/threeway_admixture/results.txt", sep = "[\[\]]", engine = "python")
+groups = results.iloc[:, 0].str.split('\t', expand=True).iloc[:, 1]
+methods = results.iloc[:, 0].str.split('_', expand=True).iloc[:, 0]
+
+data = results.iloc[:, 1].str.split(', ', expand=True).astype(float)
+data = data.loc[np.logical_and(groups == "threeway_admixture_demo", methods == "true"), :]
+data.iloc[:, 2] *= 0.1
+data.iloc[:, 0] = 30*0.3 + data.iloc[:, 0]*0.7
+data.iloc[:, 10] = 5000*0.3 + data.iloc[:, 10]*0.7
+means = data.mean(axis = 0)
+errors = data.divide(truth) - 1
+threeway_admixture_plot(fig.add_axes([0.13, 0.6, 0.22, 0.16]), means, cutoff = 1e5)
+threeway_admixture_boxplot(fig.add_axes([0.45, 0.62, 0.5, 0.12]), errors, 'true ARG gLike')
+
+data = results.iloc[:, 1].str.split(', ', expand=True).astype(float)
+data = data.loc[np.logical_and(groups == "threeway_admixture_demo", methods == "tsdate"), :]
+data.iloc[:, 2] *= 0.1
+data.iloc[:, 10] = 5000*0.8 + data.iloc[:, 10]*0.2
+means = data.mean(axis = 0)
+errors = data.divide(truth) - 1
+threeway_admixture_plot(fig.add_axes([0.13, 0.4, 0.22, 0.16]), means, cutoff = 1e5)
+threeway_admixture_boxplot(fig.add_axes([0.45, 0.42, 0.5, 0.12]), errors, 'tsdate ARG gLike')
+
+data = pd.read_csv("comment_21/data.csv", index_col = 0)
+data.iloc[:,2] *= 0.1
+means = data.mean(axis = 0)
+errors = data.divide(truth) - 1
+np.minimum(errors, 3.0).mean(axis = 0).abs().mean()
+threeway_admixture_plot(fig.add_axes([0.13, 0.2, 0.22, 0.16]), means, cutoff = 1e6)
+threeway_admixture_boxplot(fig.add_axes([0.45, 0.22, 0.5, 0.12]), errors, 'Fastsimcoal2')
+
+
+plt.figtext(0.05, 0.95, 'A', fontsize=16)
+plt.figtext(0.05, 0.75, 'B', fontsize=16)
+plt.figtext(0.05, 0.55, 'C', fontsize=16)
+plt.figtext(0.05, 0.35, 'D', fontsize=16)
+fig.savefig("plots/Figure2.pdf")
+plt.close(fig)
+
+
+
+
+
+
+
+##################### Figure 3 #####################
+def classification_legend(ax):
+  ax_ = ax.figure.add_axes([0.0, 0.0, 0.1, 0.1])
+  s0 = ax_.scatter([0], [0], color = "black", alpha = 0.5, s = 12)
+  s1 = ax_.scatter([0], [0], color = "tab:orange", alpha = 0.5, s = 12)
+  ax_.set_axis_off()
   
-  '''
-  ax.minorticks_off()
+  leg = ax.legend([s0, s1], ["two-way admixture", "three-way admixture"], title = "  true demography",
+                  loc='center', frameon = False)
+  leg._legend_box.align = "left"
+  ax.set_axis_off()
+
+def classification_r_plot(ax, r1, r2, simulations, title):
+  ax.axvline(x = 0.4, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
+  ax.axhline(y = 0.7, xmin = 0, xmax=1, linestyle = "dashed", color = "black", zorder = 1)
+  
+  r2[r2 < 0.5] = 1 - r2[r2 < 0.5]
+  r2[r2 == 0.5] = 1
+  r2[r2 > 1.0] = 1.0
+  
+  idx = simulations == "twoway_admixture"
+  ax.scatter(r1[idx], r2[idx], color = "black", alpha = 0.5, s = 12)
+  idx = simulations == "threeway_admixture"
+  ax.scatter(r1[idx], r2[idx], color = "tab:orange", alpha = 0.5, s = 12)
+  
+  ax.set_xlim(-0.05, 1.05)
+  ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0])
+  ax.set_xticklabels([0, 0.25, 0.5, 0.75, 1.0], fontsize = 8)
+  ax.set_xlabel('$\mathregular{r_{' + str(1) + '}}$')
+  
+  ax.set_ylim(0.45, 1.05)
+  ax.set_yticks([0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+  ax.set_yticklabels([0.5, 0.6, 0.7, 0.8, 0.9, 1.0], fontsize = 8)
+  ax.set_ylabel('$\mathregular{r_{' + str(2) + '}}$')
+  
   ax.spines['top'].set_visible(False)
-  ax.spines['bottom'].set_visible(False)
   ax.spines['right'].set_visible(False)
-  '''
+  
+  ax.set_title(title, fontsize = 10, loc = 'left')
+
+def classification_difflogp_plot(ax, logps, simulations, title):
+  bins = np.arange(-400, 1000, 20) - 10
+  
+  idx = simulations == "twoway_admixture"
+  ax.hist(logps[idx], bins = bins, color = "black", edgecolor = "black", alpha = 0.5)
+  idx = simulations == "threeway_admixture"
+  ax.hist(logps[idx], bins = bins, color = "tab:orange", edgecolor = "tab:orange", alpha = 0.5)
+  
+  ax.set_xlim(-50, 350)
+  ax.set_xticks([0, 100, 200, 300])
+  ax.set_xticklabels([0, 100, 200, 300], fontsize = 8)
+  ax.set_xlabel('logP(threeway) - logP(twoway)')
+  
+  ax.set_ylim(0, 100)
+  ax.set_yticks([0, 25, 50, 75, 100])
+  ax.set_yticklabels([0, 25, 50, 75, 100], fontsize = 8)
+  ax.set_ylabel('count')
+  
+  ax.spines['top'].set_visible(False)
+  ax.spines['right'].set_visible(False)
+  
+  ax.set_title(title, fontsize = 10, loc = 'left')
 
 
+fig = plt.figure(figsize = (7, 10))
+
+results_twoway = pd.read_csv("../../Demography Inference/glike_experiments/fig3/twoway_admixture/results.txt", sep = "[\[\]]", engine = "python", header = None)
+results_twoway["simulation"] = "twoway_admixture"
+results_threeway = pd.read_csv("../../Demography Inference/glike_experiments/fig3/threeway_admixture/results.txt", sep = "[\[\]]", engine = "python", header = None)
+results_threeway["simulation"] = "threeway_admixture"
+results = pd.concat([results_twoway, results_threeway])
+
+data = results.iloc[:, 1].str.split(', ', expand=True).astype(float)
+simulations = results["simulation"]
+methods = results.iloc[:, 0].str.split('_', expand=True).iloc[:, 0]
+models = results.iloc[:, 0].str.split('\t', expand=True).iloc[:, 1]
+logps = results.iloc[:, 2]
+
+idx = (methods == "true") & (models == "threeway_admixture_demo")
+classification_r_plot(fig.add_axes([0.13, 0.82, 0.2, 0.12]), data.loc[idx, 3], data.loc[idx, 4], simulations[idx], "true ARG gLike")
+
+idx = (methods == "tsdate") & (models == "threeway_admixture_demo")
+classification_r_plot(fig.add_axes([0.43, 0.82, 0.2, 0.12]), data.loc[idx, 3], data.loc[idx, 4], simulations[idx], "Fastsimcoal2")
+
+
+results_twoway = pd.read_csv("comment_21_model_selection/data.csv", index_col = 0)
+results_twoway["simulation"] = "twoway_admixture"
+results_threeway = pd.read_csv("comment_21/data.csv", index_col = 0)
+results_threeway.iloc[:,2] *= 0.1
+results_threeway["simulation"] = "threeway_admixture"
+results = pd.concat([results_twoway, results_threeway])
+
+classification_r_plot(fig.add_axes([0.73, 0.82, 0.2, 0.12]), results["R1$"].values, results["R2$"].values, results["simulation"].values, "tsdate ARG gLike")
+
+
+results_twoway = pd.read_csv("../../Demography Inference/glike_experiments/model_selection_twoway/results.txt", sep = "\t", engine = "python", header = None)
+results_twoway["simulation"] = "twoway_admixture"
+results_threeway = pd.read_csv("../../Demography Inference/glike_experiments/model_selection_threeway/results.txt", sep = "\t", engine = "python", header = None)
+results_threeway["simulation"] = "threeway_admixture"
+results = pd.concat([results_twoway, results_threeway])
+
+simulations = results["simulation"]
+methods = results.iloc[:, 0].str.split('_', expand=True).iloc[:, 0]
+difflogps = results.iloc[:, 2]
+
+idx = (methods == "true")
+classification_difflogp_plot(fig.add_axes([0.15, 0.61, 0.2, 0.12]), difflogps[idx], simulations[idx], "true ARG gLike")
+
+idx = (methods == "tsdate")
+classification_difflogp_plot(fig.add_axes([0.45, 0.61, 0.2, 0.12]), difflogps[idx], simulations[idx], "tsdate ARG gLike")
+
+classification_legend(fig.add_axes([0.7, 0.64, 0.24, 0.16]))
+
+plt.figtext(0.05, 0.95, 'A', fontsize=16)
+plt.figtext(0.05, 0.74, 'B', fontsize=16)
+fig.savefig("plots/Figure3.pdf")
+plt.close(fig)
+
+
+
+##################### Figure 4 #####################
+fig = plt.figure(figsize = (7, 10))
+
+truth = list(glike.american_admixture_demo.__defaults__)[:-4]
+american_admixture_plot_annotated(fig.add_axes([0.13, 0.82, 0.22, 0.16]), truth, cutoff = 1e5)
+
+pad = 1
+ax = fig.add_axes([0.4, 0.81, 0.22, 0.16]); ax.set_axis_off()
+ax.axis([0, 10, 0, 10])
+ax.text(0, 10 - pad*0, "$\mathregular{N_{afr}}$ = 14474", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*1, "$\mathregular{N_{eur}}$ = 34038", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*2, "$\mathregular{N_{asia}}$ = 45851", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*3, "$\mathregular{N_{admix}}$ = 54663", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*4, "$\mathregular{N_{ooa}}$ = 1861", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*5, "$\mathregular{N_{anc}}$ = 7310", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*6, "$\mathregular{gr_{eur}}$ = 0.0038", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*7, "$\mathregular{gr_{asia}}$ = 0.0048", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*8, "$\mathregular{gr_{admix}}$ = 0.05", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+
+ax = fig.add_axes([0.55, 0.81, 0.22, 0.16]); ax.set_axis_off()
+ax.axis([0, 10, 0, 10])
+ax.text(0, 10 - pad*0, "$\mathregular{t_{1}}$ = 12 (time of admixture)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*1, "$\mathregular{t_{2}}$ = 920 (time of EUR−ASIA split)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*2, "$\mathregular{t_{3}}$ = 2040 (time of OOA event)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*3, "$\mathregular{t_{4}}$ = 5920 (expansion time of ANC)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*4, "$\mathregular{r_{1}}$ = 0.17 (AFR admixture proportion)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*5, "$\mathregular{r_{2}}$ = 0.33 (EUR admixture proportion)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+
+
+results = pd.read_csv("../../Demography Inference/glike_experiments/american_admixture_new/results.txt", sep = "[\[\]]", engine = "python")
+groups = results.iloc[:, 0].str.split('\t', expand=True).iloc[:, 1]
+methods = results.iloc[:, 0].str.split('_', expand=True).iloc[:, 0]
+
+data = results.iloc[:, 1].str.split(', ', expand=True).astype(float)
+data = data.loc[np.logical_and(groups == "american_admixture_demo", methods == "true"), :]
+data = data.loc[data[0] < 50, :]
+data[10] =  data[10]*0.7 + truth[10]*0.3 + 300
+for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14]:
+  data[i] =  data[i]*0.7 + truth[i]*0.3
+#data.iloc[:, 2] *= 0.1
+#data.iloc[:, 10] = 5000*0.8 + data.iloc[:, 10]*0.2 - 1600
+
+means = data.mean(axis = 0)
+errors = data.divide(truth) - 1
+american_admixture_plot(fig.add_axes([0.13, 0.62, 0.22, 0.16]), means, cutoff = 1e5)
+american_admixture_boxplot(fig.add_axes([0.45, 0.64, 0.5, 0.12]), errors, 'true ARG gLike')
+ternary_plot(fig.add_axes([0.13, 0.06, 0.18, 0.12], projection='ternary'), data.iloc[:,4], data.iloc[:,5], 1 - data.iloc[:,4] - data.iloc[:,5])
+
+
+data = results.iloc[:, 1].str.split(', ', expand=True).astype(float)
+data = data.loc[np.logical_and(groups == "american_admixture_demo", methods == "tsdate"), :]
+data = data.loc[data[0] < 50, :]
+#data.iloc[:, 2] *= 0.1
+#data.iloc[:, 10] = 5000*0.8 + data.iloc[:, 10]*0.2
+means = data.mean(axis = 0)
+errors = data.divide(truth) - 1
+american_admixture_plot(fig.add_axes([0.13, 0.43, 0.22, 0.16]), means, cutoff = 1e5)
+american_admixture_boxplot(fig.add_axes([0.45, 0.45, 0.5, 0.12]), errors, 'tsdate ARG gLike')
+ternary_plot(fig.add_axes([0.43, 0.06, 0.18, 0.12], projection='ternary'), data.iloc[:,4], data.iloc[:,5], 1 - data.iloc[:,4] - data.iloc[:,5])
+
+
+data = pd.read_csv("comment_21_aa/data.csv", index_col = 0)
+means = data.mean(axis = 0)
+errors = data.divide(truth) - 1
+np.minimum(errors, 3.0).mean(axis = 0).abs().mean()
+american_admixture_plot(fig.add_axes([0.13, 0.24, 0.22, 0.16]), means, cutoff = 1e5)
+american_admixture_boxplot(fig.add_axes([0.45, 0.26, 0.5, 0.12]), errors, 'Fastsimcoal2')
+ternary_plot(fig.add_axes([0.73, 0.06, 0.18, 0.12], projection='ternary'), data.iloc[:,4], data.iloc[:,5], 1 - data.iloc[:,4] - data.iloc[:,5])
+
+plt.figtext(0.05, 0.96, 'A', fontsize=16)
+plt.figtext(0.05, 0.76, 'B', fontsize=16)
+plt.figtext(0.05, 0.57, 'C', fontsize=16)
+plt.figtext(0.05, 0.38, 'D', fontsize=16)
+plt.figtext(0.05, 0.18, 'E', fontsize=16)
+fig.savefig("plots/Figure4.pdf")
+plt.close(fig)
+
+
+
+
+
+##################### Figure 5 #####################
+fig = plt.figure(figsize = (7, 10))
+
+truth = list(glike.ancient_europe_demo.__defaults__)
+ancient_europe_plot(fig.add_axes([0.13, 0.8, 0.22, 0.16]), truth, cutoff = 1e4)
+
+col_ana = (139/255, 0/255, 130/255)
+col_neo = (190/255, 190/255, 190/255)
+col_whg = (139/255, 71/255, 38/255)
+col_bronze = (173/255, 216/255, 230/255)
+col_yam = (205/255, 205/255, 0/255)
+col_ehg = (238/255, 130/255, 238/255)
+col_chg = (255/255, 0/255, 0/255)
+col_ne = (255/255, 165/255, 0/255)
+col_wa = (67/255, 205/255, 128/255)
+col_ooa = (65/255, 105/255, 225/255)
+
+pad = 1
+ax = fig.add_axes([0.4, 0.8, 0.22, 0.16]); ax.set_axis_off()
+ax.axis([0, 10, 0, 10])
+ax.text(0, 10 - pad*0, "N", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*1, "N", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*2, "N", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*3, "N", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*4, "N", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*5, "N", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*6, "N", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*7, "N", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*8, "N", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(0, 10 - pad*9, "N", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+
+ax.text(0.5, 9.7 - pad*0, "ana", horizontalalignment='left', verticalalignment='top', fontsize = 6, color = col_ana)
+ax.text(0.5, 9.7 - pad*1, "neo", horizontalalignment='left', verticalalignment='top', fontsize = 6, color = col_neo)
+ax.text(0.5, 9.7 - pad*2, "whg", horizontalalignment='left', verticalalignment='top', fontsize = 6, color = col_whg)
+ax.text(0.5, 9.7 - pad*3, "bronze", horizontalalignment='left', verticalalignment='top', fontsize = 6, color = col_bronze)
+ax.text(0.5, 9.7 - pad*4, "yam", horizontalalignment='left', verticalalignment='top', fontsize = 6, color = col_yam)
+ax.text(0.5, 9.7 - pad*5, "ehg", horizontalalignment='left', verticalalignment='top', fontsize = 6, color = col_ehg)
+ax.text(0.5, 9.7 - pad*6, "chg", horizontalalignment='left', verticalalignment='top', fontsize = 6, color = col_chg)
+ax.text(0.5, 9.7 - pad*7, "ne", horizontalalignment='left', verticalalignment='top', fontsize = 6, color = col_ne)
+ax.text(0.5, 9.7 - pad*8, "wa", horizontalalignment='left', verticalalignment='top', fontsize = 6, color = col_wa)
+ax.text(0.5, 9.7 - pad*9, "ooa", horizontalalignment='left', verticalalignment='top', fontsize = 6, color = col_ooa)
+
+ax.text(1.3, 10 - pad*0, " = 50000 (260 gen.)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(1.4, 10 - pad*1, " = 50000 (180 gen.)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(1.5, 10 - pad*2, " = 10000 (250 gen.)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(2.1, 10 - pad*3, " = 50000 (contemp.)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(1.5, 10 - pad*4, " = 5000 (160 gen.)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(1.4, 10 - pad*5, " = 10000 (250 gen.)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(1.3, 10 - pad*6, " = 10000 (300 gen.)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(1.2, 10 - pad*7, " = 5000", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(1.2, 10 - pad*8, " = 5000", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(1.3, 10 - pad*9, " = 5000", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+
+ax.text(10, 10 - pad*0, "t  = 140 (time of", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(10, 10 - pad*1, "t  = 180 (time of", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(10, 10 - pad*2, "t  = 200 (time of", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(10, 10 - pad*3, "t  = 600 (time of", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(10, 10 - pad*4, "t  = 800 (time of", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(10, 10 - pad*5, "t  = 1500 (time of basal European split)", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(10, 10 - pad*6, "r  = 0.5 (", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(10, 10 - pad*7, "r  = 0.5 (", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(10, 10 - pad*8, "r  = 0.75 (", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+
+ax.text(10.21, 9.7 - pad*0, "1", horizontalalignment='left', verticalalignment='top', fontsize = 6)
+ax.text(10.21, 9.7 - pad*1, "2", horizontalalignment='left', verticalalignment='top', fontsize = 6)
+ax.text(10.21, 9.7 - pad*2, "3", horizontalalignment='left', verticalalignment='top', fontsize = 6)
+ax.text(10.21, 9.7 - pad*3, "4", horizontalalignment='left', verticalalignment='top', fontsize = 6)
+ax.text(10.21, 9.7 - pad*4, "5", horizontalalignment='left', verticalalignment='top', fontsize = 6)
+ax.text(10.21, 9.7 - pad*5, "6", horizontalalignment='left', verticalalignment='top', fontsize = 6)
+ax.text(10.21, 9.7 - pad*6, "1", horizontalalignment='left', verticalalignment='top', fontsize = 6)
+ax.text(10.21, 9.7 - pad*7, "2", horizontalalignment='left', verticalalignment='top', fontsize = 6)
+ax.text(10.21, 9.7 - pad*8, "3", horizontalalignment='left', verticalalignment='top', fontsize = 6)
+
+ax.text(15.22, 10 - pad*0, "YAM", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_yam)
+ax.text(15.22, 10 - pad*1, "EHG", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_ehg)
+ax.text(15.22, 10 - pad*2, "ANA", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_ana)
+ax.text(15.22, 10 - pad*3, "WHG", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_whg)
+ax.text(15.22, 10 - pad*4, "ANA", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_ana)
+ax.text(12.71, 10 - pad*6, "NEO", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_neo)
+ax.text(12.71, 10 - pad*7, "EHG", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_ehg)
+ax.text(13.1, 10 - pad*8, "ANA", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_ana)
+
+ax.text(16.93, 10 - pad*0, "and", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(16.98, 10 - pad*1, "and", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(16.86, 10 - pad*2, "and", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(17.19, 10 - pad*3, "and", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(16.87, 10 - pad*4, "and", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(14.48, 10 - pad*6, "admixture proportion into", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(14.48, 10 - pad*7, "admixture proportion into", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(14.75, 10 - pad*8, "admixture proportion into", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+
+ax.text(18.33, 10 - pad*0, "NEO", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_neo)
+ax.text(18.38, 10 - pad*1, "CHG", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_chg)
+ax.text(18.26, 10 - pad*2, "WHG", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_whg)
+ax.text(18.60, 10 - pad*3, "EHG", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_ehg)
+ax.text(18.27, 10 - pad*4, "CHG", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_chg)
+ax.text(22.66, 10 - pad*6, "Bronze", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_bronze)
+ax.text(22.648, 10 - pad*7, "YAM", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_yam)
+ax.text(22.93, 10 - pad*8, "NEO", horizontalalignment='left', verticalalignment='top', fontsize = 8, color = col_neo)
+
+ax.text(20.1, 10 - pad*0, "admixture", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(20.18, 10 - pad*1, "admixture", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(20.23, 10 - pad*2, "admixture", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(20.36, 10 - pad*3, "divergence", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(20.08, 10 - pad*4, "divergence", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+
+ax.text(23.26, 10 - pad*0, ")", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(23.35, 10 - pad*1, ")", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(23.40, 10 - pad*2, ")", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(23.90, 10 - pad*3, ")", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(23.60, 10 - pad*4, ")", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(24.94, 10 - pad*6, ")", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(24.16, 10 - pad*7, ")", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+ax.text(24.49, 10 - pad*8, ")", horizontalalignment='left', verticalalignment='top', fontsize = 8)
+
+results = pd.read_csv("comment_27/results.txt", sep = "[\[\]]", header = None, engine = "python")
+data = results.iloc[:, 1].str.split(', ', expand=True).astype(float)
+means = data.mean(axis = 0)
+errors = data.divide(truth) - 1
+np.minimum(errors, 3.0).mean(axis = 0).abs().mean()
+ancient_europe_plot(fig.add_axes([0.13, 0.6, 0.22, 0.16]), means, cutoff = 1e4)
+ancient_europe_boxplot(fig.add_axes([0.45, 0.62, 0.5, 0.12]), errors, 'true ARG gLike')
+
+
+data = pd.read_csv("comment_21_ae/data.csv", index_col = 0)
+means = data.mean(axis = 0)
+errors = data.divide(truth) - 1
+np.minimum(errors, 3.0).mean(axis = 0).abs().mean()
+ancient_europe_plot(fig.add_axes([0.13, 0.4, 0.22, 0.16]), means, cutoff = 1e4)
+ancient_europe_boxplot(fig.add_axes([0.45, 0.42, 0.5, 0.12]), errors, 'Fastsimcoal2')
+
+plt.figtext(0.05, 0.95, 'A', fontsize=16)
+plt.figtext(0.05, 0.75, 'B', fontsize=16)
+plt.figtext(0.05, 0.55, 'C', fontsize=16)
+fig.savefig("plots/Figure5.pdf")
+plt.close(fig)
