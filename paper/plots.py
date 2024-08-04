@@ -533,9 +533,6 @@ methods = results.iloc[:, 0].str.split('_', expand=True).iloc[:, 0]
 
 data = results.iloc[:, 1].str.split(', ', expand=True).astype(float)
 data = data.loc[np.logical_and(groups == "threeway_admixture_demo", methods == "true"), :]
-data.iloc[:, 2] *= 0.1
-data.iloc[:, 0] = 30*0.3 + data.iloc[:, 0]*0.7
-data.iloc[:, 10] = 5000*0.3 + data.iloc[:, 10]*0.7
 means = data.mean(axis = 0)
 errors = data.divide(truth) - 1
 threeway_admixture_plot(fig.add_axes([0.13, 0.6, 0.22, 0.16]), means, cutoff = 1e5)
@@ -543,15 +540,12 @@ threeway_admixture_boxplot(fig.add_axes([0.45, 0.62, 0.5, 0.12]), errors, 'true 
 
 data = results.iloc[:, 1].str.split(', ', expand=True).astype(float)
 data = data.loc[np.logical_and(groups == "threeway_admixture_demo", methods == "tsdate"), :]
-data.iloc[:, 2] *= 0.1
-data.iloc[:, 10] = 5000*0.8 + data.iloc[:, 10]*0.2
 means = data.mean(axis = 0)
 errors = data.divide(truth) - 1
 threeway_admixture_plot(fig.add_axes([0.13, 0.4, 0.22, 0.16]), means, cutoff = 1e5)
 threeway_admixture_boxplot(fig.add_axes([0.45, 0.42, 0.5, 0.12]), errors, 'tsdate ARG gLike')
 
 data = pd.read_csv("comment_21/data.csv", index_col = 0)
-data.iloc[:,2] *= 0.1
 means = data.mean(axis = 0)
 errors = data.divide(truth) - 1
 np.minimum(errors, 3.0).mean(axis = 0).abs().mean()
@@ -589,7 +583,6 @@ def classification_r_plot(ax, r1, r2, simulations, title):
   ax.axhline(y = 0.7, xmin = 0, xmax=1, linestyle = "dashed", color = "black", zorder = 1)
   
   r2[r2 < 0.5] = 1 - r2[r2 < 0.5]
-  r2[r2 == 0.5] = 1
   r2[r2 > 1.0] = 1.0
   
   idx = simulations == "twoway_admixture"
@@ -727,13 +720,6 @@ methods = results.iloc[:, 0].str.split('_', expand=True).iloc[:, 0]
 
 data = results.iloc[:, 1].str.split(', ', expand=True).astype(float)
 data = data.loc[np.logical_and(groups == "american_admixture_demo", methods == "true"), :]
-data = data.loc[data[0] < 50, :]
-data[10] =  data[10]*0.7 + truth[10]*0.3 + 300
-for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14]:
-  data[i] =  data[i]*0.7 + truth[i]*0.3
-#data.iloc[:, 2] *= 0.1
-#data.iloc[:, 10] = 5000*0.8 + data.iloc[:, 10]*0.2 - 1600
-
 means = data.mean(axis = 0)
 errors = data.divide(truth) - 1
 american_admixture_plot(fig.add_axes([0.13, 0.62, 0.22, 0.16]), means, cutoff = 1e5)
@@ -743,9 +729,6 @@ ternary_plot(fig.add_axes([0.13, 0.06, 0.18, 0.12], projection='ternary'), data.
 
 data = results.iloc[:, 1].str.split(', ', expand=True).astype(float)
 data = data.loc[np.logical_and(groups == "american_admixture_demo", methods == "tsdate"), :]
-data = data.loc[data[0] < 50, :]
-#data.iloc[:, 2] *= 0.1
-#data.iloc[:, 10] = 5000*0.8 + data.iloc[:, 10]*0.2
 means = data.mean(axis = 0)
 errors = data.divide(truth) - 1
 american_admixture_plot(fig.add_axes([0.13, 0.43, 0.22, 0.16]), means, cutoff = 1e5)
