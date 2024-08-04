@@ -121,8 +121,8 @@ gLike provides a function `maximize` that mimics the popular `scipy.optimize.min
 
 `bounds` is a list of 2-tuples, of the same length as `x0`, where each tuple contains the lower and upper bound of the parameter. Specifically, it is a list of tuples `(low, high)` where `low` and `high` could be a number or a string expression including names of the parameters (which will be evaluated at runtime by `eval()`). For example, 
 
-  x0 = {"t1":25, "t2":50, "t3":75]
-  bounds = [(0, "t2"), ("t1", "t3"), ("t2", 100)]
+    x0 = {"t1":25, "t2":50, "t3":75]
+    bounds = [(0, "t2"), ("t1", "t3"), ("t2", 100)]
 
 Means that three parameters are being estimated, with names `t1`, `t2` and `t3`. Their initial values are `25`, `50` and `75`, respectively. 
 The boundary conditions require that `0 < t1 < t2 < t3 < 100`.
