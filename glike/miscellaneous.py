@@ -107,9 +107,9 @@ def demography_to_demo(demography):
     ns = [1/population.initial_size for population in demography.populations]
     grs = [population.growth_rate for population in demography.populations]
     populations = [population.name for population in demography.populations]
-    demo.add_phase(Phase(0, ns, grs, populations = populations))
+    demo.add_phase(Phase(0, t_end, ns, grs, populations = populations))
     
-    for event in demography.events:
+    while event = demography.events.pop(0):
       if type(event) is msprime.demography.Admixture:
         populations_ = populations; populations = populations.copy(); 
         populations.remove(event.derived)
@@ -136,6 +136,7 @@ def demography_to_demo(demography):
         continue
       
       t_ = t; t = event.time
+      t_end = events[0].time if len(events) > 0 else np.inf
       ns_ = ns.copy()
       ns = [None for _ in populations]
       for population in populations:
