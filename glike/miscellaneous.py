@@ -191,3 +191,23 @@ def demo_to_demography(demo):
       demography.add_population_parameters_change(time = phase.t, initial_size = 1/n, growth_rate = gr, population = population)
   
   return demography
+
+
+# 
+def get_coalescent_times(tree):
+  times = [tree.time(node) for node in tree.nodes()]
+  progenies =  [len(tree.children(node)) for node in tree.nodes()]
+  times_coal = [time for progeny, time in zip(progenies, times) for i in range(progeny - 1) if progeny >= 2]
+  times_coal = sorted(times_coal)
+  return times_coal
+
+
+def get_histogram_log_coal_times(trees):
+  log_coal_times = np.log(np.array([get_coal_times(tree) for tree in trees]).ravel())
+  hist, bins = np.histogram(log_coal_times, bins = np.arange(-1, 12.2, 0.2))
+  return hist
+
+
+def plot_coalescent_distribution(ax, demo):
+  trees = [msprime.sim_ancestry({"admix":1000}, sequence_length = 1, demography = demography, ploidy = 1).first() for _ in range(1000)]
+
