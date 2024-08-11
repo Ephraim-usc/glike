@@ -164,15 +164,17 @@ def demo_to_demography(demo):
   # find all relevant populations and their initial sizes
   populations = []
   ns = []
+  grs = []
   for phase in demo.phases:
-    for population in phase.populations:
+    for population, n, gr in zip(phase.populations, phase.ns, phase.grs):
       if population not in populations:
         populations.append(population)
-        ns.append(phase.ns[phase.populations.index(population)])
+        ns.append(n)
+        grs.append(gr)
   
   demography = msprime.Demography()
-  for population, n in zip(populations, ns):
-    demography.add_population(name = population, initial_size = 1/n)
+  for population, n, gr in zip(populations, ns, grs):
+    demography.add_population(name = population, initial_size = 1/n, growth_rate = gr)
   
   for phase_, phase in zip(demo.phases[:-1], demo.phases[1:]):
     P = phase.P
@@ -185,5 +187,7 @@ def demo_to_demography(demo):
       for dest in phase.populations:
         if P.loc[source, dest] > 0:
           demography.add_mass_migration(time = phase.t, source = source, dest = dest, proportion = P.loc[source, dest])
+    for population, n, gr in zip(phase.populations, phase.ns, phase.grs):
+      demography.add_population_parameters_change(time = phase.t, initial_size = 1/n, growth_rate = gr, population = population)
   
   return demography
