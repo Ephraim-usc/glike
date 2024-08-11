@@ -153,5 +153,66 @@ def demography_to_demo(demography):
           tmp = [event.population]
         for population in tmp:
           ns[populations.index(population)] = (1/event.initial_size, event.growth_rate) if event.growth_rate and event.growth_rate>0 else 1/event.initial_size
+
+
+# this function converts a glike Demo object into an msprime demography object
+# this works for msprime v1.2.0 but may not always work if msprime updates
+def demo_to_demography(demo):
+    import msprime
+    import pandas as pd
+    demo = Demo()
+    events = demography.events
+    
+    t = 0
+    t_end = events[0].time if len(events) > 0 else np.inf
+    ns = [1/population.initial_size for population in demography.populations]
+    grs = [population.growth_rate for population in demography.populations]
+    populations = [population.name for population in demography.populations]
+    demo.add_phase(Phase(0, t_end, ns, grs, populations = populations))
+    
+    while event = demography.events.pop(0):
+      if type(event) is msprime.demography.Admixture:
+        populations_ = populations; populations = populations.copy(); 
+        populations.remove(event.derived)
+        P = pd.DataFrame(0, index = populations_, columns = populations)
+        for population in populations:
+          P.loc[population, population] = 1
+        for anc, prop in zip(event.ancestral, event.proportions):
+          P.loc[event.derived, anc] = prop
+        P = P.values
+      elif type(event) is msprime.demography.PopulationSplit:
+        populations_ = populations; populations = populations.copy()
+        for derived in event.derived:
+          populations.remove(derived)
+        P = pd.DataFrame(0, index = populations_, columns = populations)
+        for population in populations:
+          P.loc[population, population] = 1
+        for derived in event.derived:
+          P.loc[derived, event.ancestral] = 1
+        P = P.values
+      elif type(event) is msprime.demography.PopulationParametersChange:
+        populations_ = populations; populations = populations.copy()
+        P = None
+      else:
+        continue
+      
+      t_ = t; t = event.time
+      t_end = events[0].time if len(events) > 0 else np.inf
+      ns_ = ns.copy()
+      ns = [None for _ in populations]
+      for population in populations:
+        n = ns_[populations_.index(population)]
+        if type(n) is float:
+          ns[populations.index(population)] = n
+        else:
+          ns[populations.index(population)] = (math.log(n[0]) + n[1] * (t-t_), n[1])
+      
+      if type(event) is msprime.demography.PopulationParametersChange:
+        if event.population == -1:
+          tmp = populations.copy()
+        else:
+          tmp = [event.population]
+        for population in tmp:
+          ns[populations.index(population)] = (1/event.initial_size, event.growth_rate) if event.growth_rate and event.growth_rate>0 else 1/event.initial_size
       
       demo.add_phase(Phase(t, ns, P = P, populations = populations))
