@@ -158,24 +158,32 @@ def demography_to_demo(demography):
 # this function converts a glike Demo object into an msprime demography object
 # this works for msprime v1.2.0 but may not always work if msprime updates
 def demo_to_demography(demo):
-    import msprime
-    import pandas as pd
-
-    # find all relevant populations and their initial sizes
-    populations = []
-    ns = []
-    for phase in demo.phases:
-      for population in phase.populations:
-        if population not in populations:
-          populations.append(population)
-          ns.append(phase.ns[phase.populations.index(population)])
-    
-    demography = msprime.Demography()
-    for population, n in zip(populations, ns):
-      demography.add_population(name = population, initial_size = 1/n)
-    
-    for phase in phase.phases:
-      P = phase.P
-      if (P.shape[0] == P.shape[1]) and (P == np.eye(P.shape[0])).all():
+  import msprime
+  import pandas as pd
+  
+  # find all relevant populations and their initial sizes
+  populations = []
+  ns = []
+  for phase in demo.phases:
+    for population in phase.populations:
+      if population not in populations:
+        populations.append(population)
+        ns.append(phase.ns[phase.populations.index(population)])
+  
+  demography = msprime.Demography()
+  for population, n in zip(populations, ns):
+    demography.add_population(name = population, initial_size = 1/n)
+  
+  for phase_, phase in zip(demo.phases[:-1], demo.phases[1:]):
+    P = phase.P
+    if (P.shape[0] == P.shape[1]) and (P == np.eye(P.shape[0])).all():
+      continue
+    P = pd.DataFrame(P, index = phase_.populations, columns = phase.populations)
+    for source in phase_.populations:
+      if source in phase.populations and P.loc[source, source] == 1:
         continue
-      
+      for dest in phase.populations:
+        if P.loc[source, dest] > 0:
+          demography.add_mass_migration(time = phase.t, source = source, dest = dest, proportion = P.loc[source, dest])
+  
+  return demography
