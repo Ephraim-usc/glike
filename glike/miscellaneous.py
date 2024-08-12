@@ -193,7 +193,7 @@ def demo_to_demography(demo):
       multiplier = 1.0
       for dest, proportion in zip(dests, proportions):
         demography.add_mass_migration(time = phase.t, source = source, dest = dest, proportion = proportion * multiplier)
-        multiplier *= 1 - proportion
+        multiplier /= 1 - proportion
     for population, n, gr in zip(phase.populations, phase.ns, phase.grs):
       demography.add_population_parameters_change(time = phase.t, initial_size = 1/n, growth_rate = gr, population = population)
   
