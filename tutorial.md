@@ -246,11 +246,11 @@ Which prints:
 Another useful feature is `glike.get_coalescent_times_demo`, which simulates the coalescence distribution of the `Demo` object.
 For example,
 
-    coalescent_times = glike.get_coalescent_times_demo(demo, {"admix":1000}, sims = 10000)
+    coals = glike.get_coals_demo(demo, {"admix":1000}, sims = 10000)
 
 Simulates 10000 independent trees with the `msprime` engine, and summarizes the coalescent times.
 The result is a 10000x999 2D array, each row of which is the coalescent times (a tree with 1000 samples has 999 coalescent events) of a simulated tree.
-This coalescence distribution can be visualized by
+This coalescence distribution can be visualized by `glike.plot_coalescent_distribution`:
 
     log_coals = np.log(coalescent_times.ravel())
     hist, bins = np.histogram(log_coals, bins = np.arange(-1, 12.2, 0.2)) 
@@ -265,13 +265,13 @@ This coalescence distribution can be visualized by
     ax.axvline(x = 920, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
     ax.axvline(x = 2040, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
     
-    x = np.exp(np.arange(-1, 12.2, 0.2))[:-1]
-    width = np.exp(np.arange(-1, 12.2, 0.2))[1:] - np.exp(np.arange(-1, 12.2, 0.2))[:-1]
-    ax.bar(x, height = hist, width = width, align = "edge", alpha = 0.5, color = "black", edgecolor = "black")
-    
-    ax.set_xscale("log")
-    #ax.set_xticks([0.1, 0, 10, 100, 1000, 10000, 100000])
+    glike.plot_coalescent_distribution(ax, [coals], ["American Admixture"])
     plt.show()
+
+Which plots:
+
+![alt text](http://url/to/img.png)
+
 
 
 Note that `glike.demo_to_demography` and `glike.get_coalescent_times_demo` are based on `msprime` version 1.0, and may not be compatible with future updates of `msprime`.
