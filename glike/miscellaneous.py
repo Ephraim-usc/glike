@@ -93,6 +93,7 @@ def plot_tree(tree):
   return lines
 
 
+'''
 # this function converts an msprime demography object into a glike Demo object
 # this works for msprime v1.2.0 but may not always work if msprime updates
 # note that all continuous migrations will be ignored
@@ -153,6 +154,7 @@ def demography_to_demo(demography):
           tmp = [event.population]
         for population in tmp:
           ns[populations.index(population)] = (1/event.initial_size, event.growth_rate) if event.growth_rate and event.growth_rate>0 else 1/event.initial_size
+'''
 
 
 # this function converts a glike Demo object into an msprime demography object
