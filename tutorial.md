@@ -247,7 +247,8 @@ Another useful feature is `glike.get_coalescent_times_demo`, which simulates the
 For example,
 
     coalescent_times = glike.get_coalescent_times_demo(demo, {"admix":1000})
-    
+
+
 
 
 Note that `glike.demo_to_demography` and `glike.get_coalescent_times_demo` are based on `msprime` version 1.0, and may not be compatible with future updates of `msprime`.
