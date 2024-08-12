@@ -55,7 +55,7 @@ The three-way admixture model as defined in the glike language is
 Where the demography consists of four phases, each defined by the starting and ending time, the list of inverse population sizes, and the mass migration matrices.
 
 
-Checking out
+Checking out the demography
 ------------
 
 It is recommended to always check if the demographic model is written correctly. Here we create the true demography as an example:
@@ -192,4 +192,65 @@ If we want to estimate the population sizes and growth rates, we may do
     x0 = {"N_ana":10000, "N_neo":10000, "N_whg":10000, "N_bronze":10000, "N_yam":10000, "N_ehg":10000, "N_chg":10000, "N_ne":10000, "N_wa":10000, "N_ooa":10000, "gr":0.01}
     bounds = [(100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (100,1000000), (1e-4, 1e0)]
     glike.maximize(fun, x0, bounds = bounds)
+
+
+Miscellaneous
+------------
+
+gLike provides some functionalities that may be helpful to users. 
+For example, a `glike.Demo` object can be converted to an `msprime.Demography` object through the `glike.demo_to_demography` function.
+
+    demo = glike.american_admixture_demo()
+    demography = glike.demo_to_demography(demo)
+    print(demography)
+
+Which prints:
+
+    Demography
+    ╟  Populations
+    ║  ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+    ║  │ id │name   │description  │initial_size  │ growth_rate │  default_sampling_time│extra_metadata  │
+    ║  ├────────────────────────────────────────────────────────────────────────────────────────────────┤
+    ║  │ 0  │afr    │             │14474.0       │      0      │                      0│{}              │
+    ║  │ 1  │eur    │             │34038.0       │   0.0038    │                      0│{}              │
+    ║  │ 2  │asia   │             │45851.0       │   0.0048    │                      0│{}              │
+    ║  │ 3  │admix  │             │54663.0       │    0.05     │                      0│{}              │
+    ║  └────────────────────────────────────────────────────────────────────────────────────────────────┘
+    ╟  Migration Matrix
+    ║  ┌──────────────────────────────────┐
+    ║  │       │ afr │ eur │ asia │ admix │
+    ║  ├──────────────────────────────────┤
+    ║  │    afr│  0  │  0  │  0   │   0   │
+    ║  │    eur│  0  │  0  │  0   │   0   │
+    ║  │   asia│  0  │  0  │  0   │   0   │
+    ║  │  admix│  0  │  0  │  0   │   0   │
+    ║  └──────────────────────────────────┘
+    ╟  Events
+    ║  ┌─────────────────────────────────────────────────────────────────────────────────────────┐
+    ║  │  time│type            │parameters              │effect                                  │
+    ║  ├─────────────────────────────────────────────────────────────────────────────────────────┤
+    ║  │    12│Mass Migration  │source=admix,           │Lineages currently in population admix  │
+    ║  │      │                │dest=afr,               │move to afr with probability 0.17       │
+    ║  │      │                │proportion=0.17         │(equivalent to individuals migrating    │
+    ║  │      │                │                        │from afr to admix forwards in time)     │
+    ║  │┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈│
+    ║  │    12│Mass Migration  │source=admix,           │Lineages currently in population admix  │
+    ║  │      │                │dest=eur,               │move to eur with probability 0.33       │
+    ║  │      │                │proportion=0.33         │(equivalent to individuals migrating    │
+    ║  │      │                │                        │from eur to admix forwards in time)     │
+    ║  │┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈│
+    ║  │    12│Mass Migration  │source=admix,           │Lineages currently in population admix  │
+    ║  │      │                │dest=asia,              │move to asia with probability 0.5       │
+    ...
+
+Another useful feature is `glike.get_coalescent_times_demo`, which simulates the coalescence distribution of the `Demo` object.
+For example,
+
+    coalescent_times = glike.get_coalescent_times_demo(demo, {"admix":1000})
+    
+
+
+Note that `glike.demo_to_demography` and `glike.get_coalescent_times_demo` are based on `msprime` version 1.0, and may not be compatible with future updates of `msprime`.
+
+
 
