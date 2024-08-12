@@ -235,12 +235,18 @@ Which prints:
     ║  │      │                │                        │from afr to admix forwards in time)     │
     ║  │┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈│
     ║  │    12│Mass Migration  │source=admix,           │Lineages currently in population admix  │
-    ║  │      │                │dest=eur,               │move to eur with probability 0.33       │
-    ║  │      │                │proportion=0.33         │(equivalent to individuals migrating    │
+    ║  │      │                │dest=eur,               │move to eur with probability 0.274      │
+    ║  │      │                │proportion=0.274        │(equivalent to individuals migrating    │
     ║  │      │                │                        │from eur to admix forwards in time)     │
     ║  │┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈│
     ║  │    12│Mass Migration  │source=admix,           │Lineages currently in population admix  │
-    ║  │      │                │dest=asia,              │move to asia with probability 0.5       │
+    ║  │      │                │dest=asia,              │move to asia with probability 0.278     │
+    ║  │      │                │proportion=0.278        │(equivalent to individuals migrating    │
+    ║  │      │                │                        │from asia to admix forwards in time)    │
+    ║  │┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈│
+    ║  │    12│Population      │population=afr,         │initial_size → 1.4e+04 and growth_rate  │
+    ║  │      │parameter       │initial_size=14474.0,   │→ 0 for population afr                  │
+    ║  │      │change          │growth_rate=0.0         │                                        │
     ...
 
 Another useful feature is `glike.get_coalescent_times_demo`, which simulates the coalescence distribution of the `Demo` object.
