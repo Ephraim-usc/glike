@@ -193,21 +193,18 @@ def demo_to_demography(demo):
   return demography
 
 
-# 
+# the coalescent times of a tree, in ascending order
+# returns an 1D array of length N-1
 def get_coalescent_times(tree):
   times = [tree.time(node) for node in tree.nodes()]
   progenies =  [len(tree.children(node)) for node in tree.nodes()]
   times_coal = [time for progeny, time in zip(progenies, times) for i in range(progeny - 1) if progeny >= 2]
   times_coal = sorted(times_coal)
-  return times_coal
+  return np.array(times_coal)
 
+def get_coalescent_times_trees(trees):
+  return np.array([get_coalescent_times(tree) for tree in trees])
 
-def get_histogram_log_coal_times(trees):
-  log_coal_times = np.log(np.array([get_coal_times(tree) for tree in trees]).ravel())
-  hist, bins = np.histogram(log_coal_times, bins = np.arange(-1, 12.2, 0.2))
-  return hist
-
-
-def plot_coalescent_distribution(ax, demo):
-  trees = [msprime.sim_ancestry({"admix":1000}, sequence_length = 1, demography = demography, ploidy = 1).first() for _ in range(1000)]
-
+def get_coalescent_times_demo(demo, samples_msprime, sims = 10000):
+  trees = [msprime.sim_ancestry(samples_msprime, sequence_length = 1, demography = demography, ploidy = 1).first() for _ in range(sims)]
+  return get_coalescent_times_trees(trees)
