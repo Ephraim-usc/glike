@@ -232,13 +232,13 @@ def plot_coalescent_distribution(ax, list_of_coals, names, bins = None, colors =
   for coals, color, name in zip(list_of_coals, colors, names):
     log_coals = np.log(coals.ravel())
     hist, bins = np.histogram(log_coals, bins = bins)
-    hist /= coals.shape[0]
+    hist = hist/float(coals.shape[0])
     lefts = np.exp(bins)[:-1]; width = np.exp(bins)[1:] - np.exp(bins)[:-1]
-    ax.bar(lefts, height = hist, width = width, align = "edge", alpha = 0.5, color = "black", edgecolor = "black", label = name)
+    ax.bar(lefts, height = hist, width = width, align = "edge", alpha = 0.5, color = color, edgecolor = color, label = name)
   
   ax.set_xscale("log")
   ax.set_xlabel("generations")
-  ax.set_ylabel("average number of coalescenes")
+  ax.set_ylabel("average count of coalescenes")
   
   handles, labels = ax.get_legend_handles_labels()
   ax.legend(handles = handles[::-1], labels = labels[::-1], loc = "upper right", prop={'size': 8}, title = "", frameon = False)
