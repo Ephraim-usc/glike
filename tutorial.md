@@ -290,9 +290,9 @@ For example, the two-way admixture and three-way admixture demographies are almo
     
     fig = plt.figure(figsize = (7, 10))
     ax = fig.add_axes([0.1, 0.5, 0.4, 0.3])
-    ax.axvline(x = 12, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
-    ax.axvline(x = 920, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
-    ax.axvline(x = 2040, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
+    ax.axvline(x = 30, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
+    ax.axvline(x = 60, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
+    ax.axvline(x = 10000, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
     
     glike.plot_coalescent_distribution(ax, 
         [coals_threeway, coals_twoway], 
