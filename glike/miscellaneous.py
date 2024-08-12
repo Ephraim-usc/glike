@@ -203,7 +203,6 @@ def demo_to_demography(demo):
 # the coalescent times of a tree, in ascending order
 # returns an 1D array of length N-1
 def get_coalescent_times(tree):
-  import msprime
   times = [tree.time(node) for node in tree.nodes()]
   progenies =  [len(tree.children(node)) for node in tree.nodes()]
   times_coal = [time for progeny, time in zip(progenies, times) for i in range(progeny - 1) if progeny >= 2]
@@ -214,5 +213,6 @@ def get_coalescent_times_trees(trees):
   return np.array([get_coalescent_times(tree) for tree in trees])
 
 def get_coalescent_times_demo(demo, samples_msprime, sims = 10000):
+  import msprime
   trees = [msprime.sim_ancestry(samples_msprime, sequence_length = 1, demography = demography, ploidy = 1).first() for _ in range(sims)]
   return get_coalescent_times_trees(trees)
