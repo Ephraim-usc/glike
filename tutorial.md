@@ -258,9 +258,6 @@ Simulates 10000 independent trees with the `msprime` engine, and summarizes the 
 The result is a 10000x999 2D array, each row of which is the coalescent times (a tree with 1000 samples has 999 coalescent events) of a simulated tree.
 This coalescence distribution can be visualized by `glike.plot_coalescent_distribution`:
 
-    log_coals = np.log(coals.ravel())
-    hist, bins = np.histogram(log_coals, bins = np.arange(-1, 12.2, 0.2)) 
-
     import matplotlib as mpl
     import matplotlib.pyplot as plt
     import matplotlib.colors as mcolors
@@ -297,7 +294,8 @@ For example, the two-way admixture and three-way admixture demographies are almo
     ax.axvline(x = 920, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
     ax.axvline(x = 2040, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
     
-    glike.plot_coalescent_distribution(ax, [coals_threeway, coals_twoway], 
+    glike.plot_coalescent_distribution(ax, 
+        [coals_threeway, coals_twoway], 
         ["Three-way Admixture", "Two-way Admixture"])
     
     plt.show()
