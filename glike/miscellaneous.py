@@ -214,5 +214,6 @@ def get_coalescent_times_trees(trees):
 
 def get_coalescent_times_demo(demo, samples_msprime, sims = 10000):
   import msprime
+  demography = demo_to_demography(demo)
   trees = [msprime.sim_ancestry(samples_msprime, sequence_length = 1, demography = demography, ploidy = 1).first() for _ in range(sims)]
   return get_coalescent_times_trees(trees)
