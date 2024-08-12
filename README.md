@@ -154,7 +154,7 @@ The basic function is `glike.get_coals()`, which computes the coalescent times o
 
     coals = glike.get_coals(tree)
 
-Where `tree` is an `msprime.Tree` object. The returned object is an 1D array of length `tree.num_samples()-1`.
+Where `tree` is an `msprime.Tree` object. The returned object is an 1D array of length `tree.num_samples()-1`, representing the coalescent times in ascending order.
 
 More often the coalescence distribution of a list of trees is directly useful.
 
