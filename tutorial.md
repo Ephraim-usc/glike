@@ -249,6 +249,8 @@ Which prints:
     ║  │      │change          │growth_rate=0.0         │                                        │
     ...
 
+Note that migration proportions are represented differently than in `glike.Demo`, because simultaneous events are executed sequentially.
+
 Another useful feature is `glike.get_coalescent_times_demo`, which simulates the coalescence distribution of the `Demo` object.
 For example,
 
