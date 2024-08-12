@@ -266,13 +266,12 @@ This coalescence distribution can be visualized by
     ax.axvline(x = 2040, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
     
     x = np.exp(np.arange(-1, 12.2, 0.2))[:-1]
-    ax.scatter(x, hist)
+    width = np.exp(np.arange(-1, 12.2, 0.2))[1:] - np.exp(np.arange(-1, 12.2, 0.2))[:-1]
+    ax.bar(x, height = hist, width = width, align = "edge", alpha = 0.5, color = "black", edgecolor = "black")
     
     ax.set_xscale("log")
     #ax.set_xticks([0.1, 0, 10, 100, 1000, 10000, 100000])
-    
-    fig.savefig("latinos.pdf")
-    plt.close(fig)
+    plt.show()
 
 
 Note that `glike.demo_to_demography` and `glike.get_coalescent_times_demo` are based on `msprime` version 1.0, and may not be compatible with future updates of `msprime`.
