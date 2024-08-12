@@ -190,10 +190,10 @@ def demo_to_demography(demo):
       for dest in phase.populations:
         if P.loc[source, dest] > 0 and dest != source:
           dests.append(dest); proportions.append(P.loc[source, dest])
-      multiplier = 1.0
+      remaining_proportion = 1.0
       for dest, proportion in zip(dests, proportions):
-        demography.add_mass_migration(time = phase.t, source = source, dest = dest, proportion = proportion * multiplier)
-        multiplier /= 1 - proportion
+        demography.add_mass_migration(time = phase.t, source = source, dest = dest, proportion = proportion / remaining_proportion)
+        remaining_proportion -= proportion
     for population, n, gr in zip(phase.populations, phase.ns, phase.grs):
       demography.add_population_parameters_change(time = phase.t, initial_size = 1/n, growth_rate = gr, population = population)
   
