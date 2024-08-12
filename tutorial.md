@@ -252,7 +252,7 @@ Simulates 10000 independent trees with the `msprime` engine, and summarizes the 
 The result is a 10000x999 2D array, each row of which is the coalescent times (a tree with 1000 samples has 999 coalescent events) of a simulated tree.
 This coalescence distribution can be visualized by `glike.plot_coalescent_distribution`:
 
-    log_coals = np.log(coalescent_times.ravel())
+    log_coals = np.log(coals.ravel())
     hist, bins = np.histogram(log_coals, bins = np.arange(-1, 12.2, 0.2)) 
 
     import matplotlib as mpl
