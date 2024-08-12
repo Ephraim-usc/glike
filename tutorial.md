@@ -272,7 +272,31 @@ Which plots:
 
 ![american_admixture_coals](./american_admixture_coals.png)
 
+It is worth noting that coalescence distributions are low-dimensional representations of the ARG, and may not capture all important features of the demography.
+For example, the two-way admixture and three-way admixture demographies are almost indistinguishable by coalescence distributions:
 
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    import matplotlib.colors as mcolors
+    
+    demo_threeway = glike.threeway_admixture_demo()
+    demo_twoway = glike.threeway_admixture_demo(r2 = 1.0)
+    
+    coals_threeway = glike.get_coals_demo(demo_threeway, {"A":1000}, sims = 10000)
+    coals_twoway = glike.get_coals_demo(demo_twoway, {"A":1000}, sims = 10000)
+    
+    fig = plt.figure(figsize = (7, 10))
+    ax = fig.add_axes([0.1, 0.5, 0.4, 0.3])
+    ax.axvline(x = 12, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
+    ax.axvline(x = 920, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
+    ax.axvline(x = 2040, ymin = 0, ymax=1, linestyle = "dashed", color = "black", zorder = 1)
+    
+    glike.plot_coalescent_distribution(ax, [coals_threeway, coals_twoway], 
+        ["Three-way Admixture", "Two-way Admixture"])
+    
+    plt.show()
+
+![threeway_admixture_coals](./threeway_admixture_coals.png)
 
 Note that `glike.demo_to_demography` and `glike.get_coalescent_times_demo` are based on `msprime` version 1.0, and may not be compatible with future updates of `msprime`.
 
