@@ -270,7 +270,7 @@ This coalescence distribution can be visualized by `glike.plot_coalescent_distri
 
 Which plots:
 
-![alt text](http://url/to/img.png)
+![american_admixture_coals](./american_admixture_coals.png)
 
 
 
