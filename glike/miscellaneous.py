@@ -186,9 +186,14 @@ def demo_to_demography(demo):
     for source in phase_.populations:
       if source in phase.populations and P.loc[source, source] == 1:
         continue
+      dests, proportions = [], []
       for dest in phase.populations:
         if P.loc[source, dest] > 0:
-          demography.add_mass_migration(time = phase.t, source = source, dest = dest, proportion = P.loc[source, dest])
+          dests.append(dest); proportions.append(P.loc[source, dest])
+      if len(dests) == 1:
+        demography.add_mass_migration(time = phase.t, source = source, dest = dests[0], proportion = 1)
+      else:
+        demography.add_admixture(time = phase.t, derived = source, ancestral = dests, proportions = proportions)
     for population, n, gr in zip(phase.populations, phase.ns, phase.grs):
       demography.add_population_parameters_change(time = phase.t, initial_size = 1/n, growth_rate = gr, population = population)
   
