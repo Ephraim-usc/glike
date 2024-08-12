@@ -202,18 +202,43 @@ def demo_to_demography(demo):
 
 # the coalescent times of a tree, in ascending order
 # returns an 1D array of length N-1
-def get_coalescent_times(tree):
+def get_coals(tree):
   times = [tree.time(node) for node in tree.nodes()]
   progenies =  [len(tree.children(node)) for node in tree.nodes()]
   times_coal = [time for progeny, time in zip(progenies, times) for i in range(progeny - 1) if progeny >= 2]
   times_coal = sorted(times_coal)
   return np.array(times_coal)
 
-def get_coalescent_times_trees(trees):
-  return np.array([get_coalescent_times(tree) for tree in trees])
+def get_coals_trees(trees):
+  return np.array([get_coals(tree) for tree in trees])
 
-def get_coalescent_times_demo(demo, samples_msprime, sims = 10000):
+def get_coals_demo(demo, samples_msprime, sims = 10000):
   import msprime
   demography = demo_to_demography(demo)
   trees = [msprime.sim_ancestry(samples_msprime, sequence_length = 1, demography = demography, ploidy = 1).first() for _ in range(sims)]
-  return get_coalescent_times_trees(trees)
+  return get_coals_trees(trees)
+
+
+def plot_coalescent_distribution(ax, list_of_coals, names, bins = None, colors = None):
+  import matplotlib as mpl
+  import matplotlib.pyplot as plt
+  import matplotlib.colors as mcolors
+  
+  if bins is None:
+    bins = np.arange(-1, 12.2, 0.2)
+  if colors is None:
+    colors = list(mcolors.TABLEAU_COLORS.values())
+  
+  for coals, color, name in zip(list_of_coals, colors, names):
+    log_coals = np.log(coals.ravel())
+    hist, bins = np.histogram(log_coals, bins = bins)
+    lefts = np.exp(bins)[:-1]; width = np.exp(bins)[1:] - np.exp(bins)[:-1]
+    ax.bar(lefts, height = hist, width = width, align = "edge", alpha = 0.5, color = "black", edgecolor = "black", label = name)
+  
+  ax.set_xscale("log")
+  ax.set_xlabel("generations")
+  ax.set_ylabel("coalescence count")
+  
+  handles, labels = ax.get_legend_handles_labels()
+  ax.legend(handles = handles[::-1], labels = labels[::-1], loc = "upper right", prop={'size': 8}, title = "", frameon = False)
+
