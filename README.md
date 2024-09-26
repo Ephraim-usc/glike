@@ -92,7 +92,7 @@ Where `t` is the starting (most recent) time in generations. `t_end` is the endi
 
 `populations` is the 1D array of population names, this is only useful for visualizing the demography or conveniently assigning population identities to samples. If not provided, alphabatical names (A, B, C, ...) would be automatically given to populations. 
 
-Only `t`, `t_end` and `ns` are required , other arguments are optional. The number of populations in this phase should be consistent among parameters, so it is required that
+Only `t`, `t_end` and `ns` are required, other arguments are optional. The number of populations in this phase should be consistent among parameters, so it is required that
 
     len(ns) == len(grs) == P.shape[1] == len(populations)
 
