@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import gzip
 from tqdm import tqdm
+import random
 
 import tsinfer
 
@@ -45,7 +46,7 @@ def write_relate_input(arg, name, recomb_rate = 1e-8):
   map_file.close()
 
 
-def write_tsinfer_input(arg, name):
+def write_tsinfer_input(arg, name, ascertainment = None):
   sample_data = tsinfer.SampleData(path = name + ".samples", sequence_length = math.ceil(arg.last().interval[1]))
   first = arg.first()
   for sample in arg.samples():
@@ -59,7 +60,12 @@ def write_tsinfer_input(arg, name):
     if position == prev_position:
       continue
     prev_position = position
-    sample_data.add_site(position, variant.genotypes)
+    if ascertainment is None:
+      sample_data.add_site(position, variant.genotypes)
+    else:
+      MAF = variant.genotypes.sum() / arg.num_samples
+      if random.random() < ascertainment(MAF):
+        sample_data.add_site(position, variant.genotypes)
   
   sample_data.finalise()
   return sample_data
