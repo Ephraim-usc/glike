@@ -63,7 +63,8 @@ def write_tsinfer_input(arg, name, ascertainment = None):
     if ascertainment is None:
       sample_data.add_site(position, variant.genotypes)
     else:
-      MAF = variant.genotypes.sum() / arg.num_samples
+      AF = variant.genotypes.sum() / arg.num_samples
+      MAF = AF if AF <= 0.5 else 1 - AF
       if random.random() < ascertainment(MAF):
         sample_data.add_site(position, variant.genotypes)
   
