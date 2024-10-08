@@ -13,16 +13,16 @@
 0  R1$  unif 0.01  0.99 output
 0  R2$  unif 0.01  0.99 output
 0  R3$  unif 0.01  0.99 output
-1  Nana$  unif 1000 100000 output
-1  Nneo$  unif 1000 100000 output
-1  Nwhg$  unif 1000 100000 output
-1  Nbronze$  unif 1000 100000 output
-1  Nyam$  unif 1000 100000 output
-1  Nehg$  unif 1000 100000 output
-1  Nchg$  unif 1000 100000 output
-1  Nne$  unif 1000 100000 output
-1  Nwa$  unif 1000 100000 output
-1  Nooa$  unif 1000 100000 output
+1  Nana$  unif 100 100000 output
+1  Nneo$  unif 100 100000 output
+1  Nwhg$  unif 100 100000 output
+1  Nbronze$  unif 100 100000 output
+1  Nyam$  unif 100 100000 output
+1  Nehg$  unif 100 100000 output
+1  Nchg$  unif 100 100000 output
+1  Nne$  unif 100 100000 output
+1  Nwa$  unif 100 100000 output
+1  Nooa$  unif 100 100000 output
 0  GR$  logunif 0.001 1 output
 
 
@@ -30,3 +30,6 @@
 
 [COMPLEX PARAMETERS]
 0 GBR$ = 0 - GR$ hide
+0 TGR1$ = T1$ * GR$ hide
+0 Gbronze$ = exp(TGR1$) hide
+1 NGbronze$ = Nbronze$ * Gbronze$ hide
