@@ -14,8 +14,8 @@
 1  Neur$  unif 100 100000 output
 1  Nasia$  unif 100 100000 output
 1  Nadmix$  unif 100 100000 output
-1  Nooa$  unif 1000 100000 output
-1  Nanc$  unif 1000 100000 output
+1  Nooa$  unif 100 100000 output
+1  Nanc$  unif 100 100000 output
 0  GReur$  logunif 0.0001 1 output
 0  GRasia$  logunif 0.0001 1 output
 0  GRadmix$  logunif 0.0001 1 output
