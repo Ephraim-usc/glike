@@ -30,6 +30,6 @@
 
 [COMPLEX PARAMETERS]
 0 GBR$ = 0 - GR$ hide
-0 TGR1$ = T1$ * GR$ hide
-0 Gbronze$ = exp(TGR1$) hide
-1 NGbronze$ = Nbronze$ * Gbronze$ hide
+0 TGR$ = T1$ * GR$ hide
+0 Gbronze$ = exp(TGR$) hide
+1 NbronzeG$ = Nbronze$ * Gbronze$ hide
