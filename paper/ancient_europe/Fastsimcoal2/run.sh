@@ -3,7 +3,7 @@
 ##SBATCH --partition=oneweek
 #SBATCH --time=48:00:00
 #SBATCH --mem=30000
-#SBATCH --array=21-50
+#SBATCH --array=1-50
 
 name=${SLURM_ARRAY_TASK_ID}
 
