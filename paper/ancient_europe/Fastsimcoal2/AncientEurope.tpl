@@ -4,7 +4,7 @@
 Nana$
 Nneo$
 Nwhg$
-Nbronze$*exp(T1$*GR$)
+NGbronze$
 Nyam$
 Nehg$
 Nchg$
