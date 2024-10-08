@@ -26,8 +26,8 @@ GBRasia$
 //historical event: time, source, sink, migrants, new size, new growth rate, migr. matrix 
 7 historical event 
 T1$ 0 1 R1$ 1 0 0
-T1$ 0 2 R4$ 1 0 0
-T1$ 0 3 1 1 0 0
+T1$ 0 2 R4$ 1 GBReur$ 0
+T1$ 0 3 1 1 Nasia$ 0
 T2$ 2 4 1 1 0 0
 T2$ 3 4 1 1 0 0
 T3$ 4 1 1 1 0 0
