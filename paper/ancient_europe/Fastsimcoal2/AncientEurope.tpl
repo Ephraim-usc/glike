@@ -4,7 +4,7 @@
 Nana$
 Nneo$
 Nwhg$
-NGbronze$
+NbronzeG$
 Nyam$
 Nehg$
 Nchg$
