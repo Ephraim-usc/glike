@@ -3,7 +3,7 @@ import pandas as pd
 import glike
 
 results = []
-for i in range(1, 21):
+for i in range(1, 51):
   for j in range(1, 21):
     if not os.path.isfile(f"output_{i}/{j}.bestlhoods"):
       continue
