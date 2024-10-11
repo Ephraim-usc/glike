@@ -23,7 +23,7 @@
 1  Nne$  unif 100 100000 output
 1  Nwa$  unif 100 100000 output
 1  Nooa$  unif 100 100000 output
-0  GR$  logunif 0.001 1 output
+0  GR$  logunif 0.001 0.2 output
 
 
 [RULES]
