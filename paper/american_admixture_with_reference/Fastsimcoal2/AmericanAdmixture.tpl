@@ -31,7 +31,7 @@ T1$ 0 3 1 1 GBRasia$ 0
 T2$ 2 4 1 1 0 0
 T2$ 3 4 1 1 0 0
 T3$ 4 1 1 1 0 0
-T4$ 1 5 0 1 0 0
+T4$ 1 5 1 1 0 0
 //Number of independent loci [chromosome] 
 1 0
 //Per chromosome: Number of linkage blocks
