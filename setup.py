@@ -16,7 +16,7 @@ setup(
     name="glike",
     version="0.1",
     author="Caoqi Fan",
-    author_email="caoqifan@usc.edu",
+    author_email="fcq1116@gmail.com",
     description="Stochastic Genealogical likelihood",
     long_description=readme(),
     long_description_content_type="text/markdown",
