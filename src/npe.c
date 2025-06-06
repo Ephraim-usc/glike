@@ -163,11 +163,13 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
       cdf_[j] = cdf_[j-1] + pdf_[j];
     }
     
-    if (fabs(cdf_[j-1] - 1.0) > 1e-6)
+    if (fabs(cdf_[i-1] - 1.0) > 1e-6)
     {
       printf("Error: probabilities don't sum up to 1!\n");
       Py_RETURN_NONE;
     }
+    
+    cdf_[i-1] = 1.0; // forcing it to be 1.0, otherwise a total likelihood of something like 0.9999999 may cause failure in randomly selecting a population
   }
   
   int *values = (int *)malloc(N * M * sizeof(int)); int *values_;
