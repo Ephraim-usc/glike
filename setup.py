@@ -24,7 +24,8 @@ setup(
     packages=["glike"],
     python_requires=">=3",
     install_requires=[
-        "numpy>=1.14.5",
+        "numpy>=1.14.5,<2.0.0",
+        "scipy",
         "tskit",
         "tqdm",
     ],
