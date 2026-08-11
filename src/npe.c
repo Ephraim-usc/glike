@@ -117,6 +117,18 @@ static PyObject *product_det(PyObject *self, PyObject *args, PyObject *kwds)
   return out;
 }
 
+// ============================================================
+// { Added by Ji
+// Cumulative statistics over all product_sto calls. Reported sparsely (at 1,
+// 10, 100, ... affected rows) because product_sto is called once per parent
+// state per generation per tree, so per-call printing would flood a real run.
+static long stat_rows = 0;
+static long stat_renorm = 0;
+static long stat_uniform = 0;
+static long stat_next_report = 1;
+// }
+// ============================================================
+
 // W and P should be of the same size, and both row-first allocated
 // this function is not open to the user, so we don't explicitly check for errors
 static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
@@ -141,6 +153,8 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
   int *idx = (int *)malloc(N * K * sizeof(int)); int *idx_;
   
   int i, j;
+  int edge_case_count = 0; // rows where every weight was filtered out. added by Ji
+  int renorm_count = 0;    // rows whose kept weights were re-normalized. added by Ji
   for (n = 0; n < N; n++)
   {
     W_ = W + n * K;
@@ -156,7 +170,10 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
       idx_[i] = k;
       i ++;
     }
-    
+
+    // ============================================================
+    // { Changed by Ji
+    /*
     cdf_[0] = pdf_[0];
     for (j = 1; j < i; j++)
     {
@@ -170,8 +187,83 @@ static PyObject *product_sto(PyObject *self, PyObject *args, PyObject *kwds)
     }
     
     cdf_[i-1] = 1.0; // forcing it to be 1.0, otherwise a total likelihood of something like 0.9999999 may cause failure in randomly selecting a population
+   */
+    
+    if (i == 0)
+    {
+        // Edge case: all values filtered out
+        edge_case_count++;
+        
+        // Fall back to uniform distribution
+        for (k = 0; k < K; k++)
+        {
+            pdf_[k] = 1.0 / K;
+            idx_[k] = k;
+        }
+        i = K;
+        
+        cdf_[0] = pdf_[0];
+        for (j = 1; j < i; j++)
+        {
+            cdf_[j] = cdf_[j-1] + pdf_[j];
+        }
+        cdf_[i-1] = 1.0;
+    }
+    else
+    {
+        // Normal case: build CDF and renormalize if needed
+        cdf_[0] = pdf_[0];
+        for (j = 1; j < i; j++)
+        {
+            cdf_[j] = cdf_[j-1] + pdf_[j];
+        }
+        
+        if (fabs(cdf_[i-1] - 1.0) > 1e-6)
+        {
+            renorm_count++;
+            double scale = 1.0 / cdf_[i-1];
+            for (j = 0; j < i; j++)
+            {
+                pdf_[j] *= scale;
+            }
+            cdf_[0] = pdf_[0];
+            for (j = 1; j < i; j++)
+            {
+                cdf_[j] = cdf_[j-1] + pdf_[j];
+            }
+        }
+        
+        cdf_[i-1] = 1.0;
+    }
+    // }
+    // ============================================================
+
   }
   
+  // ============================================================
+  // { Added by Ji
+  // Accumulate over calls and report both kinds of adjustment together.
+  stat_rows += N;
+  stat_renorm += renorm_count;
+  stat_uniform += edge_case_count;
+
+  if (stat_renorm + stat_uniform >= stat_next_report)
+  {
+      printf("npe.product_sto: %ld of %ld rows (%.3f%%) re-normalized to sum to 1",
+             stat_renorm, stat_rows, 100.0 * stat_renorm / stat_rows);
+      if (stat_uniform > 0)
+      {
+          printf("; %ld of %ld rows (%.3f%%) had all weights < 1e-6 and fell back to a uniform distribution",
+                 stat_uniform, stat_rows, 100.0 * stat_uniform / stat_rows);
+      }
+      printf(" [cumulative]\n");
+      fflush(stdout);
+
+      while (stat_next_report <= stat_renorm + stat_uniform) stat_next_report *= 10;
+  }
+  // }
+  // ============================================================
+
   int *values = (int *)malloc(N * M * sizeof(int)); int *values_;
   double *ws = (double *)malloc(N * M * sizeof(double)); double *ws_;
   double *ps = (double *)malloc(N * M * sizeof(double)); double *ps_;
